@@ -1,0 +1,79 @@
+2003-09-10 rk
+Removed "File Info.vi". it uses a CIN Manager function which
+starts to behave rather badly in newer (>=7.0) non-Windows LabVIEW version.
+
+2005-01-12 rk
+Incorporated newest zlib version 1.22 and 1.0.1 of Jean-loup Gailly's
+minizip library. Added and adapted VIs to support addition of files to
+existing archives, delete files from an archive, and add and retrieve
+password protected files.
+Fixed a bug in the "File Info.vi" in the file package and reactivated
+it in the lvzip library.
+
+2005-04-04 rk
+Many minor changes to the shared library to clean it up and make it
+compile on Linux, too
+
+2005-04-12 rk
+Changed several connector panes to 12 pane connector to generalize and
+allow for consistent password parameter support up to the top most
+(easy level) VIs.
+
+2005-04-14 rk
+Added functionality to prepend the file name to the error message if an
+input file couldn't be found.
+
+2005-12-31 rk
+Found that the last build on sf did not include the modified VIs. Cleaned
+up a bit.
+
+2006-01-02 jk
+Added the Xcode project files and source code.
+
+2006-01-04 rk
+Combined the Macintosh C source and Xcode project file into the standard
+C source directory.
+
+2006-01-07 rk
+Updated zlib sources to version 1.2.3 as they have some important security fixes.
+
+2006-03-01 rk
+Added support for transparent Macintosh resource file handling through MacBinary encoding.
+
+2006-09-23 rk
+Fixed error in LabVIEW 8 when extracting read-only files.
+
+2007-09-10 rk
+Added support for adding and extracting memory streams to and from a ZIP file.
+
+2007-09-16 rk
+Added support for ZIP streams itself instead of disk based ZIP files.
+
+2007-12-8 rk
+Minor modifications to try to get it to compile in LabWindows/CVI
+
+2007-12-10 rk
+created vxWorks .out shared libraries for LabVIEW RT 8.2 and 8.5.
+
+2008-03-31 rk
+changed zipOpen2() to properly open an empty archive that contains no files at all
+
+2008-04-28 rk
+changed ZLIB Store File.vi to also work for LabVIEW files that are located in LLBs
+by creating a temporary copy to add to the archive.
+
+2008-10-25 rk
+Added missing VI documentation to various VIs.
+changed ZLIB Delete Files From Archive.vi to use a correct temporary filename for
+the intermediate archive file.
+by creating a temporary copy to add to the archive.
+
+2008-12-23 rk
+Prepended all public symbols with lvzip_ to avoid name conflicts with the LabVIEW
+VxWorks kernel on cRIO targets.
+
+2008-12-24 jk
+Removed Mac OS 9 shared library and changed to zip format for packaged Mac OS X framework.  Still need to update install script VI to handle unzipping via command-line during install.
+
+2008-12-27 jk
+Changed package URL to http://wiki.openg.org/oglib_lvzip

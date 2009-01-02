@@ -1,0 +1,114 @@
+[Package Name]
+Name=oglib_lvzip
+Version=2.4
+Release=1
+
+[Description]
+Description="The lvzip package contains several routines for operating on zip files.\0D\0AThe new version 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files.\0D\0A\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.4 adds support for direct memory stream handling."
+Summary="OpenG Zip Tools"
+License=LGPL
+Copyright="1995-2004 Mark Adler, Jean-loup Gailly\0A1998-2004 Gilles Vollant\0A2002 - 2007 Christophe Salzmann, Jim Kring, Rolf Kalbermatter"
+Distribution="OpenG Toolkit"
+Icon=lvzip.bmp
+Vendor=OpenG.org
+URL=http://wiki.openg.org/oglib_lvzip
+Packager="Jim Kring <jim@jimkring.com>"
+
+[Platform]
+Exclusive_LabVIEW_Version=>=6.1
+Exclusive_LabVIEW_System=All
+Exclusive_OS=All
+
+[Script VIs]
+Source Dir=""
+PostInstall=PostInstall.vi
+PreUninstall=PreUninstall.vi
+PostUninstall=""
+Verify=""
+PreBuild=""
+PostBuild=""
+
+[Dependencies]
+AutoReqProv=FALSE
+Requires="ogrsc_dynamicpalette >= 0.2, oglib_error >= 2.0, oglib_file >= 2.5"
+Conflicts=""
+
+[Files]
+Num File Groups=10
+
+[File Group 0]
+Source Dir=built/lvzip
+Target Dir=<OpenG.lib>/lvzip
+Replace Mode=Always
+Num Files=2
+File 0=*.mnu
+File 1=*.txt
+
+[File Group 1]
+Source Dir=built/lvzip/lvzip.llb
+Target Dir=<OpenG.lib>/lvzip/lvzip.llb
+Replace Mode=Always
+Num Files=2
+File 0=*.vi
+File 1=*.ctl
+
+[File Group 2]
+Source Dir=built/lvzip/macbin.llb
+Target Dir=<OpenG.lib>/lvzip/macbin.llb
+Replace Mode=Always
+Num Files=2
+File 0=*.vi
+File 1=*.ctl
+
+[File Group 3]
+Source Dir=built/lvzip
+Target Dir=<OpenG.lib>/lvzip
+Replace Mode=Always
+Exclusive_OS="Windows NT,Windows 9x"
+Num Files=1
+File 0=lvzlib.dll
+
+[File Group 4]
+Source Dir=built/lvzip
+Target Dir=<OpenG.lib>/lvzip
+Replace Mode=Always
+Exclusive_OS=Linux
+Num Files=1
+File 0=lvzlib.so
+
+[File Group 5]
+Source Dir=built/lvzip
+Target Dir=<OpenG.lib>/lvzip
+Replace Mode=Always
+Exclusive_OS="Mac OS>=10"
+Num Files=1
+File 0=lvzlib.framework.zip
+
+[File Group 6]
+Source Dir=built/lvzip/vxWorks82
+Target Dir=<OpenG.lib>/lvzip
+Exclusive_LabVIEW_Version=<=8.2
+Num Files=1
+File 0=lvzlib.out
+
+[File Group 7]
+Source Dir=built/lvzip/vxWorks85
+Target Dir=<OpenG.lib>/lvzip
+Exclusive_LabVIEW_Version=8.5,8.6
+Num Files=1
+File 0=lvzlib.out
+
+[File Group 8]
+Source Dir="Dynamic Palette MNUs"
+Target Dir=<user.lib>/_dynamicpalette_dirs/file
+Replace Mode=Always
+Num Files=1
+File 0=oglib_lvzip.mnu
+
+[File Group 9]
+Source Dir="Dynamic Palette MNUs"
+Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
+Replace Mode=Always
+Num Files=1
+File 0=oglib_lvzip.mnu
+

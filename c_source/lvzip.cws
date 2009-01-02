@@ -1,0 +1,398 @@
+[Workspace Header]
+Version = 801
+Pathname = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/lvzip.cws"
+CVI Dir = "/c/program files/national instruments/cvi80"
+IVI Standard Root Dir = "/C/Program Files/IVI"
+VXIplug&play Framework Dir = "/C/VXIPNP/winnt"
+Number of Projects = 1
+Active Project = 1
+Project 0001 = "lvzip.prj"
+Project 0001 Collapsed = True
+Project 0001 Folder Headers Collapsed = True
+Drag Bar Left = 316
+Window Top = 23
+Window Left = 17
+Window Bottom = 762
+Window Right = 1405
+Maximized = False
+Maximized Children = False
+Max Number Of Errors = 20
+Track Include File Dependencies = True
+Prompt For Missing Includes = True
+Stop On First Error File = False
+Bring Up Err Win For Warnings = True
+Show Build Dialog = False
+Save Changes Before Running = "Always"
+Hide Windows = False
+Global Hot Key = False
+Break At First Statement = False
+Sort Type = "File Name"
+Number of Opened Files = 3
+Window Confinement Region Enabled = True
+MainColumnWidth = 297
+FileDateColumnWidth = 70
+FileSizeColumnWidth = 70
+StatusColumnWidth = 70
+
+[Project Header 0001]
+Version = 801
+Don't Update DistKit = False
+Platform Code = 4
+Build Configuration = "Debug"
+Warn User If Debugging Release = 1
+Batch Build Release = True
+Batch Build Debug = True
+Force Rebuild = False
+
+[File 0001]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/lvutil.c"
+File Type = "CSource"
+Disk Date = 3289833408
+In Projects = "1,"
+Window Top = 25
+Window Left = 6
+Window Z-Order = 1
+Source Window State = "1,45,45,45,0,4,0,0,0,106,0,0,0,0,0,51,455,0,480,19,691,881,1,0,"
+
+[File 0002]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/lvutil.h"
+File Type = "Include"
+Disk Date = 3289840737
+In Projects = "1,"
+Window Top = 25
+Window Left = 6
+Window Z-Order = 2
+Source Window State = "1,49,49,49,6,7,7,0,0,105,0,0,0,0,0,29,30,0,49,6,402,869,1,0,"
+
+[File 0003]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/unzip.c"
+File Type = "CSource"
+Disk Date = 3289840961
+In Projects = "1,"
+Window Top = 25
+Window Left = 5
+Window Z-Order = 3
+Source Window State = "1,964,964,964,12,13,12,0,0,141,0,0,0,0,0,41,1059,0,1079,8,568,1163,1,0,"
+
+[File 0004]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/adler32.c"
+File Type = "CSource"
+Disk Date = 3219512782
+In Projects = "1,"
+Window Top = 25
+Window Left = 6
+Source Window State = "1,7,8,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,284,676,1,0,"
+
+[File 0005]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/compress.c"
+File Type = "CSource"
+Disk Date = 3219512782
+In Projects = "1,"
+Window Top = 26
+Window Left = 212
+Source Window State = "1,7,8,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,282,838,1,0,"
+
+[File 0006]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/crc32.c"
+File Type = "CSource"
+Disk Date = 3219512782
+In Projects = "1,"
+Window Top = 26
+Window Left = 339
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,15,0,27,60,283,794,1,0,"
+
+[File 0007]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/crc32.h"
+File Type = "Include"
+Disk Date = 3185308370
+In Projects = "1,"
+Source Window State = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
+
+[File 0008]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/crypt.h"
+File Type = "Include"
+Disk Date = 3279802152
+In Projects = "1,"
+Window Top = 46
+Window Left = 42
+Source Window State = "1,88,88,88,34,35,34,0,0,0,0,0,0,0,0,0,77,0,86,21,517,1234,1,0,"
+
+[File 0009]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/deflate.c"
+File Type = "CSource"
+Disk Date = 3279803747
+In Projects = "1,"
+Window Top = 23
+Window Left = 208
+Source Window State = "1,98,99,98,0,0,0,0,0,0,0,0,0,0,0,0,27,0,91,22,785,917,1,0,"
+
+[File 0010]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/deflate.h"
+File Type = "Include"
+Disk Date = 3289838072
+In Projects = "1,"
+Window Top = 23
+Window Left = 259
+Source Window State = "1,298,298,298,0,11,11,0,0,0,0,0,0,0,0,0,3,0,19,0,530,1049,1,0,"
+
+[File 0011]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/infback.c"
+File Type = "CSource"
+Disk Date = 3219512782
+In Projects = "1,"
+Window Top = 71
+Window Left = 30
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,284,676,1,0,"
+
+[File 0012]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inffast.c"
+File Type = "CSource"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 25
+Window Left = 6
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,381,852,1,0,"
+
+[File 0013]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inffast.h"
+File Type = "Include"
+Disk Date = 3185308370
+In Projects = "1,"
+Window Top = 25
+Window Left = 6
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,349,676,1,0,"
+
+[File 0014]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inffixed.h"
+File Type = "Include"
+Disk Date = 3185308370
+In Projects = "1,"
+Source Window State = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
+
+[File 0015]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inflate.c"
+File Type = "CSource"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 94
+Window Left = 42
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,284,676,1,0,"
+
+[File 0016]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inflate.h"
+File Type = "Include"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 48
+Window Left = 18
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,388,779,1,0,"
+
+[File 0017]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inftrees.c"
+File Type = "CSource"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 29
+Window Left = 15
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,0,38,0,633,827,1,0,"
+
+[File 0018]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inftrees.h"
+File Type = "Include"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 26
+Window Left = 162
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,21,0,0,0,499,1052,1,0,"
+
+[File 0019]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/ioapi.c"
+File Type = "CSource"
+Disk Date = 3272815458
+In Projects = "1,"
+Window Top = 117
+Window Left = 54
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,284,676,1,0,"
+
+[File 0020]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/ioapi.h"
+File Type = "Include"
+Disk Date = 3272815434
+In Projects = "1,"
+Source Window State = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
+
+[File 0021]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/iomem.c"
+File Type = "CSource"
+Disk Date = 3280138438
+In Projects = "1,"
+Window Top = 68
+Window Left = 337
+Source Window State = "1,105,105,105,12,96,12,0,0,0,0,0,0,0,0,0,92,0,105,92,491,939,1,0,"
+
+[File 0022]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/iomem.h"
+File Type = "Include"
+Disk Date = 3272886235
+In Projects = "1,"
+Window Top = 25
+Window Left = 6
+Source Window State = "1,9,10,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,9,0,327,888,1,0,"
+
+[File 0023]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/iowin32.c"
+File Type = "CSource"
+Disk Date = 3280142667
+In Projects = "1,"
+Window Top = 26
+Window Left = 66
+Source Window State = "1,70,71,70,0,0,0,0,0,0,0,60,0,0,0,0,60,0,70,0,528,1016,1,0,"
+
+[File 0024]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/iowin32.h"
+File Type = "Include"
+Disk Date = 3219512783
+In Projects = "1,"
+Source Window State = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
+
+[File 0025]
+Path = "/c/Work/OpenG/opengtoolkit/cintools/labview.lib"
+File Type = "Library"
+Disk Date = 3045340510
+In Projects = "1,"
+
+[File 0026]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/mztools.c"
+File Type = "CSource"
+Disk Date = 3279802016
+In Projects = "1,"
+Window Top = 31
+Window Left = 24
+Source Window State = "1,12,12,12,10,15,10,0,0,0,0,0,0,0,0,0,0,0,16,19,522,1074,1,0,"
+
+[File 0027]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/mztools.h"
+File Type = "Include"
+Disk Date = 3279804145
+In Projects = "1,"
+Window Top = 25
+Window Left = 6
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,471,939,1,0,"
+
+[File 0028]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/trees.c"
+File Type = "CSource"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 60
+Window Left = 608
+Source Window State = "1,33,33,33,11,22,11,0,0,0,0,0,0,0,0,0,15,0,50,41,536,717,1,0,"
+
+[File 0029]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/trees.h"
+File Type = "Include"
+Disk Date = 3116569292
+In Projects = "1,"
+Window Top = 48
+Window Left = 18
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,540,666,1,0,"
+
+[File 0030]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/uncompr.c"
+File Type = "CSource"
+Disk Date = 3185386155
+In Projects = "1,"
+Window Top = 25
+Window Left = 6
+Source Window State = "1,7,8,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,284,676,1,0,"
+
+[File 0031]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/unzip.h"
+File Type = "Include"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 51
+Window Left = 28
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,129,0,0,0,316,825,1,0,"
+
+[File 0032]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zconf.h"
+File Type = "Include"
+Disk Date = 3286992725
+In Projects = "1,"
+Window Top = 27
+Window Left = 8
+Source Window State = "1,212,212,212,16,23,16,0,3,0,0,0,0,0,0,0,207,0,212,23,545,823,1,0,"
+
+[File 0033]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zip.c"
+File Type = "CSource"
+Disk Date = 3289840296
+In Projects = "1,"
+Window Top = 48
+Window Left = 18
+Source Window State = "1,196,196,196,4,18,4,0,0,0,0,0,0,0,0,0,180,0,202,12,378,1028,1,0,"
+
+[File 0034]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zip.h"
+File Type = "Include"
+Disk Date = 3289840327
+In Projects = "1,"
+Source Window State = "0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,"
+
+[File 0035]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zlib.h"
+File Type = "Include"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 43
+Window Left = 31
+Source Window State = "1,234,235,235,108,109,109,0,0,0,0,0,0,0,0,0,189,0,194,7,526,1136,1,0,"
+
+[File 0036]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zutil.c"
+File Type = "CSource"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 163
+Window Left = 78
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,284,676,1,0,"
+
+[File 0037]
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zutil.h"
+File Type = "Include"
+Disk Date = 3219512783
+In Projects = "1,"
+Window Top = 30
+Window Left = 11
+Source Window State = "1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,18,39,640,1016,1,0,"
+
+[Build Options 0001]
+Generate Browse Info = True
+Enable Uninitialized Locals Runtime Warning = True
+Debugging Level = "Standard"
+Break On Library Errors = True
+Break On First Chance Exceptions = False
+Execution Target Address = "Local desktop computer"
+Execution Target Port = 0
+Execution Target Type = 0
+
+[SCC Options 0001]
+Use global settings = True
+SCC Provider = ""
+SCC Project = ""
+Local Path = ""
+Auxiliary Path = ""
+Perform Same Action For .h File As For .uir File = "Ask"
+Username = ""
+Comment = ""
+Use Default Username = False
+Use Default Comment = False
+Suppress CVI Error Messages = False
+
+[DLL Debugging Support 0001]
+External Process Path = ""
+
+[Command Line Args 0001]
+Command Line Args = ""
+

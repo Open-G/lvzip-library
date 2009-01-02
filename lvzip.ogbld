@@ -1,0 +1,117 @@
+[General]
+# Project Root is optional.  If it is not specified, it is=""
+# assumed to be the .deab file's parent directory=""
+Project Root=""
+# Build Root is optional.  If it is not specified, it is=""
+# assumed to be the Project Root.  Build Root may be either=""
+# an absolute path, or a path relative to the Project Root=""
+Build Root=built/lvzip
+# Source Root is optional.  If it is not specified, it is=""
+# assumed to be the Project Root.  Source Root may be either=""
+# an absolute path, or a path relative to the Project Root=""
+Source Root=source
+# Overwrite Existing Files specifies whether to overwrite=""
+# files in the build location.  This is an optional.  If it=""
+# is not specified, it is assumed to be FALSE=""
+Overwrite Existing Files=TRUE
+# If a Namespace is specified, all VIs and CTLs will be=""
+# "name magled" with the Namespace as a suffix.  For=""
+# example, "MyVI.vi" with a Namespace of "MyApp" becomes=""
+# "MyVI__MyApp.vi" in the built software product.=""
+Namespace=ogtk
+###########################################################=""
+# Top Level VIs specifies VIs whose hierarchies are to be=""
+# included in the build. Additionally, Top Level VIs will=""
+# be set as "Top-Level" in destination LLBs if the its=""
+# Destination is converted to an LLB or EXE.  You can use=""
+# any keyname for Top Level VIs.  Keynames for this section=""
+# are arbitrary.=""
+File Format Version=1.0.1
+Log Dir=built
+Log File=""
+Log File Suffix=""
+Include Help Files=FALSE
+Help File Dir=""
+Include Shared Libs=TRUE
+Shared Lib Dir=""
+Include External Subrs=FALSE
+External Subr Dir=""
+Include Hidden VIs=FALSE
+EXE Icon File=""
+New Build Root=TRUE
+Unsaved Changes MsgBox=FALSE
+Ambiguous VIs Dest Dir=""
+Call Pre-Build VI="build_support/Pre-Post Build (testing).vi"
+Call Post-Build VI=""
+Revision File=build_support/lvzip.rev
+Version VI Name=""
+Version Ctrl Name=""
+Apply New Password=""
+RemovePolyVIsAndTypedefs=FALSE
+Allow CBVI & Build Hierarchy Overlap=FALSE
+Namespace Convention=0
+Call-Back VI 1="build_support/Call-Back VI - Rem namespace from Window Title.vi"
+
+[Top Level VIs]
+###########################################################=""
+# Dynamic VIs specifies VIs whose hierarchies are to be=""
+# included in the build.  Keynames for this section are=""
+# arbitrary=""
+VI 1="lvzip.llb/ZLIB VI Tree.vi"
+VI 2="macbin.llb/MACBIN VI Tree.vi"
+
+[Dynamic VIs]
+###########################################################=""
+# Destination sections should be named "Destination N", where=""
+# "N" is an integer.  This allows you to specify multiple=""
+# Destination sections.=""
+
+[Exclude Lib Dirs from Build]
+LibDir 1=<application>
+
+[Destination 1]
+Source Dir=lvzip.llb
+Target Dir=lvzip.llb
+Convert Target to LLB=FALSE
+Convert Target to EXE=FALSE
+Save Level=0
+Default Destination=FALSE
+Apply New Password=""
+Namespace=""
+
+[Destination 2]
+Source Dir=macbin.llb
+Target Dir=macbin.llb
+Convert Target to LLB=FALSE
+Convert Target to EXE=FALSE
+Save Level=0
+Default Destination=FALSE
+Apply New Password=""
+Namespace=""
+
+[SupportFiles 1]
+TargetDir=""
+OverwriteExisting=TRUE
+FollowVIDirHierarchy=FALSE
+Recursive=FALSE
+Exclude=FALSE
+SourceFile 1=lvzlib.*
+SourceFile 2=submenus/*.mnu
+SourceFile 3=readme.txt
+SourceFile 4=PreInstall.vi
+
+[SupportFiles 2]
+TargetDir="vxWorks82"
+OverwriteExisting=TRUE
+FollowVIDirHierarchy=FALSE
+Recursive=FALSE
+Exclude=FALSE
+SourceFile 1="vxWorks LV8.2/lvzlib.*"
+
+[SupportFiles 3]
+TargetDir="vxWorks85"
+OverwriteExisting=TRUE
+FollowVIDirHierarchy=FALSE
+Recursive=FALSE
+Exclude=FALSE
+SourceFile 1="vxWorks LV8.5/lvzlib.*"

@@ -1,0 +1,43 @@
+#include <windows.h>
+
+#define IDR_VERSION1  1
+IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
+  FILEVERSION	 2,4,2
+  PRODUCTVERSION 2,4,2
+  FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
+  FILEFLAGS	0
+  FILEOS	VOS_DOS_WINDOWS32
+  FILETYPE	VFT_DLL
+  FILESUBTYPE	0	// not used
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    //language ID = U.S. English, char set = Windows, Multilingual
+
+    BEGIN
+      VALUE "FileDescription",  "LabVIEW zlib data compression library\0"
+      VALUE "FileVersion",      "2.4.2.LV6\0"
+      VALUE "InternalName",     "lvzlib\0"
+      VALUE "OriginalFilename", "lvzlib.dll\0"
+      VALUE "ProductName",      "LVZLib.DLL\0"
+      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\r\nZIP support by Gilles Vollant\r\nLabVIEW support by Rolf Kalbermatter\r\nBased on zlib 1.2.3 and minizip 1.01e\0"
+      VALUE "LegalCopyright",   "(C) 1995-2005 Jean-loup Gailly & Mark Adler\0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1252
+  END
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+
+#define IDI_LVZLIB  1
+ID(IDI_LVZLIB)      ICON    DISCARDABLE     "lvzlib.ico"

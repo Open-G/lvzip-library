@@ -1,0 +1,25 @@
+LabVIEW's palette menu editor has a lot of peculiarities.  Additionally, since OpenG libraries are name-mangled at build time, there are other issues that must be addressed.
+
+******
+Issues
+******
+
+1) when a palette menu links to sumenus or VIs that are beneath user.lib, it stores the path link relative to user.lib
+2) when the library is built, the VI names are changed so that they have an "__ogtk" suffix.
+
+
+************
+Implications
+************
+
+This menus have to be edited to link to the built and installed libary.
+
+
+*******
+Process
+*******
+
+1) Build your library first!
+2) Package and install your library into its static location beneath ./user.lib/_OpenG.lib/YourLibName/
+3) Create/Edit your Dynamic Palette View menu (your library's root menu) and point it to VIs, or submenus at the INSTALLED library location.
+4) Submenus are stored in ./source/submenus/*.mnu.  To edit them, install your built package, copy the source submenus into the INSTALLED location (overwriting, if applicable) and edit the submenus in the INSTALLED location.  After editing is completed, move the INSTALLED (and edited) submenus to the ./source/submenus/ folder.  Commit these mnu files to CVS.  The next time you do a build & package, the newly edited submenus will be included in the package.

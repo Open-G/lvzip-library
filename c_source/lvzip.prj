@@ -1,0 +1,529 @@
+[Project Header]
+Version = 801
+Pathname = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/lvzip.prj"
+Project Label = "lvzip"
+CVI Dir = "/c/program files/national instruments/cvi80"
+IVI Standard Root Dir = "/C/Program Files/IVI"
+VXIplug&play Framework Dir = "/C/VXIPNP/winnt"
+Number of Files = 37
+Target Type = "Dynamic Link Library"
+Flags = 2064
+
+[File 0001]
+File Type = "CSource"
+Res Id = 1
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "adler32.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/adler32.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0002]
+File Type = "CSource"
+Res Id = 2
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "compress.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/compress.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0003]
+File Type = "CSource"
+Res Id = 3
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "crc32.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/crc32.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0004]
+File Type = "Include"
+Res Id = 4
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "crc32.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/crc32.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0005]
+File Type = "Include"
+Res Id = 5
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "crypt.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/crypt.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0006]
+File Type = "CSource"
+Res Id = 6
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "deflate.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/deflate.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0007]
+File Type = "Include"
+Res Id = 7
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "deflate.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/deflate.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0008]
+File Type = "CSource"
+Res Id = 8
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "infback.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/infback.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0009]
+File Type = "CSource"
+Res Id = 9
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "inffast.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inffast.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0010]
+File Type = "Include"
+Res Id = 10
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "inffast.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inffast.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0011]
+File Type = "Include"
+Res Id = 11
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "inffixed.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inffixed.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0012]
+File Type = "CSource"
+Res Id = 12
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "inflate.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inflate.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0013]
+File Type = "Include"
+Res Id = 13
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "inflate.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inflate.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0014]
+File Type = "CSource"
+Res Id = 14
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "inftrees.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inftrees.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0015]
+File Type = "Include"
+Res Id = 15
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "inftrees.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/inftrees.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0016]
+File Type = "CSource"
+Res Id = 16
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ioapi.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/ioapi.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0017]
+File Type = "Include"
+Res Id = 17
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "ioapi.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/ioapi.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0018]
+File Type = "CSource"
+Res Id = 18
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "iomem.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/iomem.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0019]
+File Type = "Include"
+Res Id = 19
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "iomem.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/iomem.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0020]
+File Type = "CSource"
+Res Id = 20
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "iowin32.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/iowin32.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0021]
+File Type = "Include"
+Res Id = 21
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "iowin32.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/iowin32.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0022]
+File Type = "Library"
+Res Id = 22
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "../../cintools/labview.lib"
+Path = "/c/Work/OpenG/opengtoolkit/cintools/labview.lib"
+Exclude = False
+Project Flags = 0
+Folder = "Not In A Folder"
+
+[File 0023]
+File Type = "CSource"
+Res Id = 23
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "lvutil.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/lvutil.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0024]
+File Type = "Include"
+Res Id = 24
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "lvutil.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/lvutil.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0025]
+File Type = "CSource"
+Res Id = 25
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "mztools.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/mztools.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0026]
+File Type = "Include"
+Res Id = 26
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "mztools.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/mztools.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0027]
+File Type = "CSource"
+Res Id = 27
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "trees.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/trees.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0028]
+File Type = "Include"
+Res Id = 28
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "trees.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/trees.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0029]
+File Type = "CSource"
+Res Id = 29
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "uncompr.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/uncompr.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0030]
+File Type = "CSource"
+Res Id = 30
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "unzip.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/unzip.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0031]
+File Type = "Include"
+Res Id = 31
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "unzip.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/unzip.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0032]
+File Type = "Include"
+Res Id = 32
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "zconf.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zconf.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0033]
+File Type = "CSource"
+Res Id = 33
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "zip.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zip.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0034]
+File Type = "Include"
+Res Id = 34
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "zip.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zip.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0035]
+File Type = "Include"
+Res Id = 35
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "zlib.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zlib.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[File 0036]
+File Type = "CSource"
+Res Id = 36
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "zutil.c"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zutil.c"
+Exclude = False
+Compile Into Object File = False
+Project Flags = 0
+Folder = "Source Files"
+
+[File 0037]
+File Type = "Include"
+Res Id = 37
+Path Is Rel = True
+Path Rel To = "Project"
+Path Rel Path = "zutil.h"
+Path = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/zutil.h"
+Exclude = False
+Project Flags = 0
+Folder = "Headers"
+
+[Folders]
+Include Files Folder Not Added Yet = True
+User Interface Files Folder Not Added Yet = True
+Instrument Files Folder Not Added Yet = True
+Folder 0 = "Source Files"
+Folder 1 = "Headers"
+
+[Compiler Options]
+Default Calling Convention = "cdecl"
+Require Prototypes = True
+Require Return Values = True
+Enable Pointer Mismatch Warning = True
+Enable Unreachable Code Warning = True
+Enable Unreferenced Identifiers Warning = True
+Enable Assignment In Conditional Warning = True
+O Option Compatible With 5.0 = False
+Uninitialized Locals Compile Warning = "Conservative"
+
+[Run Options]
+Stack Size = 250000
+Image Base Address = 268435456
+
+[Compiler Defines]
+Compiler Defines = "/DWIN32_LEAN_AND_MEAN /DNO_vsnprintf /DNO_DUMMY_DECL /DZLIB_DLL"
+
+[Create Executable]
+Executable File_Debug Is Rel = True
+Executable File_Debug Rel To = "Project"
+Executable File_Debug Rel Path = "cvibuild.deb/lvzip.dll"
+Executable File_Debug = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/cvibuild.deb/lvzip.dll"
+Executable File_Release Is Rel = True
+Executable File_Release Rel To = "Project"
+Executable File_Release Rel Path = "cvibuild.rel/lvzip.dll"
+Executable File_Release = "/c/Work/OpenG/opengtoolkit/lvzip/c_source/cvibuild.rel/lvzip.dll"
+Icon File Is Rel = False
+Icon File = ""
+Application Title = ""
+Numeric File Version = "1,0,0,0"
+Numeric Prod Version = "1,0,0,0"
+Comments = ""
+Company Name = "CIT Engineering"
+File Version = "1.0"
+Legal Copyright = "Copyright © CIT Engineering, 2007"
+Legal Trademarks = ""
+Private Build = ""
+Product Version = "1.0"
+Special Build = ""
+DLL Exports = "Symbols Marked As Export"
+Export File1 = "lvutil.h"
+Export File2 = "mztools.h"
+Export File3 = "unzip.h"
+Export File4 = "zip.h"
+DLL Import Library Choice = "Gen Lib For Current Mode"
+Use IVI Subdirectories for Import Libraries = False
+Use VXIPNP Subdirectories for Import Libraries = False
+Use Dflt Import Lib Base Name = True
+Where to Copy DLL = "Do not copy"
+Add Type Lib To DLL = False
+Include Type Lib Help Links = False
+Type Lib FP File Is Rel = False
+Type Lib FP File = ""
+Type Lib Guid = ""
+Runtime Support = "LabVIEW RealTime Support Only"
+Instrument Driver Support Only = True
+Embed Project .UIRs = False
+Generate Map File = False
+
+[External Compiler Support]
+UIR Callbacks File Option = 0
+Using LoadExternalModule = False
+Create Project Symbols File = True
+UIR Callbacks Obj File Is Rel = False
+UIR Callbacks Obj File = ""
+Project Symbols H File Is Rel = False
+Project Symbols H File = ""
+Project Symbols Obj File Is Rel = False
+Project Symbols Obj File = ""
+
+[ActiveX Server Options]
+Specification File Is Rel = False
+Specification File = ""
+Source File Is Rel = False
+Source File = ""
+Include File Is Rel = False
+Include File = ""
+IDL File Is Rel = False
+IDL File = ""
+Register ActiveX Server = False
+
+[tpcSection]
+tpcEnabled = 0
+tpcOverrideEnvironment = 0
+

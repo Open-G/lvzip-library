@@ -1,0 +1,43 @@
+Download
+
+install oglib_lvzip using OpenG Commander (OGC)
+
+Usefull Links
+
+    * Discussion Forums
+          o Support
+          o Bugs
+          o Feature Requests
+
+Documentation 
+
+Library Organization
+
+There are five main groups of VIs within the OpenG ZIP Tools library:
+
+   1. Advanced Compression VIs – these are used to open/create a ZIP archive for adding files, add individual files to that archive, and close it.
+   2. Advanced Decompression VIs – these VIs are used open a ZIP archive for querying, enumerate its contents, query various information about the archive and individual files in it, and extract individual files from it.
+   3. High-Level ZIP Tools – These are the VIs which are prebuild to do common tasks such as compressing an entire directory (and optionally its subdirectories), or compress a number of files into an archive. Another function allows to delete particular files from an archive and last but not least one function to extract the entire contents of an archive into a directory, maintaining the internal directory structure if present.
+   4. ZLIB String Operations - these VIs allow to compress and decompress a string directly in memory. Another function computes the CRC32 value for a string.
+   5. MacBinary Tools - these are two functions to convert a MacBinary file into the two fork representation on the Macintosh amd back. On other systems the non-MacBinary version is split into two physical files on disk instead, because there is no support for multiple file forks on these systems.
+   
+Description
+
+The core of this libray is an external shared library consisting basically of the version 1.2.3 release of zlib and the version 1.0.1e of the zip library from Gilles Vollant.
+The current version supports most types of ZIP files with exception of the newest proprietary format created by the latest version of Winzip. It also supports adding files with password, and extracting password protected files.
+
+One specific point to watch for, if you start to work on the Advanced level of things is that the file reference created by the two Open functions are very different. So you can't open a file with ZLIB Open ZIP Archive and pass this refnum to any of the decompress functions and vice-versa.
+
+Used OpenG libraries:
+
+The lvzip package makes use of the error package, the file package and through the last one also of the array package. Some functions in the file package have been added in the latest released package and therefore this version of lvzip will only work with the version 2.5 or above of the file package.
+
+Roadmap
+
+There are currently no further modifications planned on this library besides of possible bug-fixes. Once a new major release of the zlib library is available, this may get incorporated into the shared library and made available as a new package release.
+
+Copyrights
+
+Copyright (C) 1995-2004 Mark Adler, Jean-loup Gailly
+Copyright (C) 1998-2004 Gilles Vollant
+Copyright (C) 2002-2007 Rolf Kalbermatter, Jim Kring, Christoph Salzmann
