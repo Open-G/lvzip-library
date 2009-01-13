@@ -1,6 +1,6 @@
 [Package Name]
 Name=oglib_lvzip
-Version=2.4
+Version=2.5
 Release=1
 
 [Description]
@@ -35,7 +35,7 @@ Source Dir=built/lvzip
 Target Dir=<user.lib>/_OpenG.lib/lvzip
 Replace Mode=Always
 
-Num Files=79
+Num Files=81
 
 File 0=macbin.mnu
 File 1=readme.txt
@@ -85,37 +85,39 @@ File 44=lvzip.llb/ZLIB File Information__ogtk.vi
 File 45=lvzip.llb/ZLIB Get Current File Info Old__ogtk.vi
 File 46=lvzip.llb/ZLIB Get Current File Info__ogtk.vi
 File 47=lvzip.llb/ZLIB Get File CRC32__ogtk.vi
-File 48=lvzip.llb/ZLIB Get Global Info__ogtk.vi
-File 49=lvzip.llb/ZLIB Get Version__ogtk.vi
-File 50=lvzip.llb/ZLIB Go To First File__ogtk.vi
-File 51=lvzip.llb/ZLIB Go To Next File__ogtk.vi
-File 52=lvzip.llb/ZLIB Inflate__ogtk.vi
-File 53=lvzip.llb/ZLIB Initialize File Functions__ogtk.vi
-File 54=lvzip.llb/ZLIB Initialize Stream Functions__ogtk.vi
-File 55=lvzip.llb/ZLIB Locate File__ogtk.vi
-File 56=lvzip.llb/ZLIB Open Read File__ogtk.vi
-File 57=lvzip.llb/ZLIB Open Unzip Archive__ogtk.vi
-File 58=lvzip.llb/ZLIB Open Unzip Stream__ogtk.vi
-File 59=lvzip.llb/ZLIB Open Unzip__ogtk.vi
-File 60=lvzip.llb/ZLIB Open Write File__ogtk.vi
-File 61=lvzip.llb/ZLIB Open Zip Archive__ogtk.vi
-File 62=lvzip.llb/ZLIB Open ZIP Mode__ogtk.ctl
-File 63=lvzip.llb/ZLIB Open Zip Stream__ogtk.vi
-File 64=lvzip.llb/ZLIB Open Zip__ogtk.vi
-File 65=lvzip.llb/ZLIB Path to Path String__ogtk.vi
-File 66=lvzip.llb/ZLIB Read Compressed File__ogtk.vi
-File 67=lvzip.llb/ZLIB Read Compressed Stream__ogtk.vi
-File 68=lvzip.llb/ZLIB Read Local Extra Data__ogtk.vi
-File 69=lvzip.llb/ZLIB Store File__ogtk.vi
-File 70=lvzip.llb/ZLIB Store Stream__ogtk.vi
-File 71=lvzip.llb/ZLIB Store__ogtk.vi
-File 72=lvzip.llb/ZLIB Transfer Raw File__ogtk.vi
-File 73=lvzip.llb/ZLIB Uncompress File Info__ogtk.ctl
-File 74=lvzip.llb/ZLIB Unzip Handle__ogtk.ctl
-File 75=lvzip.llb/ZLIB VI Tree__ogtk.vi
-File 76=lvzip.llb/ZLIB Write File__ogtk.vi
-File 77=lvzip.llb/ZLIB Write Stream__ogtk.vi
-File 78=lvzip.llb/ZLIB Zip Handle__ogtk.ctl
+File 48=lvzip.llb/ZLIB Get File__ogtk.vi
+File 49=lvzip.llb/ZLIB Get Global Info__ogtk.vi
+File 50=lvzip.llb/ZLIB Get Version__ogtk.vi
+File 51=lvzip.llb/ZLIB Go To First File__ogtk.vi
+File 52=lvzip.llb/ZLIB Go To Next File__ogtk.vi
+File 53=lvzip.llb/ZLIB Inflate__ogtk.vi
+File 54=lvzip.llb/ZLIB Initialize File Functions__ogtk.vi
+File 55=lvzip.llb/ZLIB Initialize Stream Functions__ogtk.vi
+File 56=lvzip.llb/ZLIB Locate File__ogtk.vi
+File 57=lvzip.llb/ZLIB Move Raw File__ogtk.vi
+File 58=lvzip.llb/ZLIB Open Read File__ogtk.vi
+File 59=lvzip.llb/ZLIB Open Unzip Archive__ogtk.vi
+File 60=lvzip.llb/ZLIB Open Unzip Stream__ogtk.vi
+File 61=lvzip.llb/ZLIB Open Unzip__ogtk.vi
+File 62=lvzip.llb/ZLIB Open Write File__ogtk.vi
+File 63=lvzip.llb/ZLIB Open Zip Archive__ogtk.vi
+File 64=lvzip.llb/ZLIB Open ZIP Mode__ogtk.ctl
+File 65=lvzip.llb/ZLIB Open Zip Stream__ogtk.vi
+File 66=lvzip.llb/ZLIB Open Zip__ogtk.vi
+File 67=lvzip.llb/ZLIB Path to Path String__ogtk.vi
+File 68=lvzip.llb/ZLIB Read Compressed File__ogtk.vi
+File 69=lvzip.llb/ZLIB Read Compressed Stream__ogtk.vi
+File 70=lvzip.llb/ZLIB Read Local Extra Data__ogtk.vi
+File 71=lvzip.llb/ZLIB Store File__ogtk.vi
+File 72=lvzip.llb/ZLIB Store Stream__ogtk.vi
+File 73=lvzip.llb/ZLIB Store__ogtk.vi
+File 74=lvzip.llb/ZLIB Transfer Raw File__ogtk.vi
+File 75=lvzip.llb/ZLIB Uncompress File Info__ogtk.ctl
+File 76=lvzip.llb/ZLIB Unzip Handle__ogtk.ctl
+File 77=lvzip.llb/ZLIB VI Tree__ogtk.vi
+File 78=lvzip.llb/ZLIB Write File__ogtk.vi
+File 79=lvzip.llb/ZLIB Write Stream__ogtk.vi
+File 80=lvzip.llb/ZLIB Zip Handle__ogtk.ctl
 
 [File Group 1]
 Source Dir=built/lvzip
