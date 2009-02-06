@@ -55,7 +55,7 @@ ENDIF
 ; 75 "inffast.S"
 ;FILE "inffast.S"
 
-;;;GLOBAL _inflate_fast
+;;;GLOBAL _lvzip_inflate_fast
 
 ;;;SECTION .text
 
@@ -73,10 +73,10 @@ inflate_fast_use_mmx:
 
 
 _TEXT			segment
-PUBLIC _inflate_fast
+PUBLIC _lvzip_inflate_fast
 
 ALIGN 4
-_inflate_fast:
+_lvzip_inflate_fast:
 	jmp inflate_fast_entry
 
 

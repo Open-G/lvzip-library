@@ -28,11 +28,11 @@
 #define get_crc_table               lvzip_get_crc_table
 #define inflate                     lvzip_inflate
 #define inflate_copyright           lvzip_inflate_copyright
-#define inflate_fast                lvzip_inflate_fast
 #define inflate_table               lvzip_inflate_table
 #define inflateCopy                 lvzip_inflateCopy
 #define inflateEnd                  lvzip_inflateEnd
 #define inflateGetHeader            lvzip_inflateGetHeader
+#define inflate_fast                lvzip_inflate_fast
 #define inflateInit_                lvzip_inflateInit_
 #define inflateInit2_               lvzip_inflateInit2_
 #define inflatePrime                lvzip_inflatePrime
