@@ -1055,7 +1055,7 @@ ZEXTERN int ZEXPORT zipCloseFileInZipRaw (file, uncompressed_size, crc32)
     zi->ci.stream.avail_in = 0;
 
     if ((zi->ci.method == Z_DEFLATED) && (!zi->ci.raw))
-        while (err==ZIP_OK)
+        while (err == ZIP_OK)
     {
         uLong uTotalOutBefore;
         if (zi->ci.stream.avail_out == 0)
@@ -1066,12 +1066,15 @@ ZEXTERN int ZEXPORT zipCloseFileInZipRaw (file, uncompressed_size, crc32)
             zi->ci.stream.next_out = zi->ci.buffered_data;
         }
         uTotalOutBefore = zi->ci.stream.total_out;
-        err=deflate(&zi->ci.stream,  Z_FINISH);
+        if (err == ZIP_OK)
+		  err = deflate(&zi->ci.stream,  Z_FINISH);
+		else 
+          deflate(&zi->ci.stream,  Z_FINISH);
         zi->ci.pos_in_buffered_data += (uInt)(zi->ci.stream.total_out - uTotalOutBefore) ;
     }
 
-    if (err==Z_STREAM_END)
-        err=ZIP_OK; /* this is normal */
+    if (err == Z_STREAM_END)
+        err = ZIP_OK; /* this is normal */
 
     if ((zi->ci.pos_in_buffered_data>0) && (err==ZIP_OK))
         if (zipFlushWriteBuffer(zi)==ZIP_ERRNO)
@@ -1079,7 +1082,7 @@ ZEXTERN int ZEXPORT zipCloseFileInZipRaw (file, uncompressed_size, crc32)
 
     if ((zi->ci.method == Z_DEFLATED) && (!zi->ci.raw))
     {
-        err=deflateEnd(&zi->ci.stream);
+        err = deflateEnd(&zi->ci.stream);
         zi->ci.stream_initialised = 0;
     }
 
