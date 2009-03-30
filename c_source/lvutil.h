@@ -250,6 +250,7 @@ MgErr FPathToText(Path path, LStrPtr lstr);
 MgErr FPathToPath(Path *p);
 MgErr FAppendName(Path path, PStr name);
 Bool32 FIsAPathOfType(Path path, int32 ofType);
+MgErr FGetPathType(Path, int32*);
 int32 FDepth(Path path);
 MgErr FDisposePath(Path p);
 

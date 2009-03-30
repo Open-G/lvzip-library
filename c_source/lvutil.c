@@ -343,6 +343,7 @@ static int32 MakePathDSString(Path path, LStrPtr *lstr)
     int32 pathLen = -1;
 
     MgErr err = FPathToText(path, (LStrPtr)&pathLen);
+	DoDebugger();
     if (!err)
     {
       *lstr = (LStrPtr)DSNewPClr(sizeof(int32) + pathLen + 1);
@@ -551,6 +552,7 @@ extern MgErr ZEXPORT LVPath_DecodeMacbinary(Path srcPath, Path dstPath)
 extern MgErr ZEXPORT LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 openMode, uInt32 denyMode)
 {
     MgErr err;
+	int32 type;
     File ioRefNum;
 #if MacOS
     FSSpec fss;
@@ -570,8 +572,11 @@ extern MgErr ZEXPORT LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uI
 #endif
     *refnum = 0;
     
-    if (!FIsAPathOfType(path, fAbsPath))
-      return mgArgErr;
+    if (err = FGetPathType(path, &type))
+      return err;
+	
+	if ((type != fAbsPath) && (type != fUNCPath)) 
+	  return mgArgErr;
 
 #if MacOS
     if (err = MakeMacSpec(path, &fss))
