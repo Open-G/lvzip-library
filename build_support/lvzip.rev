@@ -1,8 +1,8 @@
 [lvzip.ogbld]
-Version=2.4
-Build_Number=26
-Build_Date="1/2/2009 9:38:37 AM"
+Version=2.5
+Build_Number=27
+Build_Date="3/30/2009 3:56:37 PM"
 Status=OK
 Warnings=1
-Log_File=/D/Projects/OpenG/opengtoolkit/CVS_Folders/lvzip/built/lvzip.log
+Log_File=/D/Projects/OpenG/opengtoolkit/SVN_Folders/lvzip/built/lvzip.log
 
