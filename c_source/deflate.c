@@ -1449,8 +1449,8 @@ local block_state deflate_fast(s, flush)
     deflate_state *s;
     int flush;
 {
-    IPos hash_head = NIL; /* head of the hash chain */
-    int bflush;           /* set if current block must be flushed */
+    IPos hash_head; /* head of the hash chain */
+    int bflush;     /* set if current block must be flushed */
 
     for (;;) {
         /* Make sure that we always have enough lookahead, except
@@ -1469,6 +1469,7 @@ local block_state deflate_fast(s, flush)
         /* Insert the string window[strstart .. strstart+2] in the
          * dictionary, and set hash_head to the head of the hash chain:
          */
+        hash_head = NIL;
         if (s->lookahead >= MIN_MATCH) {
             INSERT_STRING(s, s->strstart, hash_head);
         }
