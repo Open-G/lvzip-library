@@ -65,8 +65,7 @@ by creating a temporary copy to add to the archive.
 2008-10-25 rk
 Added missing VI documentation to various VIs.
 changed ZLIB Delete Files From Archive.vi to use a correct temporary filename for
-the intermediate archive file.
-by creating a temporary copy to add to the archive.
+the intermediate archive file by creating a temporary copy to add to the archive.
 
 2008-12-23 rk
 Prepended all public symbols with lvzip_ to avoid name conflicts with the LabVIEW
@@ -82,3 +81,9 @@ Changed package URL to http://wiki.openg.org/oglib_lvzip
 2009-01-06 rk
 Optimized ZLIB Extract All Files To Dir.vi and ZLIB Delete Files From Archive.vi to
 not index files uneccessarily to speed up the operation considerably.
+Fixed palette files to include the polymorphic icons.
+
+2009-09-02 rk
+Removed use of the private vi.lib config file VIs to convert between unix style paths
+and platform paths by incorperating them into the library.
+Added a test for deleting from an archive.

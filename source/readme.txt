@@ -1,7 +1,7 @@
-LabVIEW ZIP library, version 2.4
---------------------------------
+LabVIEW ZIP library, version 2.5.2
+----------------------------------
 
-Copyright 2002-2007 Rolf Kalbermatter
+Copyright 2002-2009 Rolf Kalbermatter
 
 
 Please read this document before you upgrade from a version of LVZIP
@@ -11,9 +11,32 @@ Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
 
+Release 2.5.2, Released: Sep. 3, 2009
+=====================================
 
-New features in 2.4:
---------------------
+Bug fixes:
+----------
+1) Fixed the use of LabVIEW config file VIs that are now considered private in 2009.
+
+
+Release 2.5.1, Released: April 28, 2009
+=======================================
+
+New features:
+-------------
+1) Optimized ZLIB Extract All Files To Dir.vi and ZLIB Delete Files From Archive.vi to
+not index files uneccessarily to speed up the operation considerably. 
+
+Bug fixes:
+----------
+1) Fixed palette files to include the polymorphic icons.
+
+
+Release 2.4.1, Released: Jan. 2, 2009
+=====================================
+
+New features:
+-------------
 1) Support for ZIP and UNZIP streams directly located in memory contrary to
 requiring disk based files at all times.
 
@@ -28,24 +51,39 @@ checked. Added support for vxWorks based RT targets for LabVIEW 8.2 and
 8.5/8.6.
 
 Note, that for VxWorks based targets you have to copy the lvzlib.out file found
-typically under "user.lib/_OpenG.lib/lvzipfile" manually to your RT target using
-some FTP utility into the "ni-rt/system" folder. LabVIEW will currently not
-deploy or download that file automatically for those targets.
+typically under "user.lib/_OpenG.lib/lvzip" manually to your RT target using
+some FTP utility to copy this file into the "ni-rt/system" folder. LabVIEW will
+currently not deploy or download that file automatically for those targets.
 
-Bug fixes in 2.4:
------------------
+Bug fixes:
+----------
 1) Fixed a problem in ZIP Open File.vi where one could not open an empty
 already created archive for appending new files.
 
 2) Fixed a problem in ZLIB Delete Files From Archive.vi to use a correct
 temporary filename for the intermediate archive file.
 
-3) Fixed a potential problem with uninitialized memory in a function in
-the shared library.
+3) Fixed a problem in ZLIB Store File.vi to also wirk for LabVIEW files
+located inside an LLB.
+
+4) Fixed a potential problem with uninitialized memory in a function in
+the shared library that could cause ZLIB Get Global Info to error on an
+not properly closed archive.
+
+Removed support:
+----------------
+1) Removed MacOS 9 Shared library.
 
 
-New features in 2.3:
---------------------
+Release 2.3.2, Released: Feb. 6, 2007
+=====================================
+
+
+Release 2.3.1, Released: Sep. 23, 2006
+======================================
+
+New features:
+-------------
 1) Transparent MacBinary support on the Macintosh (experimental feature)
 
 If the compression routine encounters a Macintosh file with a resource fork
@@ -63,8 +101,11 @@ access and only change it to read-only after the original creation and
 modification time has been applied.
 
 
-New features in 2.2 (never really properly released):
------------------------------------------------------
+Release 2.2, (never really properly released)
+=============================================
+
+New features:
+-------------
 
 1) Password support (limited testing)
 
