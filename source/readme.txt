@@ -78,6 +78,10 @@ Removed support:
 Release 2.3.2, Released: Feb. 6, 2007
 =====================================
 
+Bug fix:
+--------
+1) changed incorrect dependency on dynamicpalette to >= 0.2
+
 
 Release 2.3.1, Released: Sep. 23, 2006
 ======================================
