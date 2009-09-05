@@ -1,13 +1,14 @@
 [Package Name]
 Name=oglib_lvzip
-Version=2.5
-Release=2
+Version=2.5.1
+Release=1
 
 [Description]
-Description="The lvzip package contains several routines for operating on zip files.\0D\0A\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files.\0D\0A\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.4 adds support for direct memory stream handling."
+Description="The lvzip package contains several routines for operating on zip files.\0D\0A\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
+
 Summary="OpenG Zip Tools"
-License=LGPL
-Copyright="1995-2005 Mark Adler, Jean-loup Gailly\0A1998-2005 Gilles Vollant\0A2002 - 2009 Christophe Salzmann, Jim Kring, Rolf Kalbermatter"
+License="BSD (VIs), LGPL (Shared Library)"
+Copyright="1995-2004 Mark Adler, Jean-loup Gailly\0A1998-2004 Gilles Vollant\0A2002 - 2009 Christophe Salzmann, Jim Kring, Rolf Kalbermatter"
 Distribution="OpenG Toolkit"
 Icon=lvzip.bmp
 Vendor=OpenG.org
