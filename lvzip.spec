@@ -156,7 +156,7 @@ File 0=lvzlib.out
 [File Group 5]
 Source Dir=built/lvzip/vxWorks85
 Target Dir=<OpenG.lib>/lvzip
-Exclusive_LabVIEW_Version=8.5,8.6
+Exclusive_LabVIEW_Version=>=8.5
 Num Files=1
 File 0=lvzlib.out
 
