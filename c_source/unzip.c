@@ -1,5 +1,5 @@
 /* unzip.c -- IO for uncompress .zip files using zlib
-   Version 1.01e, February 12th, 2005
+   Version 1.01f, December 22th, 2009
 
    Copyright (C) 1998-2005 Gilles Vollant
 
@@ -175,10 +175,7 @@ local int unzlocal_getByte(pzlib_filefunc_def,filestream,pi)
     int *pi;
 {
     unsigned char c;
-    int err;
-    
-    *pi = 0;
-    err = (int)ZREAD(*pzlib_filefunc_def,filestream,&c,1);
+    int err = (int)ZREAD(*pzlib_filefunc_def,filestream,&c,1);
     if (err==1)
     {
         *pi = (int)c;
@@ -186,6 +183,7 @@ local int unzlocal_getByte(pzlib_filefunc_def,filestream,pi)
     }
     else
     {
+        *pi = 0;
         if (ZERROR(*pzlib_filefunc_def,filestream))
             return UNZ_ERRNO;
         else
@@ -208,7 +206,7 @@ local int unzlocal_getShort (pzlib_filefunc_def,filestream,pX)
     uLong *pX;
 {
     uLong x ;
-    int i;
+    int i = 0;
     int err;
 
     err = unzlocal_getByte(pzlib_filefunc_def,filestream,&i);
@@ -236,7 +234,7 @@ local int unzlocal_getLong (pzlib_filefunc_def,filestream,pX)
     uLong *pX;
 {
     uLong x ;
-    int i;
+    int i = 0;
     int err;
 
     err = unzlocal_getByte(pzlib_filefunc_def,filestream,&i);
@@ -263,9 +261,6 @@ local int unzlocal_getLong (pzlib_filefunc_def,filestream,pX)
 
 
 /* My own strcmpi / strcasecmp */
-local int strcmpcasenosensitive_internal OF((
-    const char* fileName1,
-    const char* fileName2));
 local int strcmpcasenosensitive_internal (fileName1,fileName2)
     const char* fileName1;
     const char* fileName2;
@@ -495,8 +490,11 @@ ZEXTERN unzFile ZEXPORT unzOpen2 (path, pzlib_filefunc_def)
 
 
     s=(unz_s*)ALLOC(sizeof(unz_s));
-    *s=us;
-    unzGoToFirstFile((unzFile)s);
+    if (s!=NULL)
+    {
+        *s=us;
+        unzGoToFirstFile((unzFile)s);
+    }
     return (unzFile)s;
 }
 
@@ -549,9 +547,6 @@ ZEXTERN int ZEXPORT unzGetGlobalInfo (file,pglobal_info)
 /*
    Translate date/time from Dos format to tm_unz (readable more easilty)
 */
-local void unzlocal_DosDateToTmuDate OF((
-    uLong ulDosDate,
-    tm_unz* ptm));
 local void unzlocal_DosDateToTmuDate (ulDosDate, ptm)
     uLong ulDosDate;
     tm_unz* ptm;
@@ -615,10 +610,12 @@ local int unzlocal_GetCurrentFileInfoInternal (file,
 
     /* we check the magic */
     if (err==UNZ_OK)
+    {
         if (unzlocal_getLong(&s->z_filefunc, s->filestream,&uMagic) != UNZ_OK)
             err=UNZ_ERRNO;
         else if (uMagic!=0x02014b50)
             err=UNZ_BADZIPFILE;
+    }
 
     if (unzlocal_getShort(&s->z_filefunc, s->filestream,&file_info.version) != UNZ_OK)
         err=UNZ_ERRNO;
@@ -695,10 +692,13 @@ local int unzlocal_GetCurrentFileInfoInternal (file,
             uSizeRead = extraFieldBufferSize;
 
         if (lSeek!=0)
+        {
             if (ZSEEK(s->z_filefunc, s->filestream,lSeek,ZLIB_FILEFUNC_SEEK_CUR)==0)
                 lSeek=0;
             else
                 err=UNZ_ERRNO;
+        }
+
         if ((file_info.size_file_extra>0) && (extraFieldBufferSize>0))
             if (ZREAD(s->z_filefunc, s->filestream,extraField,uSizeRead)!=uSizeRead)
                 err=UNZ_ERRNO;
@@ -720,10 +720,13 @@ local int unzlocal_GetCurrentFileInfoInternal (file,
             uSizeRead = commentBufferSize;
 
         if (lSeek!=0)
+        {
             if (ZSEEK(s->z_filefunc, s->filestream,lSeek,ZLIB_FILEFUNC_SEEK_CUR)==0)
                 lSeek=0;
             else
                 err=UNZ_ERRNO;
+        }
+
         if ((file_info.size_file_comment>0) && (commentBufferSize>0))
             if (ZREAD(s->z_filefunc, s->filestream,szComment,uSizeRead)!=uSizeRead)
                 err=UNZ_ERRNO;
@@ -961,12 +964,6 @@ ZEXTERN int ZEXPORT unzGoToFilePos(file, file_pos)
   store in *piSizeVar the size of extra info in local header
         (filename and size of extra field data)
 */
-local int unzlocal_CheckCurrentFileCoherencyHeader OF((
-    unz_s* s,
-    uInt* piSizeVar,
-    uLong *poffset_local_extrafield,
-    uInt  *psize_local_extrafield));
-   
 local int unzlocal_CheckCurrentFileCoherencyHeader (s,piSizeVar,
                                                     poffset_local_extrafield,
                                                     psize_local_extrafield)
@@ -990,10 +987,12 @@ local int unzlocal_CheckCurrentFileCoherencyHeader (s,piSizeVar,
 
 
     if (err==UNZ_OK)
+    {
         if (unzlocal_getLong(&s->z_filefunc, s->filestream,&uMagic) != UNZ_OK)
             err=UNZ_ERRNO;
         else if (uMagic!=0x04034b50)
             err=UNZ_BADZIPFILE;
+    }
 
     if (unzlocal_getShort(&s->z_filefunc, s->filestream,&uData) != UNZ_OK)
         err=UNZ_ERRNO;
@@ -1175,6 +1174,8 @@ ZEXTERN int ZEXPORT unzOpenCurrentFile3 (file, method, level, raw, password)
     pfile_in_zip_read_info->stream.avail_in = (uInt)0;
 
     s->pfile_in_zip_read = pfile_in_zip_read_info;
+
+    s->encrypted = 0;
 
 #    ifndef NOUNCRYPT
     if (password != NULL)
@@ -1579,7 +1580,7 @@ ZEXTERN uLong ZEXPORT unzGetOffset (file)
     unz_s* s;
 
     if (file==NULL)
-          return UNZ_PARAMERROR;
+          return (uLong)UNZ_PARAMERROR;
     s=(unz_s*)file;
     if (!s->current_file_ok)
       return 0;

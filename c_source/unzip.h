@@ -1,5 +1,5 @@
 /* unzip.h -- IO for uncompress .zip files using zlib
-   Version 1.01e, February 12th, 2005
+   Version 1.01f, December 22th, 2009
 
    Copyright (C) 1998-2005 Gilles Vollant
 
@@ -56,6 +56,12 @@ extern "C" {
 #ifndef _ZLIBIOAPI_H
 #include "ioapi.h"
 #endif
+
+#ifdef HAVE_BZIP2
+#include "bzlib.h"
+#endif
+
+#define Z_BZIP2ED 12
 
 #if defined(STRICTUNZIP) || defined(STRICTZIPUNZIP)
 /* like the STRICT of WIN32, we define a pointer that cannot be converted
