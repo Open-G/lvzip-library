@@ -336,7 +336,7 @@ SOURCE=.\iomem.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\iowin32.c
+SOURCE=.\iowin.c
 # End Source File
 # Begin Source File
 
@@ -413,7 +413,7 @@ SOURCE=.\iomem.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\iowin32.h
+SOURCE=.\iowin.h
 # End Source File
 # Begin Source File
 

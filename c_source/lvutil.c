@@ -32,7 +32,7 @@ static MgErr OSErrToLVErr(OSErr err);
 #include <fcntl.h>
 #include <dirent.h>
 #elif Win32
-#include "iowin32.h"
+#include "iowin.h"
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
 #endif
@@ -481,7 +481,7 @@ static MgErr UnixToLVFileErr(void)
 
 extern void ZEXPORT DLLVersion(uChar* version)
 {
-    sprintf(version, "lvzlib date: %s, time: %s",__DATE__,__TIME__);
+    sprintf((char*)version, "lvzlib date: %s, time: %s",__DATE__,__TIME__);
 }
 
 extern MgErr ZEXPORT LVPath_HasResourceFork(Path path, int32 *hasResFork)
@@ -696,7 +696,7 @@ extern MgErr ZEXPORT LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uI
 
     while (attempts)
     {
-      ioRefNum = CreateFile(lstr->str, openAcc, shareAcc, 0, createMode,
+      ioRefNum = CreateFile((LPCSTR)lstr->str, openAcc, shareAcc, 0, createMode,
                             FILE_ATTRIBUTE_NORMAL, 0);
       if (ioRefNum == INVALID_HANDLE_VALUE && GetLastError() == ERROR_SHARING_VIOLATION)
       {
@@ -944,12 +944,12 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
     }
     else
     {
-      handle = FindFirstFileA(lstr->str, &fi);
+      handle = FindFirstFileA((LPCSTR)lstr->str, &fi);
       if (handle == INVALID_HANDLE_VALUE)
         err = Win32ToLVFileErr();
       else
       {
-        *isDirectory = ((fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0);
+		  *isDirectory = ((fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 1 : 0);
         if (!FindClose(handle)) 
           err = Win32ToLVFileErr();
       }
@@ -963,14 +963,14 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
         Win32ConvertFromLVTime(fileInfo->mDate, &fi.ftLastWriteTime);
         if (!SetFileTime(handle, &fi.ftCreationTime, &fi.ftLastAccessTime, &fi.ftLastWriteTime))
           err = Win32ToLVFileErr();
-        fi.dwFileAttributes = GetFileAttributesA(lstr->str);
+        fi.dwFileAttributes = GetFileAttributesA((LPCSTR)lstr->str);
         if (fi.dwFileAttributes != INVALID_FILE_ATTRIBUTES)
         {
           if (fileInfo->flags & 0x4000)
             fi.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
           else
             fi.dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
-            SetFileAttributesA(lstr->str, fi.dwFileAttributes);
+            SetFileAttributesA((LPCSTR)lstr->str, fi.dwFileAttributes);
         }
       }
       else
@@ -997,7 +997,7 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
 
           if (!err)
           {
-            handle = FindFirstFileA(lstr->str, &fi);
+            handle = FindFirstFileA((LPCSTR)lstr->str, &fi);
             if (handle == INVALID_HANDLE_VALUE)
               count = 0;
             else
