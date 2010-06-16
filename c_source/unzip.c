@@ -72,6 +72,7 @@
         #define NOUNCRYPT
 #endif
 
+#define ZLIB_INTERNAL
 #include "zlib.h"
 #include "unzip.h"
 
