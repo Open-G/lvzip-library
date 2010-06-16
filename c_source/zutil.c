@@ -5,7 +5,6 @@
 
 /* @(#) $Id$ */
 
-#define ZLIB_INTERNAL
 #include "zutil.h"
 
 #ifndef NO_DUMMY_DECL

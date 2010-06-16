@@ -7,7 +7,6 @@
 #ifndef _lvUtil_H
 #define _lvUtil_H
 
-#define ZLIB_INTERNAL
 #include "zlib.h"
 
 #ifdef __cplusplus

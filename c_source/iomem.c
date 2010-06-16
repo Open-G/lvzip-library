@@ -11,7 +11,7 @@
 
 voidpf ZCALLBACK mem_open_file_func OF((
    voidpf opaque,
-   const char* filename,
+   const void* filename,
    int mode));
 
 uLong ZCALLBACK mem_read_file_func OF((
@@ -54,7 +54,7 @@ typedef struct
 
 voidpf ZCALLBACK mem_open_file_func (opaque, filename, mode)
    voidpf opaque;
-   const char* filename;
+   const void* filename;
    int mode;
 {
     MEMORY_IO *memio = malloc(sizeof(MEMORY_IO));
