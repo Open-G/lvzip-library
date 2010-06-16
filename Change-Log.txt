@@ -87,3 +87,6 @@ Fixed palette files to include the polymorphic icons.
 Removed use of the private vi.lib config file VIs to convert between unix style paths
 and platform paths by incorperating them into the library.
 Added a test for deleting from an archive.
+
+2010-06-16 rk
+Incorporated zlib 1.2.5 and minizip 1.1 to prepare for LabVIEW 64 Bit support
