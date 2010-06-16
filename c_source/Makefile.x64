@@ -46,7 +46,7 @@ OBJS=$(OUTDIR)\adler32.obj \
      $(OUTDIR)\zip.obj \
      $(OUTDIR)\unzip.obj
 
-ELIBS=user32.lib kernel32.lib 
+ELIBS=user32.lib kernel32.lib labview.lib
 
 # Build rules for resource files
     

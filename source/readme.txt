@@ -11,6 +11,19 @@ Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
 
+Release 2.6.1, Released: Jun. xx, 2010
+======================================
+
+New features:
+-------------
+1) Upgraded to zlib 1.2.5 and minizip 1.1 sources
+2) Support for ZIP64 Archives (>4GB) (an individual file inside the archive still
+   needs to be smaller than 4GB when getting added or extracted and memory stream
+   based retrieval is limited to < 2GB large archives due to LabVIEWs 2GB limit for
+   string handles)
+3) Support for LabVIEW for 64 Bit
+
+
 Release 2.5.2, Released: Sep. 3, 2009
 =====================================
 
