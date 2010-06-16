@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-void fill_mem_filefunc OF((zlib_filefunc_def* pzlib_filefunc_def, LStrHandle *memory));
+void fill_mem_filefunc OF((zlib_filefunc64_def* pzlib_filefunc_def, LStrHandle *memory));
 
 #ifdef __cplusplus
 }

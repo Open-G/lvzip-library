@@ -312,6 +312,23 @@ SOURCE=.\inftrees.c
 # Begin Source File
 
 SOURCE=.\ioapi.c
+
+!IF  "$(CFG)" == "zlibvc - Win32 DLL Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Debug"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Obj Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 static ASM Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 static Release"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 

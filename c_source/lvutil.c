@@ -1073,7 +1073,7 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
     return err;
 }
 
-extern long ZEXPORT InitializeFileFuncs (zlib_filefunc_def* pzlib_filefunc_def, LStrHandle *memory)
+extern long ZEXPORT InitializeFileFuncs (zlib_filefunc64_def* pzlib_filefunc_def, LStrHandle *memory)
 {
     DoDebugger();
 
@@ -1086,15 +1086,15 @@ extern long ZEXPORT InitializeFileFuncs (zlib_filefunc_def* pzlib_filefunc_def, 
       else
       {
 #if Win32
-        fill_win32_filefunc(pzlib_filefunc_def);
+        fill_win32_filefunc64A(pzlib_filefunc_def);
 #else
-        fill_fopen_filefunc(pzlib_filefunc_def);
+        fill_fopen64_filefunc(pzlib_filefunc_def);
 #endif
       }
       return mgNoErr;
     }
     else
-      return sizeof(zlib_filefunc_def);
+      return sizeof(zlib_filefunc64_def);
 }
 
 #if MacOSX

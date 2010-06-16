@@ -289,7 +289,7 @@ ZEXTERN MgErr ZEXPORT LVPath_OpenFile OF((LVRefNum *refnum,
                    uInt32 openMode,
                    uInt32 denyMode));
 
-ZEXTERN long ZEXPORT InitializeFileFuncs OF((zlib_filefunc_def* pzlib_filefunc_def, LStrHandle *memory));
+ZEXTERN long ZEXPORT InitializeFileFuncs OF((zlib_filefunc64_def* pzlib_filefunc_def, LStrHandle *memory));
 
 #ifdef __cplusplus
 }

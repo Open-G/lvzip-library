@@ -26,14 +26,14 @@ uLong ZCALLBACK mem_write_file_func OF((
    const void* buf,
    uLong size));
 
-long ZCALLBACK mem_tell_file_func OF((
+ZPOS64_T ZCALLBACK mem_tell_file_func OF((
    voidpf opaque,
    voidpf stream));
 
 long ZCALLBACK mem_seek_file_func OF((
    voidpf opaque,
    voidpf stream,
-   uLong offset,
+   ZPOS64_T offset,
    int origin));
 
 int ZCALLBACK mem_close_file_func OF((
@@ -48,7 +48,7 @@ int ZCALLBACK mem_error_file_func OF((
 typedef struct
 {
     int mode;
-    uLong pos;
+    ZPOS64_T pos;
     int error;
 } MEMORY_IO;
 
@@ -81,29 +81,37 @@ uLong ZCALLBACK mem_read_file_func (opaque, stream, buf, size)
     {
         MEMORY_IO* mem = (MEMORY_IO*)stream;
 
-        if (mem->pos + size > (uLong)LStrLen(*(LStrHandle)opaque))
-            size = LStrLen(*(LStrHandle)opaque) - mem->pos;
+        if (mem->pos + size > 0x7FFFFFFF)
+          size = (uLong)(0x7FFFFFFF - mem->pos);
+        if (mem->pos + size > LStrLen(*(LStrHandle)opaque))
+          size = (uLong)(LStrLen(*(LStrHandle)opaque) - mem->pos);
 
         zmemcpy(buf, LStrBuf(*(LStrHandle)opaque) + mem->pos, size);
         mem->pos += size;
         return size;
-    }
+	}
     return 0;
 }
 
-static MgErr ResizeStringHandle(LStrHandle handle, int32 offset, const void *buf, int32 size, int32 mode)
+static MgErr ResizeStringHandle(LStrHandle handle, ZPOS64_T offset, const void *buf, ZPOS64_T *size, int32 mode)
 {
     if (!handle)
         return mgArgErr;
 
-    if (DSGetHandleSize((UHandle)handle) < (offset + size + (int32)sizeof(int32)))
+    if (offset > 0x7FFFFFFF)
+	  return mFullErr;
+
+	if (offset + *size > 0x7FFFFFFF)
+	  *size = (uLong)(0x7FFFFFFF - offset);
+
+    if (DSGetHandleSize((UHandle)handle) < (offset + *size + (int32)sizeof(int32)))
     {
         MgErr err = fEOF;
 
         if (!(mode & ZLIB_FILEFUNC_MODE_WRITE))
             return err;
 
-        err = NumericArrayResize(uB, 1, (UHandle*)&handle, Max(10000, (offset + size) << 1));
+        err = NumericArrayResize(uB, 1, (UHandle*)&handle, Max(10000, (int32)(offset + *size) << 1));
 		if (err)
             return err;
     }
@@ -111,18 +119,17 @@ static MgErr ResizeStringHandle(LStrHandle handle, int32 offset, const void *buf
     if (mode & ZLIB_FILEFUNC_MODE_WRITE)
     {
         if (buf)
-            zmemcpy(LStrBuf(*handle) + offset, buf, size);
+            zmemcpy(LStrBuf(*handle) + offset, buf, (int32)*size);
 
         /* only grow the memory stream */
-        if (offset + size > LStrLen(*handle))
-            LStrLen(*handle) = offset + size;
+        if (offset + *size > LStrLen(*handle))
+            LStrLen(*handle) = (int32)(offset + *size);
     }
-    else if (offset + size > LStrLen(*handle))
+    else if (offset + *size > LStrLen(*handle))
         return fEOF;
 
     return mgNoErr;
 }
-
 
 uLong ZCALLBACK mem_write_file_func (opaque, stream, buf, size)
    voidpf opaque;
@@ -131,28 +138,29 @@ uLong ZCALLBACK mem_write_file_func (opaque, stream, buf, size)
    uLong size;
 {
     MEMORY_IO* mem = (MEMORY_IO*)stream;
+	ZPOS64_T len = size;
 
     if (mem != NULL && (mem->mode & ZLIB_FILEFUNC_MODE_WRITE))
-    {
-        MgErr err = ResizeStringHandle((LStrHandle)opaque, mem->pos, buf, size, mem->mode); 
+    { 
+		MgErr err = ResizeStringHandle((LStrHandle)opaque, mem->pos, buf, &len, mem->mode); 
         if (err)
         {
             mem->error = err;
             return 0;
         }
-        mem->pos += size;
+        mem->pos += len;
         return size; 
     }
     return 0;
 }
 
-long ZCALLBACK mem_tell_file_func (opaque, stream)
+ZPOS64_T ZCALLBACK mem_tell_file_func (opaque, stream)
    voidpf opaque;
    voidpf stream;
 {
     if (stream != NULL)
     {
-        return (long)((MEMORY_IO*)stream)->pos;
+        return ((MEMORY_IO*)stream)->pos;
     }
     return -1;
 }
@@ -160,34 +168,33 @@ long ZCALLBACK mem_tell_file_func (opaque, stream)
 long ZCALLBACK mem_seek_file_func (opaque, stream, offset, origin)
    voidpf opaque;
    voidpf stream;
-   uLong offset;
+   ZPOS64_T offset;
    int origin;
 {
     if (stream != NULL)
     {
         MEMORY_IO* mem = (MEMORY_IO*)stream;
-        uLong size = 0;
+        ZPOS64_T start = 0;
         MgErr err;
 
         switch (origin)
         {
             case ZLIB_FILEFUNC_SEEK_CUR :
-                size = mem->pos + offset;
+                start = mem->pos;
                 break;
             case ZLIB_FILEFUNC_SEEK_END :
                 if (opaque)
-                    size = LStrLen(*(LStrHandle)opaque);
+                    start = LStrLen(*(LStrHandle)opaque);
                 /* fall through */
             case ZLIB_FILEFUNC_SEEK_SET :
-                size += offset;
                 break;
             default:
                 return -1;
         }
 
-        if (!(err = ResizeStringHandle((LStrHandle)opaque, 0, NULL, size, mem->mode)))
+        if (!(err = ResizeStringHandle((LStrHandle)opaque, start, NULL, &offset, mem->mode)))
         {
-            mem->pos = size;
+            mem->pos = start + offset;
             return 0;
         }
         mem->error = err;
@@ -241,14 +248,14 @@ int ZCALLBACK mem_error_file_func (opaque, stream)
 }
 
 void fill_mem_filefunc (pzlib_filefunc_def, memory)
-  zlib_filefunc_def* pzlib_filefunc_def;
+  zlib_filefunc64_def* pzlib_filefunc_def;
   LStrHandle *memory;
 {
-    pzlib_filefunc_def->zopen_file = mem_open_file_func;
+    pzlib_filefunc_def->zopen64_file = mem_open_file_func;
     pzlib_filefunc_def->zread_file = mem_read_file_func;
     pzlib_filefunc_def->zwrite_file = mem_write_file_func;
-    pzlib_filefunc_def->ztell_file = mem_tell_file_func;
-    pzlib_filefunc_def->zseek_file = mem_seek_file_func;
+    pzlib_filefunc_def->ztell64_file = mem_tell_file_func;
+    pzlib_filefunc_def->zseek64_file = mem_seek_file_func;
     pzlib_filefunc_def->zclose_file = mem_close_file_func;
     pzlib_filefunc_def->zerror_file = mem_error_file_func;
     if (*memory)
