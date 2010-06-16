@@ -352,29 +352,6 @@ SOURCE=.\zip.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\zlibvc.def
-
-!IF  "$(CFG)" == "zlibvc - Win32 DLL Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Debug"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Obj Release"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 static ASM Release"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 static Release"
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\zutil.c
 # End Source File
 # End Group

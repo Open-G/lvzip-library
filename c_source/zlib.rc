@@ -2,8 +2,8 @@
 
 #define IDR_VERSION1  1
 IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
-  FILEVERSION	 2,5,2
-  PRODUCTVERSION 2,5,2
+  FILEVERSION	 2,6,1
+  PRODUCTVERSION 2,6,1
   FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
   FILEFLAGS	0
   FILEOS	VOS_DOS_WINDOWS32
@@ -17,7 +17,7 @@ BEGIN
 
     BEGIN
       VALUE "FileDescription",  "LabVIEW zlib data compression library\0"
-      VALUE "FileVersion",      "2.5.2.LV6\0"
+      VALUE "FileVersion",      "2.6.1.LV6\0"
       VALUE "InternalName",     "lvzlib\0"
       VALUE "OriginalFilename", "lvzlib.dll\0"
       VALUE "ProductName",      "LVZLib.DLL\0"
