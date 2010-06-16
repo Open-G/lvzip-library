@@ -49,7 +49,7 @@ CFG=zlibvc - Win32 DLL Release
 LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "ZLIB_DLL" /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -81,7 +81,7 @@ LINK32=link.exe
 LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MDd /W3 /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /FD /c
-# ADD CPP /nologo /MDd /W3 /ZI /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /FR /FD /c
+# ADD CPP /nologo /MDd /W3 /ZI /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "ZLIB_DLL" /FR /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -115,7 +115,7 @@ LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MTd /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /FD /c
 # SUBTRACT BASE CPP /YX /Yc /Yu
-# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "ASMV" /D "ASMINF" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "ASMV" /D "ASMINF" /D "ZLIB_DLL" /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -148,7 +148,7 @@ LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MDd /W3 /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /FD /c
 # SUBTRACT BASE CPP /YX /Yc /Yu
-# ADD CPP /nologo /MDd /W3 /ZI /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "ASMV" /D "ASMINF" /FD /c
+# ADD CPP /nologo /MDd /W3 /ZI /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "ASMV" /D "ASMINF" /D "ZLIB_DLL" /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -184,7 +184,7 @@ LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /FD /c
 # SUBTRACT BASE CPP /YX /Yc /Yu
-# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "ASMV" /D "ASMINF" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "ASMV" /D "ASMINF" /D "ZLIB_DLL" /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -295,11 +295,6 @@ SOURCE=.\deflate.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\gzio.c
-# PROP Exclude_From_Build 1
-# End Source File
-# Begin Source File
-
 SOURCE=.\infback.c
 # End Source File
 # Begin Source File
@@ -358,6 +353,25 @@ SOURCE=.\zip.c
 # Begin Source File
 
 SOURCE=.\zlibvc.def
+
+!IF  "$(CFG)" == "zlibvc - Win32 DLL Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Debug"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Obj Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 static ASM Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 static Release"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
