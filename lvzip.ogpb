@@ -35,7 +35,7 @@ Requires="ogrsc_dynamicpalette >= 0.2, oglib_error >= 2.0, oglib_file >= 2.5"
 Conflicts=""
 
 [Files]
-Num File Groups=10
+Num File Groups=11
 
 [File Group 0]
 Source Dir=built/lvzip
@@ -70,6 +70,13 @@ Num Files=1
 File 0=lvzlib.dll
 
 [File Group 4]
+Source Dir=built/lvzip/Win64
+Target Dir=<OpenG.lib>/lvzip
+Exclusive_OS="Win64"
+Num Files=1
+File 0=lvzlib.dll
+
+[File Group 5]
 Source Dir=built/lvzip
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
@@ -77,7 +84,7 @@ Exclusive_OS=Linux
 Num Files=1
 File 0=lvzlib.so
 
-[File Group 5]
+[File Group 6]
 Source Dir=built/lvzip
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
@@ -85,28 +92,28 @@ Exclusive_OS="Mac OS>=10"
 Num Files=1
 File 0=lvzlib.framework.zip
 
-[File Group 6]
+[File Group 7]
 Source Dir=built/lvzip/vxWorks82
 Target Dir=<OpenG.lib>/lvzip
 Exclusive_LabVIEW_Version=<=8.2
 Num Files=1
 File 0=lvzlib.out
 
-[File Group 7]
+[File Group 8]
 Source Dir=built/lvzip/vxWorks85
 Target Dir=<OpenG.lib>/lvzip
 Exclusive_LabVIEW_Version=>=8.5
 Num Files=1
 File 0=lvzlib.out
 
-[File Group 8]
+[File Group 9]
 Source Dir="Dynamic Palette MNUs"
 Target Dir=<user.lib>/_dynamicpalette_dirs/file
 Replace Mode=Always
 Num Files=1
 File 0=oglib_lvzip.mnu
 
-[File Group 9]
+[File Group 10]
 Source Dir="Dynamic Palette MNUs"
 Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
 Replace Mode=Always
