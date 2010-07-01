@@ -25,6 +25,7 @@ SOURCES=adler32.c \
         iowin.c \
         iomem.c \
         lvutil.c \
+	    mztools.c \
         zip.c \
         unzip.c
 
@@ -43,21 +44,34 @@ OBJS=$(OUTDIR)\adler32.obj \
 	 $(OUTDIR)\iowin.obj \
      $(OUTDIR)\iomem.obj \
      $(OUTDIR)\lvutil.obj \
+	 $(OUTDIR)\mztools.obj \
      $(OUTDIR)\zip.obj \
      $(OUTDIR)\unzip.obj
 
 ELIBS=user32.lib kernel32.lib labview.lib
 
 # Build rules for resource files
-    
+  
+# Update the resources
+  
 $(OUTDIR)\lvzlib.res: zlib.rc 
     $(rc) $(rcflags) $(rcvars) /fo $(OUTDIR)\lvzlib.res zlib.rc
+
+# Compile the sources
 
 .c{$(OUTDIR)}.obj:
     $(cc) $(cdebug) $(cflags) $(cvarsdll) /Fp"$(OUTDIR)\\" /Fo"$(OUTDIR)\\" /Fd"$(OUTDIR)\\" $**
     
-$(OUTDIR)\lvzlib.dll: $(OBJS) $(OUTDIR)\lvzlib.res
-	$(link) $(ldebug) $(dlllflags) $(conlibsdll) /MACHINE:$(CPU) -out:$(OUTDIR)\lvzlib.dll $(OBJS) $(ELIBS) /PDB:$(OUTDIR)\$(PROJ).PDB $(OUTDIR)\lvzlib.res 
+# Update the import library
+
+$(OUTDIR)\lvzlib.exp: $(OBJS) lvzlib.def
+    $(implib) -machine:$(CPU) -def:lvzlib.def -out:$(OUTDIR)\lvzlib.lib $(OBJS)
+
+# Update the dynamic link library
+
+$(OUTDIR)\lvzlib.dll: $(OBJS) $(OUTDIR)\lvzlib.res $(OUTDIR)\lvzlib.exp lvzlib.def
+	$(link) $(ldebug) $(dlllflags) $(conlibsdll) /MACHINE:$(CPU) -out:$(OUTDIR)\lvzlib.dll  \
+	$(OBJS) $(ELIBS) $(OUTDIR)\lvzlib.exp $(OUTDIR)\lvzlib.res
 
 clean:
 	$(CLEANUP)
