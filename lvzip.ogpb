@@ -1,10 +1,10 @@
 [Package Name]
 Name=oglib_lvzip
-Version=2.5.1
+Version=2.5.2
 Release=2
 
 [Description]
-Description="The lvzip package contains several routines for operating on zip files.\0D\0A\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
+Description="The lvzip package contains several routines for operating on zip files.\0D\0A\0D\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
 
 Summary="OpenG Zip Tools"
 License="BSD (VIs), LGPL (Shared Library)"
@@ -31,11 +31,11 @@ PostBuild=""
 
 [Dependencies]
 AutoReqProv=FALSE
-Requires="ogrsc_dynamicpalette >= 0.2, oglib_error >= 2.0, oglib_file >= 2.5"
+Requires="oglib_error >= 2.0, oglib_file >= 2.5"
 Conflicts=""
 
 [Files]
-Num File Groups=11
+Num File Groups=13
 
 [File Group 0]
 Source Dir=built/lvzip
@@ -120,3 +120,16 @@ Replace Mode=Always
 Num Files=1
 File 0=oglib_lvzip.mnu
 
+[File Group 11]
+Source Dir="Dynamic Palette MNUs"
+Target Dir="<application>/menus/Categories/OpenG"
+Replace Mode=Always
+Num Files=1
+File 0=oglib_lvzip.mnu
+
+[File Group 12]
+Source Dir="Dynamic Palette MNUs"
+Target Dir="<application>/menus/Categories/OpenG"
+Replace Mode=If Newer
+Num Files=1
+File 0=dir.mnu
