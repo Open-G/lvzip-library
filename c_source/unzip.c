@@ -1142,7 +1142,7 @@ ZEXTERN int ZEXPORT unzGetCurrentFileInfo (unzFile file,
                                                 szFileName,fileNameBufferSize,
                                                 extraField,extraFieldBufferSize,
                                                 szComment,commentBufferSize);
-    if (err==UNZ_OK)
+    if ((err==UNZ_OK) && (pfile_info!=NULL))
     {
         pfile_info->version = file_info64.version;
         pfile_info->version_needed = file_info64.version_needed;
