@@ -90,3 +90,13 @@ Added a test for deleting from an archive.
 
 2010-06-16 rk
 Incorporated zlib 1.2.5 and minizip 1.1 to prepare for LabVIEW 64 Bit support
+
+2011-04-08 jk
+Adds support for the new palette locations of OpenG 4.x packages and removes dependency on
+ogrsc_dynamicpalette package.
+
+2011-04-10 rk
+Fixed issue in ZLIB Store File when adding direcotry trees with password: The directory
+entries need not to be password protected. 
+Added "Carbon" to the case selector of ZLIB Specific Path to Common Path.vi and
+ZLIB Common Path to Specific Path.vi
