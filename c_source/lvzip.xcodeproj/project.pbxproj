@@ -249,10 +249,16 @@
 		83D3E190080D116E00DE332C /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = C77CC6B80C9C7C6500886AB2 /* Build configuration list for PBXProject "lvzip" */;
+			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 83D3E18C080D116E00DE332C;
 			productRefGroup = 83D3E19A080D116E00DE332C /* Products */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				83D3E1AE080D116E00DE332C /* OSX DLL */,
 			);
@@ -324,8 +330,8 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 7.0/cintools/Mach-O\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 8.2/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
 				OTHER_CFLAGS = "-fno-inline";
@@ -369,8 +375,8 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 7.0/cintools/Mach-O\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 8.2/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
 				OTHER_CFLAGS = "-fno-inline";
@@ -412,8 +418,8 @@
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
 					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
 				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 7.0/cintools/Mach-O\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 8.2/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
 				OTHER_CFLAGS = "-fno-inline";
