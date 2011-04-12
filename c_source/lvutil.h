@@ -15,7 +15,7 @@ extern "C" {
 
 #if defined(macintosh) || defined(__PPCC__) || defined(THINK_C) || defined(__SC__) || defined(__MWERKS__) || defined(__APPLE_CC__)
  #define MacOS 1
- #ifdef __MACH__
+ #ifdef TARGET_API_MAC_CARBON
   #define MacOSX 1
  #endif
  #if defined(__i386__)

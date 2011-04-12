@@ -797,7 +797,6 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
     int32 count = 0;
 #if MacOS
     FSSpec fss;
-    DTPBRec dtpb;
     CInfoPBRec cpb;
 #elif Win32
     LStrPtr lstr;
@@ -830,17 +829,27 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
 
     if (!err)
     {
-      dtpb.ioCompletion = nil;
-      dtpb.ioNamePtr = NULL;
-      dtpb.ioVRefNum = fss.vRefNum;
+ #if !MacOSX
+      DTPBRec dtpb;
 
+      memset(&dtpb, 0, sizeof(DTPBRec));
+      dtpb.ioVRefNum = fss.vRefNum;
       err = OSErrToLVErr(PBDTGetPath(&dtpb));
       if (err)
+	  {
+        dtpb.ioNamePtr = nil;
         DEBUGPRINTF(("PBGetPath: err = %ld", err));
-      if (!err)
-      {
+        /* Ignore error for getting/setting Desktop comments */
+        err = mgNoErr;
+	  }
+	  else
+	  {
         dtpb.ioNamePtr = fss.name;
         dtpb.ioDirID = fss.parID;
+      }
+ #endif
+      if (!err)
+      {
         *isDirectory = (MacIsDir(cpb) != 0);
 
         if (write)
@@ -872,13 +881,15 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
           err = OSErrToLVErr(PBSetCatInfoSync(&cpb));
           if (err)
             DEBUGPRINTF(("PBSetCatInfo: err = %ld", err));
-          if (!err && comment)
+ #if !MacOSX
+          if (!err && comment && dtpb.ioNamePtr)
           {
             dtpb.ioDTBuffer = LStrBuf(*comment);
             dtpb.ioDTReqCount = LStrLen(*comment);
-            /* Ignore error for setting Desktop comments as this is not supported on OSX */
+            /* Ignore error for setting Desktop comments */
             PBDTSetCommentSync(&dtpb);
           }
+ #endif
         }
         else
         {
@@ -913,7 +924,8 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
             MacConvertToLVTime(cpb.hFileInfo.ioFlMdDat, &fileInfo->mDate);
           }
 
-          if (comment)
+ #if !MacOSX
+          if (comment && dtpb.ioNamePtr)
           {
             err = DSSetHandleSize((UHandle)comment, 255);
             if (!err)
@@ -923,10 +935,11 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
               dtpb.ioDTActCount = 0;
               err = OSErrToLVErr(PBDTGetCommentSync(&dtpb));
               LStrLen(*comment) = err ? 0 : dtpb.ioDTActCount;
-              /* Ignore error for getting Desktop comments as this is not supported on OSX */
+              /* Ignore error for getting Desktop comments */
               err = mgNoErr;
             }
           }
+ #endif
         }
       }
     }
