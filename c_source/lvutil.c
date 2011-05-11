@@ -1119,6 +1119,8 @@ static MgErr ConvertToPosixPath(const CStr hfsPath, CStr posixPath, int32 *len)
     Boolean isDir = FALSE;
     uInt32 enc = CFStringGetSystemEncoding();
 
+	#error "Remove me"
+	
     if (!len)
       return mgArgErr;
 
