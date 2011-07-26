@@ -20,8 +20,8 @@ LIBPATH =
 # compile it.
 OBJECTS := $(OBJ_DIR)/adler32.o $(OBJ_DIR)/compress.o $(OBJ_DIR)/crc32.o $(OBJ_DIR)/uncompr.o $(OBJ_DIR)/deflate.o \
            $(OBJ_DIR)/trees.o $(OBJ_DIR)/zutil.o $(OBJ_DIR)/inflate.o $(OBJ_DIR)/infback.o $(OBJ_DIR)/inftrees.o \
-           $(OBJ_DIR)/inffast.o $(OBJ_DIR)/ioapi.o $(OBJ_DIR)/iomem.o $(OBJ_DIR)/lvutil.o $(OBJ_DIR)/zip.o \
-           $(OBJ_DIR)/unzip.o
+           $(OBJ_DIR)/inffast.o $(OBJ_DIR)/ioapi.o $(OBJ_DIR)/iomem.o $(OBJ_DIR)/lvutil.o $(OBJ_DIR)/mztools.o \
+		   $(OBJ_DIR)/zip.o $(OBJ_DIR)/unzip.o
 
 # This is the name of the output shared library.
 PROJECT_TARGETS := $(OBJ_DIR)/lvzlib.out

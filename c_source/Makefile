@@ -47,7 +47,7 @@ man3dir = ${mandir}/man3
 
 OBJS = adler32.o compress.o crc32.o uncompr.o deflate.o trees.o \
        zutil.o inflate.o infback.o inftrees.o inffast.o \
-       ioapi.o iomem.o lvutil.o zip.o unzip.o
+       ioapi.o iomem.o lvutil.o mztools.o zip.o unzip.o
 
 OBJA =
 # to use the asm code: make OBJA=match.o
