@@ -1,0 +1,26 @@
+The last release (version 4.0.0-2) of LVZIP was 'massaged' in that the package was edited to work with VIPM 2010+ and the OpenG 4.x release. 
+
+No code was changed, the package was simply unzipped, a few non-VI files (build spec, .mnu) edited and then the package was re-zipped. 
+
+All OpenG projects (except those massaged) were upgraded to VIPM 2010+ which used the Custom Category feature of VIPM and this meant the Top Level palette was relocated. The menu location and name was changed as this was important for alphabetical ordering in the OpenG Palette.
+
+Also the package was made to display a proper name in VIPM: "OpenG LabVIEW ZIP Library" instead of "oglib_lvzip"
+
+********************
+START CHANGES
+********************
+Therefore, the following items need to be addressed for LabVIEW 2009+ installations:
+- Functions Palette Name: functions_oglib_lvzip.mnu 
+- Palette Installation location: <menus>\Categories\OpenG
+
+Additionally 
+- Built Spec File should contain the following name|value pair under the section "[Package Name]": 
+    Display Name="OpenG LabVIEW ZIP Library" 
+  This will ensure that the name is correctly displayed in VIPM 2010+
+
+Additionally the following needs to be addressed:
+- All scripts cannot be dependent on any non-LabVIEW VIs otherwise an error 'may' occur. See the thread "Order of Installed Dependencies Affect Installation When Package Uses Scripts" for more information (which includes a workaround):  
+  http://forums.jki.net/topic/1643-order-of-installed-dependencies-affect-installation-when-package-uses-scripts/
+********************
+END CHANGES
+********************
