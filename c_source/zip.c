@@ -27,6 +27,7 @@
 #include <string.h>
 #include <time.h>
 #define ZLIB_INTERNAL
+#include "zlib.h"
 #include "zip.h"
 
 #ifdef STDC
@@ -1067,6 +1068,7 @@ ZEXTERN int ZEXPORT zipOpenNewFileInZip4_64 (zipFile file, const char* filename,
     int err = ZIP_OK;
 
 #    ifdef NOCRYPT
+    (crcForCrypting);
     if (password != NULL)
         return ZIP_PARAMERROR;
 #    endif
@@ -1114,9 +1116,9 @@ ZEXTERN int ZEXPORT zipOpenNewFileInZip4_64 (zipFile file, const char* filename,
     zi->ci.flag = flagBase;
     if ((level==8) || (level==9))
       zi->ci.flag |= 2;
-    if ((level==2))
+    if (level==2)
       zi->ci.flag |= 4;
-    if ((level==1))
+    if (level==1)
       zi->ci.flag |= 6;
     if (password != NULL)
       zi->ci.flag |= 1;
@@ -1398,7 +1400,7 @@ local int zip64FlushWriteBuffer(zip64_internal* zi)
     return err;
 }
 
-int ZEXPORT zipWriteInFileInZip (zipFile file,const void* buf,unsigned int len)
+ZEXTERN int ZEXPORT zipWriteInFileInZip (zipFile file,const void* buf,unsigned int len)
 {
     zip64_internal* zi;
     int err=ZIP_OK;
@@ -1505,12 +1507,12 @@ int ZEXPORT zipWriteInFileInZip (zipFile file,const void* buf,unsigned int len)
     return err;
 }
 
-int ZEXPORT zipCloseFileInZipRaw (zipFile file, uLong uncompressed_size, uLong crc32)
+ZEXTERN int ZEXPORT zipCloseFileInZipRaw (zipFile file, uLong uncompressed_size, uLong crc32)
 {
     return zipCloseFileInZipRaw64 (file, uncompressed_size, crc32);
 }
 
-int ZEXPORT zipCloseFileInZipRaw64 (zipFile file, ZPOS64_T uncompressed_size, uLong crc32)
+ZEXTERN int ZEXPORT zipCloseFileInZipRaw64 (zipFile file, ZPOS64_T uncompressed_size, uLong crc32)
 {
     zip64_internal* zi;
     ZPOS64_T compressed_size;
@@ -1710,7 +1712,7 @@ int ZEXPORT zipCloseFileInZipRaw64 (zipFile file, ZPOS64_T uncompressed_size, uL
         if (err==ZIP_OK)
             err = zip64local_putValue(&zi->z_filefunc,zi->filestream,crc32,4); /* crc 32, unknown */
 
-        if(uncompressed_size >= 0xffffffff || compressed_size >= 0xffffffff)
+        if (uncompressed_size >= 0xffffffff || compressed_size >= 0xffffffff)
         {
           if(zi->ci.pos_zip64extrainfo > 0)
           {
@@ -1935,7 +1937,7 @@ ZEXTERN int ZEXPORT zipClose2 (zipFile file, const char* global_comment, voidpf 
     if(err == ZIP_OK)
       err = Write_GlobalComment(zi, global_comment);
 
-    if (ZCLOSE64(zi->z_filefunc,zi->filestream, output) != 0)
+    if (ZCLOSE64(zi->z_filefunc, zi->filestream, output) != 0)
         if (err == ZIP_OK)
             err = ZIP_ERRNO;
 

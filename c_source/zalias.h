@@ -22,8 +22,10 @@
 #define deflateInit_                lvzip_deflateInit_
 #define deflateInit2_               lvzip_deflateInit2_
 #define deflateParams               lvzip_deflateParams
+#define deflatePending              lvzip_deflatePending
 #define deflatePrime                lvzip_deflatePrime
 #define deflateReset                lvzip_deflateReset
+#define deflateResetKeep            lvzip_deflateResetKeep
 #define deflateSetDictionary        lvzip_deflateSetDictionary
 #define deflateSetHeader            lvzip_deflateSetHeader
 #define deflateTune                 lvzip_deflateTune
@@ -44,6 +46,7 @@
 #define inflatePrime                lvzip_inflatePrime
 #define inflateReset                lvzip_inflateReset
 #define inflateReset2               lvzip_inflateReset2
+#define inflateResetKeep            lvzip_inflateResetKeep
 #define inflateSetDictionary        lvzip_inflateSetDictionary
 #define inflateSync                 lvzip_inflateSync
 #define inflateSyncPoint            lvzip_inflateSyncPoint

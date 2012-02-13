@@ -24,8 +24,14 @@
 #define MacIsAlias(cpb) ((cpb).hFileInfo.ioFlFndrInfo.fdFlags & kIsAlias)
 #define kFileChanged    (1L<<7)
 
-static MgErr MakeMacSpec(Path path, FSSpec *fss);
-static OSErr MakeFileSpec(int16 vol, int32 dirID, ConstStr255 path, FSSpec *fss);
+#ifdef MacOSX
+#define MacSpec	FSRef
+#else
+#define MacSpec FSSpec
+#endif
+
+static MgErr MakeMacSpec(Path path, MacSpec *fss);
+static OSErr MakeFileSpec(int16 vol, int32 dirID, ConstStr255 path, MacSpec *fss);
 static MgErr OSErrToLVErr(OSErr err);
 #elif Unix
 #include <errno.h>
@@ -96,7 +102,47 @@ static OSErr FSpLocationFromFullPath(CStr fullPath,
     return (err);
 }
 
-static MgErr MakeMacSpec(Path path, FSSpec *fss)
+#if MacOSX
+static MgErr ConvertToPosixPath(const CStr hfsPath, CStr posixPath, int32 *len)
+{
+    MgErr err = mFullErr;
+    CFStringRef fileRef, posixRef = NULL;
+    CFURLRef urlRef = NULL;
+    Boolean isDir = FALSE;
+    uInt32 enc = CFStringGetSystemEncoding();
+
+    if (!len)
+      return mgArgErr;
+
+    fileRef = CFStringCreateWithCString(NULL, hfsPath, enc);
+    if (fileRef)
+    {
+      urlRef = CFURLCreateWithFileSystemPath(NULL, fileRef, kCFURLHFSPathStyle, isDir);
+      CFRelease(fileRef);
+    }
+
+    if (urlRef)
+    {
+      posixRef = CFURLCopyFileSystemPath(urlRef, kCFURLPOSIXPathStyle);
+      CFRelease(urlRef);
+    }
+
+    if (posixRef)
+    {
+      err = mgNoErr;
+      if (posixPath && (*len > CFStringGetLength(posixRef)))
+      {
+        if (!CFStringGetCString(posixRef, posixPath, *len, enc))
+          err = mgArgErr;
+      }
+      *len = CFStringGetLength(posixRef);
+      CFRelease(posixRef);
+    }
+    return err;
+}
+#endif
+
+static MgErr MakeMacSpec(Path path, MacSpec *fss)
 {
     MgErr err;
     int32 pathLen = -1;
@@ -486,27 +532,38 @@ extern void ZEXPORT DLLVersion(uChar* version)
 
 extern MgErr ZEXPORT LVPath_HasResourceFork(Path path, int32 *hasResFork)
 {
+    MgErr  err = noErr;
 #if MacOS
-    FSSpec theFSSpec;
-    MgErr  err = mgNoErr;
+    MacSpec ref;
 
     *hasResFork = 0;
 
-    err = MakeMacSpec(path, &theFSSpec);
+    err = MakeMacSpec(path, &ref);
     if (!err)
     {
-      int theRefNum = FSpOpenResFile(&theFSSpec, fsRdPerm);
+#if MacOSX
+	  FSCatalogInfoBitmap whichInfo =  kFSCatInfoNodeFlags | kFSCatInfoRsrcSizes;
+	  FSCatalogInfo		catalogInfo;
+ 
+	  /* get nodeFlags and catalog info */
+	  err = OSErrToLVErr(FSGetCatalogInfo(ref, whichInfo, &catalogInfo, NULL, NULL,NULL));
+      if (!err && catalogInfo.nodeFlags & kFSNodeIsDirectoryMask)
+	    err = fIOErr;
+	  if (!err)
+        *hasResFork = catalogInfo.rsrcLogicalSize;
+#else
+	  int theRefNum = FSpOpenResFile(&ref, fsRdPerm);
       if (ResError() == mgNoErr) /* we've got a resource file */ 
       {
         CloseResFile(theRefNum);
         *hasResFork = 1;
       }
+#endif
     }
-    return err;
 #else
     *hasResFork = 0;
-    return mgNoErr;
 #endif
+    return err;
 }
 
 extern MgErr ZEXPORT LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
@@ -555,7 +612,7 @@ extern MgErr ZEXPORT LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uI
 	int32 type;
     File ioRefNum;
 #if MacOS
-    FSSpec fss;
+    MacSpec fss;
     int16 perm;
     OSErr ret;
     HParamBlockRec pb;
@@ -601,6 +658,14 @@ extern MgErr ZEXPORT LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uI
         return mgArgErr;
     }
 
+#if MacOSX
+    if (!(err = OSErrToLVErr(ret)))
+    {
+      ioRefNum = (File)pb.ioParam.ioRefNum;
+      if (openMode == openWriteOnlyTruncate)
+        err = OSErrToLVErr(SetEOF(ioRefNum, 0L));
+    }
+#else	
     if (hasDeny)
     {
       switch (denyMode)
@@ -641,13 +706,13 @@ extern MgErr ZEXPORT LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uI
       else
         ret = PBHOpenSync(&pb);
     }
-
     if (!(err = OSErrToLVErr(ret)))
     {
       ioRefNum = (File)pb.ioParam.ioRefNum;
       if (openMode == openWriteOnlyTruncate)
         err = OSErrToLVErr(SetEOF(ioRefNum, 0L));
     }
+#endif
 #elif Win32
     if (FDepth(path) == 1L)
       return mgArgErr;
@@ -796,8 +861,12 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
     MgErr err = mgNoErr;
     int32 count = 0;
 #if MacOS
-    FSSpec fss;
+    MacSpec fss;
+#if MacOSX
+	FSCatalogInfo catInfo;
+#else
     CInfoPBRec cpb;
+#endif
 #elif Win32
     LStrPtr lstr;
     HANDLE handle = NULL;
@@ -818,6 +887,9 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
       return err;
     }
 
+#if MacOSX
+	err = OSErrToLVErr(FSGetCatalogInfo(&fss, kFSCatInfoCreateDate | kFSCatInfoContentMod | kFSCatInfoFinderInfo, catInfo, null, null, null));
+#else
     memset(&cpb, 0, sizeof(CInfoPBRec));
     cpb.hFileInfo.ioNamePtr = fss.name;
     cpb.hFileInfo.ioVRefNum = fss.vRefNum;
@@ -829,8 +901,7 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
 
     if (!err)
     {
- #if !MacOSX
-      DTPBRec dtpb;
+       DTPBRec dtpb;
 
       memset(&dtpb, 0, sizeof(DTPBRec));
       dtpb.ioVRefNum = fss.vRefNum;
@@ -1109,48 +1180,6 @@ extern long ZEXPORT InitializeFileFuncs (zlib_filefunc64_def* pzlib_filefunc_def
     else
       return sizeof(zlib_filefunc64_def);
 }
-
-#if MacOSX
-static MgErr ConvertToPosixPath(const CStr hfsPath, CStr posixPath, int32 *len)
-{
-    MgErr err = mFullErr;
-    CFStringRef fileRef, posixRef = NULL;
-    CFURLRef urlRef = NULL;
-    Boolean isDir = FALSE;
-    uInt32 enc = CFStringGetSystemEncoding();
-
-	#error "Remove me"
-	
-    if (!len)
-      return mgArgErr;
-
-    fileRef = CFStringCreateWithCString(NULL, hfsPath, enc);
-    if (fileRef)
-    {
-      urlRef = CFURLCreateWithFileSystemPath(NULL, fileRef, kCFURLHFSPathStyle, isDir);
-      CFRelease(fileRef);
-    }
-
-    if (urlRef)
-    {
-      posixRef = CFURLCopyFileSystemPath(urlRef, kCFURLPOSIXPathStyle);
-      CFRelease(urlRef);
-    }
-
-    if (posixRef)
-    {
-      err = mgNoErr;
-      if (posixPath && (*len > CFStringGetLength(posixRef)))
-      {
-        if (!CFStringGetCString(posixRef, posixPath, *len, enc))
-          err = mgArgErr;
-      }
-      *len = CFStringGetLength(posixRef);
-      CFRelease(posixRef);
-    }
-    return err;
-}
-#endif
 
 extern MgErr ZEXPORT LVPath_ToText(Path path, CStr str, int32 *len)
 {
