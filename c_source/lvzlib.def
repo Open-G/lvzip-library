@@ -1,10 +1,6 @@
 LIBRARY		"lvzlib"
 
-DESCRIPTION	'"""LabVIEW zlib data compression library"""'
-
-
-VERSION		1.21
-
+VERSION		1.27
 
 HEAPSIZE	1048576,8192
 

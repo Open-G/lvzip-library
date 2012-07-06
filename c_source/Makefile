@@ -1,12 +1,11 @@
-# Makefile for lvzlib
-# Copyright (C) 1995-2003 Jean-loup Gailly.
-# Copyright (C) 2003-2007 Rolf Kalbermatter.
+# Makefile for zlib
+# Copyright (C) 1995-2011 Jean-loup Gailly.
 # For conditions of distribution and use, see copyright notice in zlib.h
 
 # To compile and test, type:
-#   ./configure; make test
-# The call of configure is optional if you don't have special requirements
-# If you wish to build zlib as a shared library, use: ./configure -s
+#    ./configure; make test
+# Normally configure builds both a static and a shared library.
+# If you want to build just a static library, use: ./configure --static
 
 # To use the asm code, type:
 #    cp contrib/asm?86/match.S ./match.S
@@ -17,47 +16,117 @@
 # To install in $HOME instead of /usr/local, use:
 #    make install prefix=$HOME
 
-CC=cc
+CC=gcc
 
-CFLAGS=-O
+CFLAGS=-O3  -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
 #CFLAGS=-g -DDEBUG
 #CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
 #           -Wstrict-prototypes -Wmissing-prototypes
 
-LDFLAGS=lvzlib.a
-LDSHARED=$(CC) -shared -Wl
-CPP=$(CC) -E
+CINDIR=/usr/local/lv70/cintools
+SFLAGS=-O3 -fPIC -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -L$(CINDIR)
+LDFLAGS= 
+TEST_LDFLAGS=-L. libz.a
+LDSHARED=gcc
+CPP=gcc -E
 
-LIBS=lvzlib.so
-SHAREDLIB=lvzlib.so
+STATICLIB=lvzlib.a
+SHAREDLIB=lvzlib.so.2
+SHAREDLIBV=lvzlib.so
+SHAREDLIBM=
+LIBS=$(STATICLIB) $(SHAREDLIBV)
 
-AR=ar rc
+AR=ar
+ARFLAGS=rc
 RANLIB=ranlib
+LDCONFIG=ldconfig
+LDSHAREDLIBC=-lc -llv
 TAR=tar
 SHELL=/bin/sh
 EXE=
 
-prefix = /usr/local
-exec_prefix = ${prefix}
-libdir = ${exec_prefix}/lib
-includedir = ${prefix}/include
-mandir = ${prefix}/share/man
+prefix =/usr/local
+exec_prefix =${prefix}
+libdir =${exec_prefix}/lib
+sharedlibdir =${libdir}
+includedir =${prefix}/include
+mandir =${prefix}/share/man
 man3dir = ${mandir}/man3
+pkgconfigdir = ${libdir}/pkgconfig
 
-OBJS = adler32.o compress.o crc32.o uncompr.o deflate.o trees.o \
-       zutil.o inflate.o infback.o inftrees.o inffast.o \
-       ioapi.o iomem.o lvutil.o mztools.o zip.o unzip.o
+OBJZ = adler32.o crc32.o deflate.o infback.o inffast.o inflate.o inftrees.o trees.o zutil.o
+OBJG = compress.o uncompr.o gzclose.o gzlib.o gzread.o gzwrite.o
+OBJL = lvutil.o ioapi.o iomem.o mztools.o
+OBJC = $(OBJZ) $(OBJL) $(OBJG)
 
+PIC_OBJZ = adler32.lo crc32.lo deflate.lo infback.lo inffast.lo inflate.lo inftrees.lo trees.lo zutil.lo
+PIC_OBJG = compress.lo uncompr.lo gzclose.lo gzlib.lo gzread.lo gzwrite.lo
+PIC_OBJL = lvutil.lo ioapi.lo iomem.lo mztools.lo
+PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJL) $(PIC_OBJG)
+
+# to use the asm code: make OBJA=match.o, PIC_OBJA=match.lo
 OBJA =
-# to use the asm code: make OBJA=match.o
+PIC_OBJA =
 
-TEST_OBJS = example.o minigzip.o
+OBJS = $(OBJC) $(OBJA)
 
-all: $(SHAREDLIB)
+PIC_OBJS = $(PIC_OBJC) $(PIC_OBJA)
 
-lvzlib.a: $(OBJS) $(OBJA)
-	$(AR) $@ $(OBJS) $(OBJA)
+#all: static all64
+all: clean $(SHAREDLIBV)
+
+static: example$(EXE) minigzip$(EXE)
+
+shared: examplesh$(EXE) minigzipsh$(EXE)
+
+all64: example64$(EXE) minigzip64$(EXE)
+
+check: test
+
+test: all teststatic test64
+
+teststatic: static
+	@if echo hello world | ./minigzip | ./minigzip -d && ./example; then \
+	  echo '		*** zlib test OK ***'; \
+	else \
+	  echo '		*** zlib test FAILED ***'; false; \
+	fi
+	-@rm -f foo.gz
+
+testshared: shared
+	@LD_LIBRARY_PATH=`pwd`:$(LD_LIBRARY_PATH) ; export LD_LIBRARY_PATH; \
+	LD_LIBRARYN32_PATH=`pwd`:$(LD_LIBRARYN32_PATH) ; export LD_LIBRARYN32_PATH; \
+	DYLD_LIBRARY_PATH=`pwd`:$(DYLD_LIBRARY_PATH) ; export DYLD_LIBRARY_PATH; \
+	SHLIB_PATH=`pwd`:$(SHLIB_PATH) ; export SHLIB_PATH; \
+	if echo hello world | ./minigzipsh | ./minigzipsh -d && ./examplesh; then \
+	  echo '		*** zlib shared test OK ***'; \
+	else \
+	  echo '		*** zlib shared test FAILED ***'; false; \
+	fi
+	-@rm -f foo.gz
+
+test64: all64
+	@if echo hello world | ./minigzip64 | ./minigzip64 -d && ./example64; then \
+	  echo '		*** zlib 64-bit test OK ***'; \
+	else \
+	  echo '		*** zlib 64-bit test FAILED ***'; false; \
+	fi
+	-@rm -f foo.gz
+
+infcover.o: test/infcover.c zlib.h zconf.h
+	$(CC) $(CFLAGS) -I. -c -o $@ test/infcover.c
+
+infcover: infcover.o libz.a
+	$(CC) $(CFLAGS) -o $@ infcover.o libz.a
+
+cover: infcover
+	rm -f *.gcda
+	./infcover
+	gcov inf*.c
+
+libz.a: $(OBJS)
+	$(AR) $(ARFLAGS) $@ $(OBJS)
 	-@ ($(RANLIB) $@ || true) >/dev/null 2>&1
 
 match.o: match.S
@@ -66,49 +135,130 @@ match.o: match.S
 	mv _match.o match.o
 	rm -f _match.s
 
-$(SHAREDLIB): $(OBJS) $(OBJA)
-	$(LDSHARED) -o $@ $(OBJS) $(OBJA)
+match.lo: match.S
+	$(CPP) match.S > _match.s
+	$(CC) -c -fPIC _match.s
+	mv _match.o match.lo
+	rm -f _match.s
 
-install: $(LIBS)
-	-@if [ ! -d $(exec_prefix) ]; then mkdir -p $(exec_prefix); fi
-	-@if [ ! -d $(includedir)  ]; then mkdir -p $(includedir); fi
-	-@if [ ! -d $(libdir)      ]; then mkdir -p $(libdir); fi
-	-@if [ ! -d $(man3dir)     ]; then mkdir -p $(man3dir); fi
-	cp zlib.h zconf.h $(includedir)
-	chmod 644 $(includedir)/zlib.h $(includedir)/zconf.h
-	cp $(LIBS) $(libdir)
-	cd $(libdir); chmod 755 $(LIBS)
-	-@(cd $(libdir); $(RANLIB) libz.a || true) >/dev/null 2>&1
-	cd $(libdir); if test -f $(SHAREDLIBV); then \
-	  rm -f $(SHAREDLIB) $(SHAREDLIBM); \
-	  ln -s $(SHAREDLIBV) $(SHAREDLIB); \
-	  ln -s $(SHAREDLIBV) $(SHAREDLIBM); \
-	  (ldconfig || true)  >/dev/null 2>&1; \
+example.o: test/example.c zlib.h zconf.h
+	$(CC) $(CFLAGS) -I. -c -o $@ test/example.c
+
+minigzip.o: test/minigzip.c zlib.h zconf.h
+	$(CC) $(CFLAGS) -I. -c -o $@ test/minigzip.c
+
+example64.o: test/example.c zlib.h zconf.h
+	$(CC) $(CFLAGS) -I. -D_FILE_OFFSET_BITS=64 -c -o $@ test/example.c
+
+minigzip64.o: test/minigzip.c zlib.h zconf.h
+	$(CC) $(CFLAGS) -I. -D_FILE_OFFSET_BITS=64 -c -o $@ test/minigzip.c
+
+.SUFFIXES: .lo
+
+.c.lo:
+	-@mkdir objs 2>/dev/null || test -d objs
+	$(CC) $(SFLAGS) -DPIC -c -o objs/$*.o $<
+	-@mv objs/$*.o $@
+
+placebo $(SHAREDLIBV): $(PIC_OBJS) libz.a
+	$(LDSHARED) $(SFLAGS) -shared -o $@ $(PIC_OBJS) $(LDSHAREDLIBC) $(LDFLAGS)
+	rm -f $(SHAREDLIB) $(SHAREDLIBM)
+#	ln -s $@ $(SHAREDLIB)
+#	ln -s $@ $(SHAREDLIBM)
+	-@rmdir objs
+
+example$(EXE): example.o $(STATICLIB)
+	$(CC) $(CFLAGS) -o $@ example.o $(TEST_LDFLAGS)
+
+minigzip$(EXE): minigzip.o $(STATICLIB)
+	$(CC) $(CFLAGS) -o $@ minigzip.o $(TEST_LDFLAGS)
+
+examplesh$(EXE): example.o $(SHAREDLIBV)
+	$(CC) $(CFLAGS) -o $@ example.o -L. $(SHAREDLIBV)
+
+minigzipsh$(EXE): minigzip.o $(SHAREDLIBV)
+	$(CC) $(CFLAGS) -o $@ minigzip.o -L. $(SHAREDLIBV)
+
+example64$(EXE): example64.o $(STATICLIB)
+	$(CC) $(CFLAGS) -o $@ example64.o $(TEST_LDFLAGS)
+
+minigzip64$(EXE): minigzip64.o $(STATICLIB)
+	$(CC) $(CFLAGS) -o $@ minigzip64.o $(TEST_LDFLAGS)
+
+install-libs: $(LIBS)
+	-@if [ ! -d $(DESTDIR)$(exec_prefix)  ]; then mkdir -p $(DESTDIR)$(exec_prefix); fi
+	-@if [ ! -d $(DESTDIR)$(libdir)       ]; then mkdir -p $(DESTDIR)$(libdir); fi
+	-@if [ ! -d $(DESTDIR)$(sharedlibdir) ]; then mkdir -p $(DESTDIR)$(sharedlibdir); fi
+	-@if [ ! -d $(DESTDIR)$(man3dir)      ]; then mkdir -p $(DESTDIR)$(man3dir); fi
+	-@if [ ! -d $(DESTDIR)$(pkgconfigdir) ]; then mkdir -p $(DESTDIR)$(pkgconfigdir); fi
+	cp $(STATICLIB) $(DESTDIR)$(libdir)
+	chmod 644 $(DESTDIR)$(libdir)/$(STATICLIB)
+	-@($(RANLIB) $(DESTDIR)$(libdir)/libz.a || true) >/dev/null 2>&1
+	-@if test -n "$(SHAREDLIBV)"; then \
+	  cp $(SHAREDLIBV) $(DESTDIR)$(sharedlibdir); \
+	  echo "cp $(SHAREDLIBV) $(DESTDIR)$(sharedlibdir)"; \
+	  chmod 755 $(DESTDIR)$(sharedlibdir)/$(SHAREDLIBV); \
+	  echo "chmod 755 $(DESTDIR)$(sharedlibdir)/$(SHAREDLIBV)"; \
+	  rm -f $(DESTDIR)$(sharedlibdir)/$(SHAREDLIB) $(DESTDIR)$(sharedlibdir)/$(SHAREDLIBM); \
+	  ln -s $(SHAREDLIBV) $(DESTDIR)$(sharedlibdir)/$(SHAREDLIB); \
+	  ln -s $(SHAREDLIBV) $(DESTDIR)$(sharedlibdir)/$(SHAREDLIBM); \
+	  ($(LDCONFIG) || true)  >/dev/null 2>&1; \
 	fi
-	cp zlib.3 $(man3dir)
-	chmod 644 $(man3dir)/zlib.3
+	cp zlib.3 $(DESTDIR)$(man3dir)
+	chmod 644 $(DESTDIR)$(man3dir)/zlib.3
+	cp zlib.pc $(DESTDIR)$(pkgconfigdir)
+	chmod 644 $(DESTDIR)$(pkgconfigdir)/zlib.pc
 # The ranlib in install is needed on NeXTSTEP which checks file times
 # ldconfig is for Linux
 
+install: install-libs
+	-@if [ ! -d $(DESTDIR)$(includedir)   ]; then mkdir -p $(DESTDIR)$(includedir); fi
+	cp zlib.h zconf.h $(DESTDIR)$(includedir)
+	chmod 644 $(DESTDIR)$(includedir)/zlib.h $(DESTDIR)$(includedir)/zconf.h
+
 uninstall:
-	cd $(includedir); \
-	cd $(libdir); rm -f libz.a; \
-	if test -f $(SHAREDLIBV); then \
+	cd $(DESTDIR)$(includedir); rm -f zlib.h zconf.h
+	cd $(DESTDIR)$(libdir); rm -f libz.a; \
+	if test -n "$(SHAREDLIBV)" -a -f $(SHAREDLIBV); then \
 	  rm -f $(SHAREDLIBV) $(SHAREDLIB) $(SHAREDLIBM); \
 	fi
-	cd $(man3dir); rm -f zlib.3
+	cd $(DESTDIR)$(man3dir); rm -f zlib.3
+	cd $(DESTDIR)$(pkgconfigdir); rm -f zlib.pc
+
+docs: zlib.3.pdf
+
+zlib.3.pdf: zlib.3
+	groff -mandoc -f H -T ps zlib.3 | ps2pdf - zlib.3.pdf
+
+zconf.h.cmakein: zconf.h.in
+	-@ TEMPFILE=`mktemp -u __XXXXXX`; \
+	echo "/#define ZCONF_H/ a\\\\\n#cmakedefine Z_PREFIX\\\\\n#cmakedefine Z_HAVE_UNISTD_H\n" > $$TEMPFILE &&\
+	sed -f $$TEMPFILE zconf.h.in > zconf.h.cmakein &&\
+	touch -r zconf.h.in zconf.h.cmakein &&\
+	rm $$TEMPFILE
+
+zconf: zconf.h.in
+	cp -p zconf.h.in zconf.h
 
 mostlyclean: clean
 clean:
-	rm -f *.o *~ example$(EXE) minigzip$(EXE) \
+	rm -f *.o *.lo *~ \
+	   example$(EXE) minigzip$(EXE) examplesh$(EXE) minigzipsh$(EXE) \
+	   example64$(EXE) minigzip64$(EXE) \
+	   infcover \
 	   libz.* foo.gz so_locations \
 	   _match.s maketree contrib/infback9/*.o
+	rm -rf objs
+	rm -f *.gcda *.gcno *.gcov
+	rm -f contrib/infback9/*.gcda contrib/infback9/*.gcno contrib/infback9/*.gcov
 
 maintainer-clean: distclean
-distclean: clean
-	cp -p Makefile.in Makefile
-	cp -p zconf.in.h zconf.h
-	rm -f .DS_Store
+distclean: clean zconf zconf.h.cmakein docs
+	rm -f Makefile zlib.pc configure.log
+	-@rm -f .DS_Store
+	-@printf 'all:\n\t-@echo "Please use ./configure first.  Thank you."\n' > Makefile
+	-@printf '\ndistclean:\n\tmake -f Makefile.in distclean\n' >> Makefile
+	-@touch -r Makefile.in Makefile
 
 tags:
 	etags *.[ch]
@@ -118,257 +268,22 @@ depend:
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
 
-adler32.o: zlib.h zconf.h
-compress.o: zlib.h zconf.h
-crc32.o: zutil.h zlib.h zconf.h /usr/include/string.h /usr/include/features.h
-crc32.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-crc32.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-crc32.o: /usr/include/stdlib.h /usr/include/sys/types.h
-crc32.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-crc32.o: /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h
-crc32.o: /usr/include/sys/select.h /usr/include/bits/select.h
-crc32.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-crc32.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-crc32.o: /usr/include/alloca.h /usr/include/errno.h /usr/include/bits/errno.h
-crc32.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-crc32.o: /usr/include/asm-i386/errno.h /usr/include/asm-generic/errno.h
-crc32.o: /usr/include/asm-generic/errno-base.h /usr/include/limits.h
-crc32.o: /usr/include/bits/posix1_lim.h /usr/include/bits/local_lim.h
-crc32.o: /usr/include/linux/limits.h /usr/include/bits/posix2_lim.h crc32.h
-deflate.o: deflate.h zutil.h zlib.h zconf.h /usr/include/string.h
-deflate.o: /usr/include/features.h /usr/include/sys/cdefs.h
-deflate.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-deflate.o: /usr/include/gnu/stubs-32.h /usr/include/stdlib.h
-deflate.o: /usr/include/sys/types.h /usr/include/bits/types.h
-deflate.o: /usr/include/bits/typesizes.h /usr/include/time.h
-deflate.o: /usr/include/endian.h /usr/include/bits/endian.h
-deflate.o: /usr/include/sys/select.h /usr/include/bits/select.h
-deflate.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-deflate.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-deflate.o: /usr/include/alloca.h /usr/include/errno.h
-deflate.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-deflate.o: /usr/include/asm/errno.h /usr/include/asm-i386/errno.h
-deflate.o: /usr/include/asm-generic/errno.h
-deflate.o: /usr/include/asm-generic/errno-base.h
-deflate.o: zutil.h zlib.h zconf.h /usr/include/string.h
-deflate.o: /usr/include/features.h /usr/include/sys/cdefs.h
-deflate.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-deflate.o: /usr/include/gnu/stubs-32.h /usr/include/stdlib.h
-deflate.o: /usr/include/sys/types.h /usr/include/bits/types.h
-deflate.o: /usr/include/bits/typesizes.h /usr/include/time.h
-deflate.o: /usr/include/endian.h /usr/include/bits/endian.h
-deflate.o: /usr/include/sys/select.h /usr/include/bits/select.h
-deflate.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-deflate.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-deflate.o: /usr/include/alloca.h /usr/include/errno.h
-deflate.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-deflate.o: /usr/include/asm/errno.h /usr/include/asm-i386/errno.h
-deflate.o: /usr/include/asm-generic/errno.h
-deflate.o: /usr/include/asm-generic/errno-base.h
-infback.o: zutil.h zlib.h zconf.h /usr/include/string.h
-infback.o: /usr/include/features.h /usr/include/sys/cdefs.h
-infback.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-infback.o: /usr/include/gnu/stubs-32.h /usr/include/stdlib.h
-infback.o: /usr/include/sys/types.h /usr/include/bits/types.h
-infback.o: /usr/include/bits/typesizes.h /usr/include/time.h
-infback.o: /usr/include/endian.h /usr/include/bits/endian.h
-infback.o: /usr/include/sys/select.h /usr/include/bits/select.h
-infback.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-infback.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-infback.o: /usr/include/alloca.h /usr/include/errno.h
-infback.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-infback.o: /usr/include/asm/errno.h /usr/include/asm-i386/errno.h
-infback.o: /usr/include/asm-generic/errno.h
-infback.o: /usr/include/asm-generic/errno-base.h inftrees.h inflate.h
-infback.o: inffast.h inffixed.h
-inffast.o: zutil.h zlib.h zconf.h /usr/include/string.h
-inffast.o: /usr/include/features.h /usr/include/sys/cdefs.h
-inffast.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-inffast.o: /usr/include/gnu/stubs-32.h /usr/include/stdlib.h
-inffast.o: /usr/include/sys/types.h /usr/include/bits/types.h
-inffast.o: /usr/include/bits/typesizes.h /usr/include/time.h
-inffast.o: /usr/include/endian.h /usr/include/bits/endian.h
-inffast.o: /usr/include/sys/select.h /usr/include/bits/select.h
-inffast.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-inffast.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-inffast.o: /usr/include/alloca.h /usr/include/errno.h
-inffast.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-inffast.o: /usr/include/asm/errno.h /usr/include/asm-i386/errno.h
-inffast.o: /usr/include/asm-generic/errno.h
-inffast.o: /usr/include/asm-generic/errno-base.h inftrees.h inflate.h
-inffast.o: inffast.h
-inflate.o: zutil.h zlib.h zconf.h /usr/include/string.h
-inflate.o: /usr/include/features.h /usr/include/sys/cdefs.h
-inflate.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-inflate.o: /usr/include/gnu/stubs-32.h /usr/include/stdlib.h
-inflate.o: /usr/include/sys/types.h /usr/include/bits/types.h
-inflate.o: /usr/include/bits/typesizes.h /usr/include/time.h
-inflate.o: /usr/include/endian.h /usr/include/bits/endian.h
-inflate.o: /usr/include/sys/select.h /usr/include/bits/select.h
-inflate.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-inflate.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-inflate.o: /usr/include/alloca.h /usr/include/errno.h
-inflate.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-inflate.o: /usr/include/asm/errno.h /usr/include/asm-i386/errno.h
-inflate.o: /usr/include/asm-generic/errno.h
-inflate.o: /usr/include/asm-generic/errno-base.h inftrees.h inflate.h
-inflate.o: inffast.h inffixed.h
-inftrees.o: zutil.h zlib.h zconf.h /usr/include/string.h
-inftrees.o: /usr/include/features.h /usr/include/sys/cdefs.h
-inftrees.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-inftrees.o: /usr/include/gnu/stubs-32.h /usr/include/stdlib.h
-inftrees.o: /usr/include/sys/types.h /usr/include/bits/types.h
-inftrees.o: /usr/include/bits/typesizes.h /usr/include/time.h
-inftrees.o: /usr/include/endian.h /usr/include/bits/endian.h
-inftrees.o: /usr/include/sys/select.h /usr/include/bits/select.h
-inftrees.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-inftrees.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-inftrees.o: /usr/include/alloca.h /usr/include/errno.h
-inftrees.o: /usr/include/bits/errno.h /usr/include/linux/errno.h
-inftrees.o: /usr/include/asm/errno.h /usr/include/asm-i386/errno.h
-inftrees.o: /usr/include/asm-generic/errno.h
-inftrees.o: /usr/include/asm-generic/errno-base.h inftrees.h
-ioapi.o: /usr/include/stdio.h /usr/include/features.h
-ioapi.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-ioapi.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-ioapi.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-ioapi.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-ioapi.o: /usr/include/bits/wchar.h /usr/include/gconv.h
-ioapi.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-ioapi.o: /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h
-ioapi.o: /usr/include/endian.h /usr/include/bits/endian.h
-ioapi.o: /usr/include/sys/select.h /usr/include/bits/select.h
-ioapi.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-ioapi.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-ioapi.o: /usr/include/alloca.h /usr/include/string.h zlib.h zconf.h ioapi.h
-iomem.o: zutil.h zlib.h zconf.h /usr/include/string.h /usr/include/features.h
-iomem.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-iomem.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-iomem.o: /usr/include/stdlib.h /usr/include/sys/types.h
-iomem.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-iomem.o: /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h
-iomem.o: /usr/include/sys/select.h /usr/include/bits/select.h
-iomem.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-iomem.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-iomem.o: /usr/include/alloca.h /usr/include/errno.h /usr/include/bits/errno.h
-iomem.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-iomem.o: /usr/include/asm-i386/errno.h /usr/include/asm-generic/errno.h
-iomem.o: /usr/include/asm-generic/errno-base.h ioapi.h lvutil.h iomem.h
-iomem.o: /usr/include/stdlib.h /usr/include/features.h
-iomem.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-iomem.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-iomem.o: /usr/include/sys/types.h /usr/include/bits/types.h
-iomem.o: /usr/include/bits/typesizes.h /usr/include/time.h
-iomem.o: /usr/include/endian.h /usr/include/bits/endian.h
-iomem.o: /usr/include/sys/select.h /usr/include/bits/select.h
-iomem.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-iomem.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-iomem.o: /usr/include/alloca.h
-lvutil.o: /usr/include/stdio.h /usr/include/features.h
-lvutil.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-lvutil.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-lvutil.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-lvutil.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-lvutil.o: /usr/include/bits/wchar.h /usr/include/gconv.h
-lvutil.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-lvutil.o: /usr/include/string.h zlib.h zconf.h ioapi.h lvutil.h iomem.h
-lvutil.o: /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h
-lvutil.o: /usr/include/endian.h /usr/include/bits/endian.h
-lvutil.o: /usr/include/sys/select.h /usr/include/bits/select.h
-lvutil.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-lvutil.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-lvutil.o: /usr/include/alloca.h /usr/include/sys/stat.h
-lvutil.o: /usr/include/bits/stat.h /usr/include/utime.h
-mztools.o: /usr/include/stdio.h /usr/include/features.h
-mztools.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-mztools.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-mztools.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-mztools.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-mztools.o: /usr/include/bits/wchar.h /usr/include/gconv.h
-mztools.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-mztools.o: /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h
-mztools.o: /usr/include/endian.h /usr/include/bits/endian.h
-mztools.o: /usr/include/sys/select.h /usr/include/bits/select.h
-mztools.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-mztools.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-mztools.o: /usr/include/alloca.h /usr/include/string.h zlib.h zconf.h unzip.h
-mztools.o: ioapi.h
-mztools.o: zlib.h zconf.h unzip.h ioapi.h
-trees.o: deflate.h zutil.h zlib.h zconf.h /usr/include/string.h
-trees.o: /usr/include/features.h /usr/include/sys/cdefs.h
-trees.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-trees.o: /usr/include/gnu/stubs-32.h /usr/include/stdlib.h
-trees.o: /usr/include/sys/types.h /usr/include/bits/types.h
-trees.o: /usr/include/bits/typesizes.h /usr/include/time.h
-trees.o: /usr/include/endian.h /usr/include/bits/endian.h
-trees.o: /usr/include/sys/select.h /usr/include/bits/select.h
-trees.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-trees.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-trees.o: /usr/include/alloca.h /usr/include/errno.h /usr/include/bits/errno.h
-trees.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-trees.o: /usr/include/asm-i386/errno.h /usr/include/asm-generic/errno.h
-trees.o: /usr/include/asm-generic/errno-base.h trees.h
-uncompr.o: zlib.h zconf.h
-unzip.o: /usr/include/stdio.h /usr/include/features.h
-unzip.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-unzip.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-unzip.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-unzip.o: /usr/include/libio.h /usr/include/_G_config.h /usr/include/wchar.h
-unzip.o: /usr/include/bits/wchar.h /usr/include/gconv.h
-unzip.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-unzip.o: /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h
-unzip.o: /usr/include/endian.h /usr/include/bits/endian.h
-unzip.o: /usr/include/sys/select.h /usr/include/bits/select.h
-unzip.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-unzip.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-unzip.o: /usr/include/alloca.h /usr/include/string.h zlib.h zconf.h unzip.h
-unzip.o: ioapi.h /usr/include/errno.h /usr/include/bits/errno.h
-unzip.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-unzip.o: /usr/include/asm-i386/errno.h /usr/include/asm-generic/errno.h
-unzip.o: /usr/include/asm-generic/errno-base.h crypt.h
-unzip.o: zlib.h zconf.h ioapi.h
-zip.o: /usr/include/stdio.h /usr/include/features.h /usr/include/sys/cdefs.h
-zip.o: /usr/include/bits/wordsize.h /usr/include/gnu/stubs.h
-zip.o: /usr/include/gnu/stubs-32.h /usr/include/bits/types.h
-zip.o: /usr/include/bits/typesizes.h /usr/include/libio.h
-zip.o: /usr/include/_G_config.h /usr/include/wchar.h
-zip.o: /usr/include/bits/wchar.h /usr/include/gconv.h
-zip.o: /usr/include/bits/stdio_lim.h /usr/include/bits/sys_errlist.h
-zip.o: /usr/include/stdlib.h /usr/include/sys/types.h /usr/include/time.h
-zip.o: /usr/include/endian.h /usr/include/bits/endian.h
-zip.o: /usr/include/sys/select.h /usr/include/bits/select.h
-zip.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-zip.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-zip.o: /usr/include/alloca.h /usr/include/string.h zlib.h zconf.h zip.h
-zip.o: ioapi.h /usr/include/errno.h /usr/include/bits/errno.h
-zip.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-zip.o: /usr/include/asm-i386/errno.h /usr/include/asm-generic/errno.h
-zip.o: /usr/include/asm-generic/errno-base.h crypt.h
-zip.o: zlib.h zconf.h ioapi.h
-zlib.o: zconf.h
-zutil.o: zutil.h zlib.h zconf.h /usr/include/string.h /usr/include/features.h
-zutil.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-zutil.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-zutil.o: /usr/include/stdlib.h /usr/include/sys/types.h
-zutil.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-zutil.o: /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h
-zutil.o: /usr/include/sys/select.h /usr/include/bits/select.h
-zutil.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-zutil.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-zutil.o: /usr/include/alloca.h /usr/include/errno.h /usr/include/bits/errno.h
-zutil.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-zutil.o: /usr/include/asm-i386/errno.h /usr/include/asm-generic/errno.h
-zutil.o: /usr/include/asm-generic/errno-base.h
-zutil.o: zlib.h zconf.h /usr/include/string.h /usr/include/features.h
-zutil.o: /usr/include/sys/cdefs.h /usr/include/bits/wordsize.h
-zutil.o: /usr/include/gnu/stubs.h /usr/include/gnu/stubs-32.h
-zutil.o: /usr/include/stdlib.h /usr/include/sys/types.h
-zutil.o: /usr/include/bits/types.h /usr/include/bits/typesizes.h
-zutil.o: /usr/include/time.h /usr/include/endian.h /usr/include/bits/endian.h
-zutil.o: /usr/include/sys/select.h /usr/include/bits/select.h
-zutil.o: /usr/include/bits/sigset.h /usr/include/bits/time.h
-zutil.o: /usr/include/sys/sysmacros.h /usr/include/bits/pthreadtypes.h
-zutil.o: /usr/include/alloca.h /usr/include/errno.h /usr/include/bits/errno.h
-zutil.o: /usr/include/linux/errno.h /usr/include/asm/errno.h
-zutil.o: /usr/include/asm-i386/errno.h /usr/include/asm-generic/errno.h
-zutil.o: /usr/include/asm-generic/errno-base.h
+adler32.o zutil.o: zutil.h zlib.h zconf.h
+gzclose.o gzlib.o gzread.o gzwrite.o: zlib.h zconf.h gzguts.h
+compress.o example.o minigzip.o uncompr.o: zlib.h zconf.h
+crc32.o: zutil.h zlib.h zconf.h crc32.h
+deflate.o: deflate.h zutil.h zlib.h zconf.h
+infback.o inflate.o: zutil.h zlib.h zconf.h inftrees.h inflate.h inffast.h inffixed.h
+inffast.o: zutil.h zlib.h zconf.h inftrees.h inflate.h inffast.h
+inftrees.o: zutil.h zlib.h zconf.h inftrees.h
+trees.o: deflate.h zutil.h zlib.h zconf.h trees.h
+
+adler32.lo zutil.lo: zutil.h zlib.h zconf.h
+gzclose.lo gzlib.lo gzread.lo gzwrite.lo: zlib.h zconf.h gzguts.h
+compress.lo example.lo minigzip.lo uncompr.lo: zlib.h zconf.h
+crc32.lo: zutil.h zlib.h zconf.h crc32.h
+deflate.lo: deflate.h zutil.h zlib.h zconf.h
+infback.lo inflate.lo: zutil.h zlib.h zconf.h inftrees.h inflate.h inffast.h inffixed.h
+inffast.lo: zutil.h zlib.h zconf.h inftrees.h inflate.h inffast.h
+inftrees.lo: zutil.h zlib.h zconf.h inftrees.h
+trees.lo: deflate.h zutil.h zlib.h zconf.h trees.h
