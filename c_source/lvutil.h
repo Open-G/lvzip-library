@@ -48,7 +48,9 @@ extern "C" {
  #if Win32
   #if defined(_CVI_DEBUG_)
    #define DoDebugger()
-  #else  
+  #elif _MSC_VER >= 1400
+	 #define DoDebugger()   __debugbreak()
+  #else
    #define DoDebugger()    {__asm int 3}
   #endif
  #elif MacOS

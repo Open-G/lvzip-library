@@ -58,3 +58,10 @@ EXPORTS
     lvzip_zipOpenNewFileInZip2
     lvzip_zipOpenNewFileInZip3
     lvzip_zipWriteInFileInZip
+
+    lvzip_gzopen
+    lvzip_gzseek
+    lvzip_gztell
+    lvzip_gzoffset
+    lvzip_adler32_combine
+    lvzip_crc32_combine

@@ -112,3 +112,9 @@
 #define zipOpenNewFileInZip4_64     lvzip_zipOpenNewFileInZip4_64
 #define zipRemoveExtraInfoBlock     lvzip_RemoveExtraInfoBlock
 #define zipWriteInFileInZip         lvzip_zipWriteInFileInZip
+#define gzopen						lvzip_gzopen
+#define gzseek						lvzip_gzseek
+#define gztell						lvzip_gztell
+#define gzoffset					lvzip_gzoffset
+#define adler32_combine				lvzip_adler32_combine
+#define gcrc32_combine				lvzip_crc32_combine
