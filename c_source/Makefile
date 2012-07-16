@@ -32,7 +32,7 @@ LDSHARED=gcc
 CPP=gcc -E
 
 STATICLIB=lvzlib.a
-SHAREDLIB=lvzlib.so.2
+SHAREDLIB=lvzlib.so.1
 SHAREDLIBV=lvzlib.so
 SHAREDLIBM=
 LIBS=$(STATICLIB) $(SHAREDLIBV)
@@ -41,7 +41,7 @@ AR=ar
 ARFLAGS=rc
 RANLIB=ranlib
 LDCONFIG=ldconfig
-LDSHAREDLIBC=-lc -llv
+LDSHAREDLIBC=-lc
 TAR=tar
 SHELL=/bin/sh
 EXE=
@@ -57,12 +57,12 @@ pkgconfigdir = ${libdir}/pkgconfig
 
 OBJZ = adler32.o crc32.o deflate.o infback.o inffast.o inflate.o inftrees.o trees.o zutil.o
 OBJG = compress.o uncompr.o gzclose.o gzlib.o gzread.o gzwrite.o
-OBJL = lvutil.o ioapi.o iomem.o mztools.o
+OBJL = unzip.o zip.o lvutil.o ioapi.o iomem.o mztools.o
 OBJC = $(OBJZ) $(OBJL) $(OBJG)
 
 PIC_OBJZ = adler32.lo crc32.lo deflate.lo infback.lo inffast.lo inflate.lo inftrees.lo trees.lo zutil.lo
 PIC_OBJG = compress.lo uncompr.lo gzclose.lo gzlib.lo gzread.lo gzwrite.lo
-PIC_OBJL = lvutil.lo ioapi.lo iomem.lo mztools.lo
+PIC_OBJL = unzip.lo zip.lo lvutil.lo ioapi.lo iomem.lo mztools.lo
 PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJL) $(PIC_OBJG)
 
 # to use the asm code: make OBJA=match.o, PIC_OBJA=match.lo

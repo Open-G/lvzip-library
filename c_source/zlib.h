@@ -1656,6 +1656,7 @@ struct gzFile_s {
     unsigned char *next;
     z_off64_t pos;
 };
+#if 0
 ZEXTERN int ZEXPORT gzgetc_ OF((gzFile file));  /* backward compatibility */
 #ifdef Z_PREFIX_SET
 #  undef z_gzgetc
@@ -1664,6 +1665,7 @@ ZEXTERN int ZEXPORT gzgetc_ OF((gzFile file));  /* backward compatibility */
 #else
 #  define gzgetc(g) \
           ((g)->have ? ((g)->have--, (g)->pos++, *((g)->next)++) : gzgetc(g))
+#endif
 #endif
 
 /* provide 64-bit offset functions if _LARGEFILE64_SOURCE defined, and/or
