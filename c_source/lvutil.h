@@ -44,6 +44,12 @@ extern "C" {
  #error No target defined
 #endif
 
+#if Win32
+ #define LibAPI(retval) extern __declspec(dllexport) retval
+#else
+ #define LibAPI(retval)	__attribute__((visibility ("default"))) extern retval
+#endif
+
 #if defined(DEBUG)
  #if Win32
   #if defined(_CVI_DEBUG_)
@@ -70,15 +76,37 @@ extern "C" {
 */
 #endif
 
-typedef char            int8;
-typedef unsigned char   uInt8;
-typedef uInt8           uChar;
-typedef short           int16;
-typedef unsigned short  uInt16;
-typedef long            int32;
-typedef unsigned long   uInt32;
-typedef float           float32;
-typedef double          float64;
+#ifndef Unused
+/* The macro Unused can be used to avoid compiler warnings for
+unused parameters or locals. */
+#   ifdef __cplusplus
+/* This implementation of Unused is safe for const parameters. */
+#       define Unused(var_or_param)    _Unused((const void *)&var_or_param)
+        inline void _Unused(const void *) {}
+#   elif MSWin
+/* This implementation of Unused is not safe for const parameters. */
+#       define Unused(var_or_param)    var_or_param=var_or_param
+#   else
+#       define Unused(var_or_param)
+#   endif
+#endif /* Unused */
+
+typedef signed char			int8;
+typedef unsigned char		uInt8;
+typedef uInt8				uChar;
+typedef signed short		int16;
+typedef unsigned short		uInt16;
+typedef signed int			int32;
+typedef unsigned int		uInt32;
+#if Win32
+typedef signed __int64		int64;
+typedef unsigned __int64	uInt64;
+#else
+typedef signed long long 	int64;
+typedef unsigned long long 	uInt64;
+#endif
+typedef float				float32;
+typedef double				float64;
 
 #define Private(T)  typedef struct T##_t { void *p; } *T
 #define PrivateH(T)  struct T##_t; typedef struct T##_t **T
@@ -199,7 +227,7 @@ typedef struct
 } LVPoint;
 
 typedef uChar        Str255[256], *PStr, *CStr, *UPtr, **UHandle;
-typedef const uChar  *ConstCStr, *ConstPStr, ConstStr255[256];
+typedef const uChar  *ConstCStr, *ConstPStr, *ConstUPtr, ConstStr255[256];
 
 #define PStrBuf(b)  (&((PStr)(b))[1])
 #define PStrLen(b)  (((PStr)(b))[0])    /* # of chars in string */
@@ -258,39 +286,42 @@ MgErr FDisposePath(Path p);
 MgErr FNewRefNum(Path path, File fd, LVRefNum* refnum);
 int32 DbgPrintf(CStr fmt, ...);
 
-UPtr DSNewPClr(int32);
+UPtr DSNewPClr(size_t size);
 MgErr DSDisposePtr(UPtr);
-UHandle DSNewHClr(int32 size);
-MgErr DSSetHandleSize(UHandle, int32);
+UHandle DSNewHClr(size_t size);
+MgErr DSSetHandleSize(UHandle, size_t);
 int32 DSGetHandleSize(UHandle);
 MgErr DSDisposeHandle(UHandle);
 
-MgErr NumericArrayResize(int32, int32, UHandle*, int32);
+void MoveBlock(ConstUPtr ps, UPtr pd, size_t size);
+
+MgErr NumericArrayResize(int32, int32, UHandle*, size_t);
 
 #define Min(a, b)      ((a) < (b)) ? (a) : (b) 
 #define Max(a, b)      ((a) > (b)) ? (a) : (b) 
 
 /* Our exported functions */
-ZEXTERN void ZEXPORT DLLVersion OF((uChar*  Version));
+LibAPI(void) DLLVersion OF((uChar*  Version));
 
-ZEXTERN MgErr ZEXPORT LVPath_ToText OF((Path path, CStr str, int32 *len));
-ZEXTERN MgErr ZEXPORT LVPath_HasResourceFork OF((Path path, int32 *hasResFork));
-ZEXTERN MgErr ZEXPORT LVPath_EncodeMacbinary OF((Path srcFileName, Path dstFileName));
-ZEXTERN MgErr ZEXPORT LVPath_DecodeMacbinary OF((Path srcFileName, Path dstFileName));
+LibAPI(MgErr) LVPath_ToText OF((Path path, CStr str, int32 *len));
+LibAPI(MgErr) LVPath_HasResourceFork OF((Path path, int32 *hasResFork));
+LibAPI(MgErr) LVPath_EncodeMacbinary OF((Path srcFileName, Path dstFileName));
+LibAPI(MgErr) LVPath_DecodeMacbinary OF((Path srcFileName, Path dstFileName));
 
-ZEXTERN MgErr ZEXPORT LVPath_UtilFileInfo OF((Path path,
+LibAPI(MgErr) LVPath_UtilFileInfo OF((Path path,
                    uInt8 write,
                    uInt8 *isDirectory,
                    LVFileInfo *finderInfo,
                    LStrHandle comment));
 
-ZEXTERN MgErr ZEXPORT LVPath_OpenFile OF((LVRefNum *refnum,
+LibAPI(MgErr) LVPath_OpenFile OF((LVRefNum *refnum,
                    Path path,
                    uInt8 rsrc,
                    uInt32 openMode,
                    uInt32 denyMode));
 
-ZEXTERN long ZEXPORT InitializeFileFuncs OF((zlib_filefunc64_def* pzlib_filefunc_def, LStrHandle *memory));
+LibAPI(MgErr) InitializeFileFuncs OF((LStrHandle filefunc_def));
+LibAPI(MgErr) InitializeStreamFuncs OF((LStrHandle  filefunc_def, LStrHandle *memory));
 
 #ifdef __cplusplus
 }

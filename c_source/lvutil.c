@@ -525,12 +525,12 @@ static MgErr UnixToLVFileErr(void)
 #endif 
 #endif
 
-extern void ZEXPORT DLLVersion(uChar* version)
+LibAPI(void) DLLVersion(uChar* version)
 {
-    sprintf((char*)version, "lvzlib date: %s, time: %s",__DATE__,__TIME__);
+    sprintf((char*)version, "lvzlib V 2.1, date: %s, time: %s",__DATE__,__TIME__);
 }
 
-extern MgErr ZEXPORT LVPath_HasResourceFork(Path path, int32 *hasResFork)
+LibAPI(MgErr) LVPath_HasResourceFork(Path path, int32 *hasResFork)
 {
     MgErr  err = noErr;
 #if MacOS
@@ -566,7 +566,7 @@ extern MgErr ZEXPORT LVPath_HasResourceFork(Path path, int32 *hasResFork)
     return err;
 }
 
-extern MgErr ZEXPORT LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
+LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
 {
 #if MacOS
     FSSpec srcFSSpec;
@@ -586,7 +586,7 @@ extern MgErr ZEXPORT LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
 #endif
 }
 
-extern MgErr ZEXPORT LVPath_DecodeMacbinary(Path srcPath, Path dstPath)
+LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcPath, Path dstPath)
 {
 #if MacOS
     FSSpec srcFSSpec;
@@ -606,7 +606,7 @@ extern MgErr ZEXPORT LVPath_DecodeMacbinary(Path srcPath, Path dstPath)
 #endif
 }
 
-extern MgErr ZEXPORT LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 openMode, uInt32 denyMode)
+LibAPI(MgErr) LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 openMode, uInt32 denyMode)
 {
     MgErr err;
 	int32 type;
@@ -852,7 +852,7 @@ extern MgErr ZEXPORT LVPath_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uI
     return err;
 }
 
-extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
+LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
                                          uInt8 write,
                                          uInt8 *isDirectory,
                                          LVFileInfo *fileInfo,
@@ -1157,31 +1157,36 @@ extern MgErr ZEXPORT LVPath_UtilFileInfo(Path path,
     return err;
 }
 
-extern long ZEXPORT InitializeFileFuncs (zlib_filefunc64_def* pzlib_filefunc_def, LStrHandle *memory)
+LibAPI(MgErr) InitializeFileFuncs(LStrHandle filefunc_def)
 {
-    DoDebugger();
-
-    if (pzlib_filefunc_def)
-    {
-      if (memory)
-      {
-        fill_mem_filefunc(pzlib_filefunc_def, memory);
-      }
-      else
-      {
+	MgErr err = NumericArrayResize(uB, 1, (UHandle*)&filefunc_def, sizeof(zlib_filefunc64_def));
+	if (!err)
+	{
+		zlib_filefunc64_def* pzlib_filefunc_def = (zlib_filefunc64_def*)LStrBuf(*filefunc_def);
+		LStrLen(*filefunc_def) = sizeof(zlib_filefunc64_def);
 #if Win32
         fill_win32_filefunc64A(pzlib_filefunc_def);
 #else
         fill_fopen64_filefunc(pzlib_filefunc_def);
 #endif
-      }
-      return mgNoErr;
-    }
-    else
-      return sizeof(zlib_filefunc64_def);
+	}
+	return err;
 }
 
-extern MgErr ZEXPORT LVPath_ToText(Path path, CStr str, int32 *len)
+LibAPI(MgErr) InitializeStreamFuncs(LStrHandle filefunc_def, LStrHandle *memory)
+{
+	MgErr err = NumericArrayResize(uB, 1, (UHandle*)&filefunc_def, sizeof(zlib_filefunc64_def));
+	if (!err)
+	{
+		zlib_filefunc64_def* pzlib_filefunc_def = (zlib_filefunc64_def*)LStrBuf(*filefunc_def);
+		LStrLen(*filefunc_def) = sizeof(zlib_filefunc64_def);
+
+        fill_mem_filefunc(pzlib_filefunc_def, memory);
+    }
+    return err;
+}
+
+LibAPI(MgErr) LVPath_ToText(Path path, CStr str, int32 *len)
 {
     MgErr err;
     LStrPtr lstr;

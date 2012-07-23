@@ -13,40 +13,50 @@ all: $(OUTDIR) $(OUTDIR)\lvzlib.dll
 SOURCES=adler32.c \
         compress.c \
         crc32.c \
-        uncompr.c \
         deflate.c \
-        trees.c \
-        zutil.c \
-        inflate.c \
-        infback.c \
-        inftrees.c \
+        gzclose.c \
+		gzlib.c \
+		gzread.c \
+		gzwrite.c \
+		infback.c \
         inffast.c \
+        inflate.c \
+        inftrees.c \
         ioapi.c \
         iowin.c \
         iomem.c \
+		lvapi.c \
         lvutil.c \
 	    mztools.c \
+		trees.c \
+        uncompr.c \
+        unzip.c \
         zip.c \
-        unzip.c
-
+        zutil.c
+		
 OBJS=$(OUTDIR)\adler32.obj \
      $(OUTDIR)\compress.obj \
      $(OUTDIR)\crc32.obj \
-     $(OUTDIR)\uncompr.obj \
      $(OUTDIR)\deflate.obj \
-     $(OUTDIR)\trees.obj \
-     $(OUTDIR)\zutil.obj \
-     $(OUTDIR)\inflate.obj \
+     $(OUTDIR)\gzclose.obj \
+	 $(OUTDIR)\gzlib.obj \
+	 $(OUTDIR)\gzread.obj \
+	 $(OUTDIR)\gzwrite.obj \
      $(OUTDIR)\infback.obj \
-     $(OUTDIR)\inftrees.obj \
      $(OUTDIR)\inffast.obj \
+     $(OUTDIR)\inflate.obj \
+     $(OUTDIR)\inftrees.obj \
      $(OUTDIR)\ioapi.obj \
 	 $(OUTDIR)\iowin.obj \
      $(OUTDIR)\iomem.obj \
+	 $(OUTDIR)\lvapi.obj \
      $(OUTDIR)\lvutil.obj \
 	 $(OUTDIR)\mztools.obj \
+     $(OUTDIR)\trees.obj \
+     $(OUTDIR)\uncompr.obj \
+     $(OUTDIR)\unzip.obj \
      $(OUTDIR)\zip.obj \
-     $(OUTDIR)\unzip.obj
+     $(OUTDIR)\zutil.obj
 
 ELIBS=user32.lib kernel32.lib labview.lib
 

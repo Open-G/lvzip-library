@@ -335,6 +335,9 @@ ZEXTERN int ZEXPORT zipClose OF((zipFile file,
 /*
   Close the zipfile
 */
+ZEXTERN int ZEXPORT zipClose2 OF((zipFile file,
+                const char* global_comment,
+				voidp output));
 
 
 ZEXTERN int ZEXPORT zipRemoveExtraInfoBlock OF((char* pData, int* dataLen, short sHeader));
