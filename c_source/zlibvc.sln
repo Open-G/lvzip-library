@@ -5,34 +5,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlibvc", "zlibvc.vcproj", "
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		DLL ASM Debug|Win32 = DLL ASM Debug|Win32
-		DLL ASM Debug|x64 = DLL ASM Debug|x64
-		DLL ASM Obj Release|Win32 = DLL ASM Obj Release|Win32
-		DLL ASM Obj Release|x64 = DLL ASM Obj Release|x64
-		DLL ASM Release|Win32 = DLL ASM Release|Win32
-		DLL ASM Release|x64 = DLL ASM Release|x64
 		DLL Debug|Win32 = DLL Debug|Win32
 		DLL Debug|x64 = DLL Debug|x64
 		DLL Release|Win32 = DLL Release|Win32
 		DLL Release|x64 = DLL Release|x64
-		static ASM Release|Win32 = static ASM Release|Win32
-		static ASM Release|x64 = static ASM Release|x64
 		static Release|Win32 = static Release|Win32
 		static Release|x64 = static Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Debug|Win32.ActiveCfg = DLL ASM Debug|Win32
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Debug|Win32.Build.0 = DLL ASM Debug|Win32
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Debug|x64.ActiveCfg = DLL ASM Debug|x64
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Debug|x64.Build.0 = DLL ASM Debug|x64
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Obj Release|Win32.ActiveCfg = DLL ASM Obj Release|Win32
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Obj Release|Win32.Build.0 = DLL ASM Obj Release|Win32
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Obj Release|x64.ActiveCfg = DLL ASM Obj Release|x64
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Obj Release|x64.Build.0 = DLL ASM Obj Release|x64
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Release|Win32.ActiveCfg = DLL ASM Release|Win32
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Release|Win32.Build.0 = DLL ASM Release|Win32
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Release|x64.ActiveCfg = DLL ASM Release|x64
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL ASM Release|x64.Build.0 = DLL ASM Release|x64
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Debug|Win32.ActiveCfg = DLL Debug|Win32
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Debug|Win32.Build.0 = DLL Debug|Win32
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Debug|x64.ActiveCfg = DLL Debug|x64
@@ -41,10 +21,6 @@ Global
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Release|Win32.Build.0 = DLL Release|Win32
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Release|x64.ActiveCfg = DLL Release|x64
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Release|x64.Build.0 = DLL Release|x64
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.static ASM Release|Win32.ActiveCfg = static ASM Release|Win32
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.static ASM Release|Win32.Build.0 = static ASM Release|Win32
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.static ASM Release|x64.ActiveCfg = static ASM Release|x64
-		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.static ASM Release|x64.Build.0 = static ASM Release|x64
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.static Release|Win32.ActiveCfg = static Release|Win32
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.static Release|Win32.Build.0 = static Release|Win32
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.static Release|x64.ActiveCfg = static Release|x64
