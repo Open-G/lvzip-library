@@ -19,10 +19,10 @@ LIBPATH =
 # directory. Make will automatically locate the source file and
 # compile it.
 OBJECTS := $(OBJ_DIR)/adler32.o $(OBJ_DIR)/compress.o $(OBJ_DIR)/crc32.o $(OBJ_DIR)/deflate.o \
-           $(OBJ_DIR)\gzclose.o $(OBJ_DIR)\gzlib.o $(OBJ_DIR)\gzread.o $(OBJ_DIR)\gzwrite.o \
+           $(OBJ_DIR)/gzclose.o $(OBJ_DIR)/gzlib.o $(OBJ_DIR)/gzread.o $(OBJ_DIR)/gzwrite.o \
            $(OBJ_DIR)/inffast.o $(OBJ_DIR)/infback.o $(OBJ_DIR)/inflate.o $(OBJ_DIR)/inftrees.o \
            $(OBJ_DIR)/ioapi.o $(OBJ_DIR)/iomem.o $(OBJ_DIR)/lvutil.o $(OBJ_DIR)/lvapi.o $(OBJ_DIR)/mztools.o \
-		   $(OBJ_DIR)/trees.o $(OBJ_DIR)/uncompr.o $(OBJ_DIR)/unzip.o $(OBJ_DIR)/zip.o $(OBJ_DIR)/zutil.o
+           $(OBJ_DIR)/trees.o $(OBJ_DIR)/uncompr.o $(OBJ_DIR)/unzip.o $(OBJ_DIR)/zip.o $(OBJ_DIR)/zutil.o
 
 # This is the name of the output shared library.
 PROJECT_TARGETS := $(OBJ_DIR)/lvzlib.out
@@ -50,11 +50,11 @@ IDE_INCLUDES = -I$(WIND_BASE)/target/h -I$(WIND_BASE)/target/h/wrn/coreip
 # copy this rule and modify its extension and compile flags for the
 # required source file type.
 $(OBJ_DIR)/%.o : %.c
-	ccppc $(CFLAGS) $(CC_ARCH_SPEC) -Wall  -MD -MP $(ADDED_CFLAGS) $(IDE_INCLUDES) $(ADDED_INCLUDES) -DCPU=$(CPU) -DTOOL_FAMILY=$(TOOL_FAMILY) -DTOOL=$(TOOL) -D_WRS_KERNEL   $(DEFINES) -o "$@" -c "$<"
+	ccppc $(CFLAGS) $(CC_ARCH_SPEC) -Wall -MD -MP $(ADDED_CFLAGS) $(IDE_INCLUDES) $(ADDED_INCLUDES) -DCPU=$(CPU) -DTOOL_FAMILY=$(TOOL_FAMILY) -DTOOL=$(TOOL) -D_WRS_KERNEL $(DEFINES) -o "$@" -c "$<"
 
 # Adapted rule for .cpp files
 $(OBJ_DIR)/%.o : %.cpp
-	c++ppc $(CFLAGS) $(CC_ARCH_SPEC) -Wall  -MD -MP $(ADDED_CFLAGS) $(IDE_INCLUDES) $(ADDED_INCLUDES) -DCPU=$(CPU) -DTOOL_FAMILY=$(TOOL_FAMILY) -DTOOL=$(TOOL) -D_WRS_KERNEL   $(DEFINES) -o "$@" -c "$<"
+	c++ppc $(CFLAGS) $(CC_ARCH_SPEC) -Wall -MD -MP $(ADDED_CFLAGS) $(IDE_INCLUDES) $(ADDED_INCLUDES) -DCPU=$(CPU) -DTOOL_FAMILY=$(TOOL_FAMILY) -DTOOL=$(TOOL) -D_WRS_KERNEL $(DEFINES) -o "$@" -c "$<"
 
 all : check_objectdir $(PROJECT_TARGETS) 
 

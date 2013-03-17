@@ -44,7 +44,7 @@
 ZEXTERN "C" {
 #endif
 
-//#define HAVE_BZIP2
+/*#define HAVE_BZIP2*/
 
 #ifndef _ZLIB_H
 #include "zlib.h"
