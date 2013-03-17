@@ -442,6 +442,9 @@ typedef uLong FAR uLongf;
 #if defined(__WATCOMC__) && !defined(Z_HAVE_UNISTD_H)
 #  define Z_HAVE_UNISTD_H
 #endif
+#if (defined(__vxworks) || defined(__vxworks__)) && !defined(Z_HAVE_UNISTD_H)
+#  define Z_HAVE_UNISTD_H
+#endif
 #ifndef Z_SOLO
 #  if defined(Z_HAVE_UNISTD_H) || defined(LARGEFILE64_SOURCE)
 #    include <unistd.h>         /* for SEEK_*, off_t, and _LFS64_LARGEFILE */
