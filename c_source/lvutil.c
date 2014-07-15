@@ -1708,16 +1708,21 @@ LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest,
 #if Unix
 #define UStrBuf(s)	(wchar_t*)LStrbuf(s)
 #ifdef HAVE_ICONV
-static char *iconv_getcharset(uInt32 codePage)
+TH_UI static char *iconv_getcharset(uInt32 codePage)
 {
+	static char[10] cp;
 	switch (codePage)
 	{
 		case CP_ACP:
-			return "ACP";
+			return "CHAR";
 		case CP_OEMCP:
+			/* FIXME: determine current local and return according OEM */
 			return "OEM";
 		case CP_UTF8:
-			return "UTF8";
+			return "UTF-8";
+		default:
+			sprintf_s(cp, 10, "CP%d", codepage);
+			return cp;
 	}
 	return NULL;
 }
@@ -1745,10 +1750,12 @@ static MgErr unix_convert_mbtow(const char *src, size_t len, UStrHandle *dest, c
 	return UnixToMgErr();
 }
 #else
-static MgErr unix_convert(const char *src, size_t len, UStrHandle *dest, const char *charset)
+/* We don't have a good way of converting from an arbitrary character set to wide char and back.
+   Just do default mbcs to wide char and vice versa ??? */
+static MgErr unix_convert_mbtow(const char *src, size_t len, UStrHandle *dest, const char *charset)
 {
-	size_t max = LStrLen(*src), numChars = 0, length;
-	char *pt = LStrBuf(*src);
+	size_t max = len, numChars = 0, length;
+	char *pt = (char*)src;
 #if HAVE_MBRTOWC
 	mbstate_t mbs;
 
@@ -1778,7 +1785,6 @@ static MgErr unix_convert(const char *src, size_t len, UStrHandle *dest, const c
 #endif
 	if (numChars > 0)
 	{
-		numChars;
 		err = NumericArrayResize(uB, 1, (UHandle*)dest, numChars * sizeof(wchar_t));
 		if (!err)
 		{
