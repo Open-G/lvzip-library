@@ -18,7 +18,7 @@
 
 CC=gcc
 
-CFLAGS=-O3  -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
 #CFLAGS=-g -DDEBUG
 #CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
@@ -155,12 +155,12 @@ minigzip64.o: test/minigzip.c zlib.h zconf.h
 
 .SUFFIXES: .lo
 
-.c.lo:
+.c.lo: 
 	-@mkdir objs 2>/dev/null || test -d objs
 	$(CC) $(SFLAGS) -DPIC -c -o objs/$*.o $<
 	-@mv objs/$*.o $@
 
-placebo $(SHAREDLIBV): $(PIC_OBJS) libz.a
+placebo $(SHAREDLIBV): $(PIC_OBJS)
 	$(LDSHARED) $(SFLAGS) -shared -o $@ $(PIC_OBJS) $(LDSHAREDLIBC) $(LDFLAGS)
 	rm -f $(SHAREDLIB) $(SHAREDLIBM)
 #	ln -s $@ $(SHAREDLIB)

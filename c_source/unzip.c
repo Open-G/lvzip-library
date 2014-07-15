@@ -185,7 +185,7 @@ typedef struct
 
 #    ifndef NOUNCRYPT
     unsigned long keys[3];     /* keys defining the pseudo-random sequence */
-    const unsigned long* pcrc_32_tab;
+    const z_crc_t* pcrc_32_tab;
 #    endif
 } unz64_s;
 
@@ -798,9 +798,9 @@ ZEXTERN unzFile ZEXPORT unzOpen64 (const void *path)
 }
 
 /*
-  Close a ZipFile opened with unzipOpen.
-  If there is files inside the .Zip opened with unzipOpenCurrentFile (see later),
-    these files MUST be closed with unzipCloseCurrentFile before call unzipClose.
+  Close a ZipFile opened with unzOpen.
+  If there is files inside the .Zip opened with unzOpenCurrentFile (see later),
+    these files MUST be closed with unzCloseCurrentFile before call unzClose.
   return UNZ_OK if there is no problem. */
 ZEXTERN int ZEXPORT unzClose (unzFile file)
 {
@@ -956,7 +956,7 @@ local int unz64local_GetCurrentFileInfoInternal (unzFile file,
     if (unz64local_getLong(&s->z_filefunc, s->filestream,&file_info.external_fa) != UNZ_OK)
         err=UNZ_ERRNO;
 
-    /* relative offset of local header */
+    // relative offset of local header
     if (unz64local_getLong(&s->z_filefunc, s->filestream,&uL) != UNZ_OK)
         err=UNZ_ERRNO;
     file_info_internal.offset_curfile = uL;
@@ -979,7 +979,7 @@ local int unz64local_GetCurrentFileInfoInternal (unzFile file,
         lSeek -= uSizeRead;
     }
 
-    /* Read extrafield */
+    // Read extrafield
     if ((err==UNZ_OK) && (extraField!=NULL))
     {
         ZPOS64_T uSizeRead ;
@@ -1010,7 +1010,7 @@ local int unz64local_GetCurrentFileInfoInternal (unzFile file,
     {
                                 uLong acc = 0;
 
-        /* since lSeek now points to after the extra field we need to move back */
+        // since lSeek now points to after the extra field we need to move back
         lSeek -= file_info.size_file_extra;
 
         if (lSeek!=0)
@@ -1220,7 +1220,7 @@ ZEXTERN int ZEXPORT unzGoToNextFile (unzFile  file)
 
 /*
   Try locate the file szFileName in the zipfile.
-  For the iCaseSensitivity signification, see unzipStringFileNameCompare
+  For the iCaseSensitivity signification, see unzStringFileNameCompare
 
   return value :
   UNZ_OK if the file is found. It becomes the current file.
@@ -1996,7 +1996,7 @@ ZEXTERN int ZEXPORT unzGetLocalExtrafield (unzFile file, voidp buf, unsigned len
 }
 
 /*
-  Close the file in zip opened with unzipOpenCurrentFile
+  Close the file in zip opened with unzOpenCurrentFile
   Return UNZ_CRCERROR if all the file was read but the CRC is not good
 */
 ZEXTERN int ZEXPORT unzCloseCurrentFile (unzFile file)

@@ -74,18 +74,18 @@ uLong* bytesRecovered;
         /* Filename */
         if (fnsize > 0) {
           if (fnsize < sizeof(filename)) {
-          if (fread(filename, 1, fnsize, fpZip) == fnsize) {
-            if (fwrite(filename, 1, fnsize, fpOut) == fnsize) {
-              offset += fnsize;
+            if (fread(filename, 1, fnsize, fpZip) == fnsize) {
+                if (fwrite(filename, 1, fnsize, fpOut) == fnsize) {
+                offset += fnsize;
+              } else {
+                err = Z_ERRNO;
+                break;
+              }
             } else {
               err = Z_ERRNO;
               break;
             }
           } else {
-            err = Z_ERRNO;
-            break;
-          }
-        } else {
             err = Z_ERRNO;
             break;
           }
@@ -97,9 +97,9 @@ uLong* bytesRecovered;
         /* Extra field */
         if (extsize > 0) {
           if (extsize < sizeof(extra)) {
-          if (fread(extra, 1, extsize, fpZip) == extsize) {
-            if (fwrite(extra, 1, extsize, fpOut) == extsize) {
-              offset += extsize;
+            if (fread(extra, 1, extsize, fpZip) == extsize) {
+              if (fwrite(extra, 1, extsize, fpOut) == extsize) {
+                offset += extsize;
                 } else {
                 err = Z_ERRNO;
                 break;
@@ -222,7 +222,7 @@ uLong* bytesRecovered;
     {
       int entriesZip = entries;
       char header[22];
-      char* comment = ""; /* "ZIP File recovered by zlib/minizip/mztools" */
+      char* comment = ""; // "ZIP File recovered by zlib/minizip/mztools";
       int comsize = (int) strlen(comment);
       if (entriesZip > 0xffff) {
         entriesZip = 0xffff;

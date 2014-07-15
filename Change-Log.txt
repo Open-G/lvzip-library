@@ -100,3 +100,10 @@ Fixed issue in ZLIB Store File when adding direcotry trees with password: The di
 entries need not to be password protected. 
 Added "Carbon" to the case selector of ZLIB Specific Path to Common Path.vi and
 ZLIB Common Path to Specific Path.vi
+
+2013-05-21 rk
+Added latest zlib 1.2.7.1 source changes
+Added intial support for 64 bit library
+
+2014-04-29 rk
+Added support for correct codepage translation for filename and file comment
