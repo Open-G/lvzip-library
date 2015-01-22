@@ -430,10 +430,10 @@ unsigned copy;
 
 /* check function to use adler32() for zlib or crc32() for gzip */
 #ifdef GUNZIP
-#  define UPDATE_CHECK(check, buf, len) \
+#  define UPDATE(check, buf, len) \
     (state->flags ? crc32(check, buf, len) : adler32(check, buf, len))
 #else
-#  define UPDATE_CHECK(check, buf, len) adler32(check, buf, len)
+#  define UPDATE(check, buf, len) adler32(check, buf, len)
 #endif
 
 /* check macros for header crc */
@@ -1179,7 +1179,7 @@ int flush;
                 state->total += out;
                 if (out)
                     strm->adler = state->check =
-                        UPDATE_CHECK(state->check, put - out, out);
+                        UPDATE(state->check, put - out, out);
                 out = left;
                 if ((
 #ifdef GUNZIP
@@ -1242,7 +1242,7 @@ int flush;
     state->total += out;
     if (state->wrap && out)
         strm->adler = state->check =
-            UPDATE_CHECK(state->check, strm->next_out - out, out);
+            UPDATE(state->check, strm->next_out - out, out);
     strm->data_type = state->bits + (state->last ? 64 : 0) +
                       (state->mode == TYPE ? 128 : 0) +
                       (state->mode == LEN_ || state->mode == COPY_ ? 256 : 0);

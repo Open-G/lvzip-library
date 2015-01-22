@@ -46,31 +46,68 @@ typedef struct
 
 static MagicCookieJar gCookieJar = NULL;
 
+#if 0
+LibAPI(const char *) lvzlib_disposeRefnum(uptr_t *refnum)
+{
+
+}
+#endif
+static int32 lvzlipCleanup(UPtr ptr)
+{
+	FileNode *pNode = (FileNode*)ptr;
+	MgErr err =	MCDisposeCookie(gCookieJar, pNode->refnum, (MagicCookieInfo)&pNode);
+	if (!err && pNode->u.node)
+	{
+		switch (pNode->magic)
+		{
+			case UnzMagic:
+				err = LibToMgErr(unzClose(pNode->u.node));
+				break;
+			case ZipMagic:
+				err = LibToMgErr(zipClose(pNode->u.node, NULL));
+				break;
+		}
+	}
+	return err;
+}
+
 static MgErr lvzlibCreateRefnum(voidp node, LVRefNum *refnum, uInt32 magic, LVBoolean autoreset)
 {
-	FileNode fNode;
+	FileNode *pNode;
 	if (!gCookieJar)
 	{
-		gCookieJar = MCNewBigJar(sizeof(FileNode));
+		gCookieJar = MCNewBigJar(sizeof(FileNode*));
 		if (!gCookieJar)
 			return mFullErr;
 	}
-	fNode.u.node = node;
-	fNode.magic = magic;
-	fNode.refnum = MCNewCookie(gCookieJar, (MagicCookieInfo)&fNode);
-	*refnum = fNode.refnum;
+	pNode = (FileNode*)DSNewPClr(sizeof(FileNode));
+	if (!pNode)
+		return mFullErr;
+
+	*refnum = MCNewCookie(gCookieJar, (MagicCookieInfo)&pNode);
+	if (*refnum)
+	{
+		pNode->u.node = node;
+		pNode->magic = magic;
+		pNode->refnum = *refnum;
+		RTSetCleanupProc(lvzlipCleanup, (UPtr)pNode, autoreset ? kCleanOnIdle : kCleanExit);
+	}
+	else
+	{
+		DSDisposePtr((UPtr)pNode);
+	}
 	return *refnum ? mgNoErr : mFullErr;
 }
 
 static MgErr lvzlibGetRefnum(LVRefNum *refnum, voidp *node, uInt32 magic)
 {
-	FileNode fNode;
-	MgErr err = MCGetCookieInfo(gCookieJar, *refnum, (MagicCookieInfo)&fNode);
+	FileNode *pNode;
+	MgErr err = MCGetCookieInfo(gCookieJar, *refnum, (MagicCookieInfo)&pNode);
 	if (!err)
 	{
-		if (fNode.magic == magic)
+		if (pNode->magic == magic)
 		{
-			*node = fNode.u.node;
+			*node = pNode->u.node;
 		}
 		else
 		{
@@ -82,15 +119,20 @@ static MgErr lvzlibGetRefnum(LVRefNum *refnum, voidp *node, uInt32 magic)
 
 static MgErr lvzlibDisposeRefnum(LVRefNum *refnum, voidp *node, uInt32 magic)
 {
-	FileNode fNode;
-	MgErr err = MCGetCookieInfo(gCookieJar, *refnum, (MagicCookieInfo)&fNode);
+	FileNode *pNode;
+	MgErr err = MCGetCookieInfo(gCookieJar, *refnum, (MagicCookieInfo)&pNode);
 	if (!err)
 	{
-		if (fNode.magic == magic)
+		if (pNode->magic == magic)
 		{
-			MCDisposeCookie(gCookieJar, *refnum, (MagicCookieInfo)&fNode);
-			if (node)
-				*node = fNode.u.node;
+			err = MCDisposeCookie(gCookieJar, *refnum, (MagicCookieInfo)&pNode);
+			if (!err)
+			{
+				RTSetCleanupProc(lvzlipCleanup, (UPtr)pNode, kCleanRemove);
+				if (node)
+					*node = pNode->u.node;
+				DSDisposePtr((UPtr)pNode);
+			}
 		}
 		else
 		{
@@ -99,12 +141,6 @@ static MgErr lvzlibDisposeRefnum(LVRefNum *refnum, voidp *node, uInt32 magic)
 	}
 	return err;
 }
-
-#if 0
-LibAPI(const char *) lvzlib_disposeRefnum(uptr_t *refnum)
-{
-}
-#endif
 
 LibAPI(const char *) lvzlib_zlibVersion(void)
 {

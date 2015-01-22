@@ -315,7 +315,7 @@ static MgErr UnixToLVFileErr(void)
 
 LibAPI(void) DLLVersion(uChar* version)
 {
-    sprintf((char*)version, "lvzlib V 2.1, date: %s, time: %s",__DATE__,__TIME__);
+    sprintf((char*)version, "lvzlib V 2.2, date: %s, time: %s",__DATE__,__TIME__);
 }
 
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh)

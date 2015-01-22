@@ -291,8 +291,21 @@ MgErr MCDisposeJar(MagicCookieJar);
 MagicCookie MCNewCookie(MagicCookieJar, MagicCookieInfo);
 MgErr MCDisposeCookie(MagicCookieJar, MagicCookie, MagicCookieInfo);
 MgErr MCGetCookieInfo(MagicCookieJar, MagicCookie, MagicCookieInfo);
+MgErr MCGetCookieInfoPtr(MagicCookieJar, MagicCookie, MagicCookieInfo*);
 MgErr MCGetCookieList(MagicCookieJar, MagicCookieListHandle*);
 Bool32 MCIsACookie(MagicCookieJar, MagicCookie);
+
+/* Runtime Cleanup support */
+enum {		/* cleanup modes (when to call cleanup proc) */
+	kCleanRemove,
+	kCleanExit,				/* only when LabVIEW exits */
+	kCleanOnIdle,			/* whenever active vi goes idle */
+	kCleanAfterReset,		/* whenever active vi goes idle after a reset */
+	kCleanOnIdleIfNotTop,	/* whenever active vi goes idle if active vi is not current vi */
+	kCleanAfterResetIfNotTop/* whenever active vi goes idle after a reset if active vi is not current vi */
+	};
+typedef int32	(*CleanupProcPtr)(UPtr);
+int32 RTSetCleanupProc(CleanupProcPtr, UPtr, int32);
 
 /* File Manager */
 typedef struct {

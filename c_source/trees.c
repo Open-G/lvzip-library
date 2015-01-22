@@ -972,7 +972,8 @@ void ZLIB_INTERNAL _tr_flush_block(s, buf, stored_len, last)
     } else if (s->strategy == Z_FIXED || static_lenb == opt_lenb) {
 #endif
         send_bits(s, (STATIC_TREES<<1)+last, 3);
-        compress_block(s, (const ct_data *)static_ltree, (const ct_data *)static_dtree);
+        compress_block(s, (const ct_data *)static_ltree,
+                       (const ct_data *)static_dtree);
 #ifdef DEBUG
         s->compressed_len += 3 + s->static_len;
 #endif
@@ -980,7 +981,8 @@ void ZLIB_INTERNAL _tr_flush_block(s, buf, stored_len, last)
         send_bits(s, (DYN_TREES<<1)+last, 3);
         send_all_trees(s, s->l_desc.max_code+1, s->d_desc.max_code+1,
                        max_blindex+1);
-        compress_block(s, (const ct_data *)s->dyn_ltree, (const ct_data *)s->dyn_dtree);
+        compress_block(s, (const ct_data *)s->dyn_ltree,
+                       (const ct_data *)s->dyn_dtree);
 #ifdef DEBUG
         s->compressed_len += 3 + s->opt_len;
 #endif

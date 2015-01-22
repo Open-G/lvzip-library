@@ -218,7 +218,7 @@
 #  endif
 #endif
 
-#if (defined(ZLIB_CONST) || defined(__cplusplus)) && !defined(z_const)
+#if defined(ZLIB_CONST) && !defined(z_const)
 #  define z_const const
 #else
 #  define z_const
@@ -393,11 +393,11 @@ typedef uLong FAR uLongf;
 
 #if !defined(Z_U4) && !defined(Z_SOLO) && defined(STDC)
 #  include <limits.h>
-#  if (UINT_MAX == 4294967295)
+#  if (UINT_MAX == 0xffffffffUL)
 #    define Z_U4 unsigned
-#  elif (ULONG_MAX == 4294967295)
+#  elif (ULONG_MAX == 0xffffffffUL)
 #    define Z_U4 unsigned long
-#  elif (USHRT_MAX == 4294967295)
+#  elif (USHRT_MAX == 0xffffffffUL)
 #    define Z_U4 unsigned short
 #  endif
 #endif
@@ -408,11 +408,11 @@ typedef uLong FAR uLongf;
    typedef unsigned long z_crc_t;
 #endif
 
-#if 0    /* was set to #if 1 by ./configure */
+#ifdef HAVE_UNISTD_H    /* may be set to #if 1 by ./configure */
 #  define Z_HAVE_UNISTD_H
 #endif
 
-#if 1    /* was set to #if 1 by ./configure */
+#ifdef HAVE_STDARG_H    /* may be set to #if 1 by ./configure */
 #  define Z_HAVE_STDARG_H
 #endif
 

@@ -1,5 +1,5 @@
 /* zlib.h -- interface of the 'zlib' general purpose compression library
-  version 1.2.7.1, March 24th, 2013
+  version 1.2.8, April 28th, 2013
 
   Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
 
@@ -38,12 +38,12 @@
 extern "C" {
 #endif
 
-#define ZLIB_VERSION "1.2.7.1"
-#define ZLIB_VERNUM 0x1271
+#define ZLIB_VERSION "1.2.8"
+#define ZLIB_VERNUM 0x1280
 #define ZLIB_VER_MAJOR 1
 #define ZLIB_VER_MINOR 2
-#define ZLIB_VER_REVISION 7
-#define ZLIB_VER_SUBREVISION 1
+#define ZLIB_VER_REVISION 8
+#define ZLIB_VER_SUBREVISION 0
 
 /*
     The 'zlib' compression library provides in-memory compression and
@@ -862,7 +862,7 @@ ZEXTERN int ZEXPORT inflateSync OF((z_streamp strm));
    available input is skipped.  No output is provided.
 
      inflateSync searches for a 00 00 FF FF pattern in the compressed data.
-   All full flush points have this pattern, but not all occurences of this
+   All full flush points have this pattern, but not all occurrences of this
    pattern are full flush points.
 
      inflateSync returns Z_OK if a possible full flush point has been found,
@@ -1023,7 +1023,8 @@ ZEXTERN int ZEXPORT inflateBackInit OF((z_streamp strm, int windowBits,
    the version of the header file.
 */
 
-typedef unsigned (*in_func) OF((void FAR *, z_const unsigned char FAR * FAR *));
+typedef unsigned (*in_func) OF((void FAR *,
+                                z_const unsigned char FAR * FAR *));
 typedef int (*out_func) OF((void FAR *, unsigned char FAR *, unsigned));
 
 ZEXTERN int ZEXPORT inflateBack OF((z_streamp strm,
@@ -1672,7 +1673,6 @@ struct gzFile_s {
     unsigned char *next;
     z_off64_t pos;
 };
-#if 0
 ZEXTERN int ZEXPORT gzgetc_ OF((gzFile file));  /* backward compatibility */
 #ifdef Z_PREFIX_SET
 #  undef z_gzgetc
@@ -1681,7 +1681,6 @@ ZEXTERN int ZEXPORT gzgetc_ OF((gzFile file));  /* backward compatibility */
 #else
 #  define gzgetc(g) \
           ((g)->have ? ((g)->have--, (g)->pos++, *((g)->next)++) : gzgetc(g))
-#endif
 #endif
 
 /* provide 64-bit offset functions if _LARGEFILE64_SOURCE defined, and/or
