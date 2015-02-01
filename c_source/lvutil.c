@@ -41,6 +41,11 @@
   #include <iconv.h>
  #endif
  #include <wchar.h>
+ #if VxWorks
+  #define FCNTL_PARAM3_CAST(param)  (int32)(param)
+ #else
+  #define FCNTL_PARAM3_CAST(param)  (param)
+ #endif
 #elif MacOSX
  #include <CoreFoundation/CoreFoundation.h>
  #include "MacBinaryIII.h"
@@ -1298,7 +1303,7 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
 			lockInfo.l_whence = SEEK_SET;
 			lockInfo.l_start = 0;
 			lockInfo.l_len = 0;
-			if (fcntl(fileno(ioRefNum), F_SETLK, (int32) &lockInfo) == -1)
+			if (fcntl(fileno(ioRefNum), F_SETLK, FCNTL_PARAM3_CAST(&lockInfo)) == -1)
 			{
 				err = UnixToLVFileErr();
 				fclose(ioRefNum);
@@ -2059,11 +2064,13 @@ LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt
 	return mgNoErr;
 }
 
+#ifndef Unix
 static void TerminateLStr(LStrHandle *dest, int32 numBytes)
 {
 	LStrLen(**dest) = numBytes;
 	LStrBuf(**dest)[numBytes] = 0;
 }
+#endif
 
 LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {

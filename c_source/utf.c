@@ -357,7 +357,7 @@ MgErr utf8_validate_next(uInt8 *src, int32 *offset, int32 length, uInt32 *code_p
 
 MgErr utf8_replace_invalid(uInt8 *src, int32 *soff, int32 slen, uInt8 *dest, int32 *doff, int32 dlen, uInt32 replacement)
 {
-	MgErr err;
+	MgErr err = noErr;
     while (src[*soff] && (slen < 0 || *soff < slen))
     {
         int32 off = *soff;
