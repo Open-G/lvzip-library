@@ -90,7 +90,7 @@ unused parameters or locals. */
 /* This implementation of Unused is not safe for const parameters. */
 #       define Unused(var_or_param)    var_or_param=var_or_param
 #   else
-#       define Unused(var_or_param)
+#       define Unused(var_or_param)    var_or_param=var_or_param
 #   endif
 #endif /* Unused */
 
@@ -445,6 +445,7 @@ typedef struct
 	uInt16 str[];
 } UString, **UStrHandle;
 
+LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp);
 LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);

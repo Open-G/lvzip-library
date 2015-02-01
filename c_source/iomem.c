@@ -58,9 +58,11 @@ voidpf ZCALLBACK mem_open_file_func (opaque, filename, mode)
    int mode;
 {
     MEMORY_IO *memio = malloc(sizeof(MEMORY_IO));
+	Unused(opaque);
+	Unused(filename);
     if (memio)
     {
-        memio->pos = 0;
+    	memio->pos = 0;
         memio->mode = mode;
         memio->error = 0;
 
@@ -83,7 +85,7 @@ uLong ZCALLBACK mem_read_file_func (opaque, stream, buf, size)
 
         if (mem->pos + size > 0x7FFFFFFF)
           size = (uLong)(0x7FFFFFFF - mem->pos);
-        if (mem->pos + size > LStrLen(*(LStrHandle)opaque))
+        if (mem->pos + size > (ZPOS64_T)LStrLen(*(LStrHandle)opaque))
           size = (uLong)(LStrLen(*(LStrHandle)opaque) - mem->pos);
 
         zmemcpy(buf, LStrBuf(*(LStrHandle)opaque) + mem->pos, size);
@@ -104,7 +106,7 @@ static MgErr ResizeStringHandle(LStrHandle handle, ZPOS64_T offset, const void *
 	if (offset + *size > 0x7FFFFFFF)
 	  *size = (uLong)(0x7FFFFFFF - offset);
 
-    if (DSGetHandleSize((UHandle)handle) < (offset + *size + (int32)sizeof(int32)))
+    if ((ZPOS64_T)DSGetHandleSize((UHandle)handle) < (offset + *size + sizeof(int32)))
     {
         MgErr err = fEOF;
 
@@ -122,10 +124,10 @@ static MgErr ResizeStringHandle(LStrHandle handle, ZPOS64_T offset, const void *
             zmemcpy(LStrBuf(*handle) + offset, buf, (int32)*size);
 
         /* only grow the memory stream */
-        if (offset + *size > LStrLen(*handle))
+        if (offset + *size > (ZPOS64_T)LStrLen(*handle))
             LStrLen(*handle) = (int32)(offset + *size);
     }
-    else if (offset + *size > LStrLen(*handle))
+    else if (offset + *size > (ZPOS64_T)LStrLen(*handle))
         return fEOF;
 
     return mgNoErr;
@@ -158,6 +160,7 @@ ZPOS64_T ZCALLBACK mem_tell_file_func (opaque, stream)
    voidpf opaque;
    voidpf stream;
 {
+    Unused(opaque);
     if (stream != NULL)
     {
         return ((MEMORY_IO*)stream)->pos;
@@ -240,6 +243,7 @@ int ZCALLBACK mem_error_file_func (opaque, stream)
    voidpf stream;
 {
     int ret=-1;
+    Unused(opaque);
     if (stream!=NULL)
     {
         ret = ((MEMORY_IO*)stream)->error;

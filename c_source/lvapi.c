@@ -3,6 +3,7 @@
 #include "lvutil.h"
 #include "zip.h"
 #include "unzip.h"
+#include <string.h>
 
 #ifndef VERSIONMADEBY
 # define VERSIONMADEBY   (0x0) /* platform depedent */
@@ -181,7 +182,7 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 		}
 		else if (comment)
 		{
-			err = ConvertCString(comment, StrLen(comment), CP_OEMCP, globalcomment, CP_ACP, 0, NULL);
+			err = ConvertCString((ConstCStr)comment, (int32)strlen(comment), CP_OEMCP, globalcomment, CP_ACP, 0, NULL);
 			if (err)
 			{
 				zipClose(node, NULL);
@@ -227,7 +228,7 @@ LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, const LStrHandle file
 
 	if (cp1 == CP_UTF8 || cp2 == CP_UTF8)
 	{
-		cp1 = CP_UTF8;
+		cp1 = cp2 = CP_UTF8;
 		flags = Lo16(flags) | FLAGS_UTF8;
 	}
 	else
@@ -246,10 +247,10 @@ LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, const LStrHandle file
 		err = lvzlibGetRefnum(refnum, &node, ZipMagic);
 		if (!err)
 		{
-			err = LibToMgErr(zipOpenNewFileInZip4_64(node, LStrBufH(tempfilename), zipfi,
+			err = LibToMgErr(zipOpenNewFileInZip4_64(node, (const char*)LStrBufH(tempfilename), zipfi,
 			                 LStrBufH(extrafield_local), LStrLenH(extrafield_local),
 	                         LStrBufH(extrafield_global), LStrLenH(extrafield_global),
-							 LStrBufH(tempcomment), method, level, raw, windowBits, memLevel,
+							 (const char*)LStrBufH(tempcomment), method, level, raw, windowBits, memLevel,
 							 strategy, password[0] ? password : NULL, crcForCrypting, VERSIONMADEBY, flags, zip64));
 		}
 	}
@@ -310,7 +311,7 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const LStrHandle globalComment, 
 			if (err)
 				comment = globalComment;
 		}
-		retval = zipClose2(node, comment ? LStrBuf(*comment) : NULL, stream);
+		retval = zipClose2(node, (const char*)LStrBufH(comment), stream);
 		if (!err && retval)
 			err = LibToMgErr(retval);
 		DSDisposeHandle((UHandle)comment);
@@ -410,7 +411,7 @@ LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, const LStrHandle fileName, 
 			err = ConvertLString(fileName, CP_ACP, &name, cp, 0, NULL);
 			if (!err)
 			{
-				err = LibToMgErr(unzLocateFile(node, LStrBuf(*name), iCaseSensitivity));
+				err = LibToMgErr(unzLocateFile(node, (const char*)LStrBufH(name), iCaseSensitivity));
 				DSDisposeHandle((UHandle)name);
 			}
 		}
@@ -442,10 +443,10 @@ LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo32(LVRefNum *refnum, unz_file_info *pf
 						if (!err)
 						{
 							uInt32 cp = pfile_info->flag & FLAGS_UTF8 ? CP_UTF8 : CP_OEMCP; 
-							err = ConvertCString(szComment, StrLen(szComment), cp, comment, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
+							err = ConvertCString((ConstCStr)szComment, (int32)strlen(szComment), cp, comment, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
 							if (!err)
 							{
-								err = ConvertCPath(szFileName, StrLen(szFileName), cp, fileName, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
+								err = ConvertCPath((ConstCStr)szFileName, (int32)strlen(szFileName), cp, fileName, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
 							}
 							LStrLen(**extraField) = pfile_info->size_file_extra;
 						}
@@ -491,10 +492,10 @@ LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo64(LVRefNum *refnum, unz_file_info64 *
 						if (!err)
 						{
 							uInt32 cp = pfile_info->flag & FLAGS_UTF8 ? CP_UTF8 : CP_OEMCP; 
-							err = ConvertCString(szComment, StrLen(szComment), cp, comment, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
+							err = ConvertCString((ConstCStr)szComment, (int32)strlen(szComment), cp, comment, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
 							if (!err)
 							{
-								err = ConvertCPath(szFileName, StrLen(szFileName), cp, fileName, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
+								err = ConvertCPath((ConstCStr)szFileName, (int32)strlen(szFileName), cp, fileName, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
 							}
 							LStrLen(**extraField) = pfile_info->size_file_extra;
 						}

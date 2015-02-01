@@ -5,14 +5,28 @@
    Copyright (C) 2002-2013 Rolf Kalbermatter
 */
 
-#include <stdio.h>
-#include <string.h>
 #define ZLIB_INTERNAL
 #include "zlib.h"
 #include "ioapi.h"
 #include "lvutil.h"
 #include "iomem.h"
-
+#include "utf.h"
+#if Unix
+ #ifndef __USE_FILE_OFFSET64
+  #define __USE_FILE_OFFSET64
+ #endif
+ #ifndef __USE_LARGEFILE64
+  #define __USE_LARGEFILE64
+ #endif
+ #ifndef _LARGEFILE64_SOURCE
+  #define _LARGEFILE64_SOURCE
+ #endif
+ #ifndef _FILE_OFFSET_BIT
+  #define _FILE_OFFSET_BIT 64
+ #endif
+#endif
+#include <stdio.h>
+#include <string.h>
 #if Win32
  #include "iowin.h"
  #ifndef INVALID_FILE_ATTRIBUTES
@@ -22,11 +36,11 @@
  #include <errno.h>
  #include <dirent.h>
  #include <fcntl.h>
+ #include <unistd.h>
  #ifdef HAVE_ICONV
   #include <iconv.h>
- #else
-  #include <wchar.h>
  #endif
+ #include <wchar.h>
 #elif MacOSX
  #include <CoreFoundation/CoreFoundation.h>
  #include "MacBinaryIII.h"
@@ -323,6 +337,8 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
     MgErr  err = mgNoErr;
 #if MacOSX
     FSRef ref;
+#else
+    Unused(path);
 #endif
 	*hasResFork = 0;
 	if (sizeLow)
@@ -597,7 +613,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
     if (err)
 		return err;
 
-    if (stat(lstr->str, &statbuf))
+    if (stat((const char*)lstr->str, &statbuf))
 		err = UnixToLVFileErr();
 
     if (!err)
@@ -612,7 +628,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 			UnixConvertFromLVTime(fileInfo->cDate, &statbuf.st_ctime);
 			*/
 			UnixConvertFromLVTime(fileInfo->mDate, &buf.modtime);
-			if (utime(lstr->str, &buf))
+			if (utime((const char*)lstr->str, &buf))
 				err = fIOErr;
 		}
 		else
@@ -627,7 +643,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 				DIR *dirp;
 				struct dirent *dp;
 
-				if (!(dirp = opendir(lstr->str)))
+				if (!(dirp = opendir((const char*)lstr->str)))
 					return UnixToLVFileErr();
 
 				for (dp = readdir(dirp); dp; dp = readdir(dirp))
@@ -663,6 +679,8 @@ LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
     }
     return err;
 #else
+    Unused(srcPath);
+    Unused(dstPath);
     return mgNotSupported;
 #endif
 }
@@ -683,6 +701,8 @@ LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcPath, Path dstPath)
     }
     return err;
 #else
+    Unused(srcPath);
+    Unused(dstPath);
     return mgNotSupported;
 #endif
 }
@@ -749,21 +769,21 @@ static MgErr lvfile_GetSize(FileRefNum ioRefNum, FileOffset *size)
 	return OSErrToLVErr(FSGetForkSize(ioRefNum, &(size->q)));
 #elif Unix
 	errno = 0;
-	tell.q = ftell64(ioRefNum);
+	tell.q = ftello64(ioRefNum);
 	if (tell.q == - 1)
 	{
 		return UnixToLVFileErr();
 	}
-	else if (fseek64(ioRefNum, 0L, SEEK_END) == -1)
+	else if (fseeko64(ioRefNum, 0L, SEEK_END) == -1)
 	{
 		return UnixToLVFileErr();
 	}
-	size->q = ftell64(ioRefNum);
+	size->q = ftello64(ioRefNum);
 	if (size->q == - 1)
 	{
 		return UnixToLVFileErr();
 	}
-	if (fseek64(ioRefNum, tell.q, SEEK_SET) == -1)
+	if (fseeko64(ioRefNum, tell.q, SEEK_SET) == -1)
 	{
 		return UnixToLVFileErr();
 	}
@@ -818,12 +838,12 @@ static MgErr lvfile_SetSize(FileRefNum ioRefNum, FileOffset *size)
 	{
 		return UnixToLVFileErr();
 	}
-	tell.q = ftell64(ioRefNum);
+	tell.q = ftello64(ioRefNum);
 	if (tell.q == -1)
 	{
 		return UnixToLVFileErr();
 	}
-	if ((tell.q > size->q) && (fseek64(ioRefNum, size->q, SEEK_SET) != 0))
+	if ((tell.q > size->q) && (fseeko64(ioRefNum, size->q, SEEK_SET) != 0))
 	{
 		return UnixToLVFileErr();
 	}
@@ -892,18 +912,18 @@ static MgErr lvfile_SetFilePos(FileRefNum ioRefNum, FileOffset *offs, uInt16 mod
 	errno = 0;
 	if (mode == fCurrent)
 	{
-		tell.q = ftell64(ioRefNum);
+		tell.q = ftello64(ioRefNum);
 		if (tell.q == -1)
 		{
 			return UnixToLVFileErr();
 		}
 		sought.q = tell.q + offs->q;
 	}
-	if (fseek64(ioRefNum, 0L, SEEK_END) != 0)
+	if (fseeko64(ioRefNum, 0L, SEEK_END) != 0)
 	{
 		return UnixToLVFileErr();
 	}
-	size.q = ftell64(ioRefNum);
+	size.q = ftello64(ioRefNum);
 	if (size.q == -1)
 	{
 		return UnixToLVFileErr();
@@ -924,10 +944,10 @@ static MgErr lvfile_SetFilePos(FileRefNum ioRefNum, FileOffset *offs, uInt16 mod
 	}
 	else if (sought.q < 0)
 	{
-		fseek64(ioRefNum, 0L, SEEK_SET);
+		fseeko64(ioRefNum, 0L, SEEK_SET);
 		return fEOF;
 	}
-	else if (fseek64(ioRefNum, sought.q, SEEK_SET) != 0)
+	else if (fseeko64(ioRefNum, sought.q, SEEK_SET) != 0)
 	{
 		return UnixToLVFileErr();
 	}
@@ -990,7 +1010,7 @@ static MgErr lvfile_GetFilePos(FileRefNum ioRefNum, FileOffset *tell)
 	return OSErrToLVErr(FSGetForkPosition(ioRefNum, tell));
 #elif Unix
 	errno = 0;
-	tell->q = ftell64(ioRefNum);
+	tell->q = ftello64(ioRefNum);
 	if (tell->q == -1)
 	{
 		return UnixToLVFileErr();
@@ -1250,20 +1270,20 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
 		err = MakePathDSString(path, &lstr, 5);
 		if (!err && rsrc & 0x1)
 		{
-			strcpy(LStrBuf(lstr) + LStrLen(lstr), "/rsrc");
+			strcpy((char*)(LStrBuf(lstr) + LStrLen(lstr)), "/rsrc");
 		}
 		if (err)
 			return err;
 
 		/* Test for file existence first to avoid creating file with mode "w". */
-		if (openMode == openWriteOnlyTruncate && stat(lstr->str, &statbuf))
+		if (openMode == openWriteOnlyTruncate && stat((const char*)lstr->str, &statbuf))
 		{
 			DSDisposePtr((UPtr)lstr);
 			return fNotFound;
 		}
 
 		errno = 0;
-		ioRefNum = fopen(LStrBuf(lstr), (char *)theMode);
+		ioRefNum = fopen((const char*)LStrBuf(lstr), (char *)theMode);
 		DSDisposePtr((UPtr)lstr);
 		if (!ioRefNum)
 			return UnixToLVFileErr();
@@ -1474,14 +1494,28 @@ static CFStringEncoding ConvertCodepageToEncoding(uInt32 codePage)
 	CFStringEncoding encoding = CFStringConvertWindowsCodepageToEncoding(codePage);
 	if (encoding == kCFStringEncodingInvalidId)
 	{
-		if (codePage == CP_OEMCP)
-			encoding = CFStringGetSystemEncoding();
-		else if (codePage == CP_ACP)
+		if (codePage == CP_ACP)
 			encoding = GetApplicationTextEncoding();
+		else if (codePage == CP_OEMCP)
+			encoding = CFStringGetSystemEncoding();
 	}
 	return encoding;
 }
 #endif
+
+LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp)
+{
+#if Win32
+	return acp ? GetACP() : GetOEMCP();
+#elif MacOSX
+	CFStringEncoding encoding = acp ? GetApplicationTextEncoding() : CFStringGetSystemEncoding();
+	return CFStringConvertEncodingToWindowsCodepage(encoding);
+#else
+    if (utf8_is_current_mbcs())
+		return CP_UTF8;
+	return acp ? CP_ACP : CP_OEMCP;
+#endif
+}
 
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
 {
@@ -1706,286 +1740,150 @@ LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest,
 }
 
 #if Unix
-#define UStrBuf(s)	(wchar_t*)LStrbuf(s)
+#define UStrBuf(s)	(wchar_t*)LStrBuf(s)
 #ifdef HAVE_ICONV
-TH_UI static char *iconv_getcharset(uInt32 codePage)
+static char *iconv_getcharset(uInt32 codePage)
 {
-	static char[10] cp;
+	static char cp[10];
 	switch (codePage)
 	{
 		case CP_ACP:
 			return "CHAR";
 		case CP_OEMCP:
 			/* FIXME: determine current local and return according OEM */
-			return "OEM";
+			return "CP437";
 		case CP_UTF8:
 			return "UTF-8";
 		default:
-			sprintf_s(cp, 10, "CP%d", codepage);
+			snprintf(cp, 10, "CP%d", codePage);
 			return cp;
 	}
 	return NULL;
 }
 
-static MgErr unix_convert_mbtow(const char *src, size_t len, UStrHandle *dest, const char *charset)
+static MgErr unix_convert_mbtow(const char *src, int32 len, UStrHandle *dest, uInt32 codePage)
 {
-	iconv_t cd = iconv_open("WCHAR_T", charset);
+	iconv_t cd = iconv_open("WCHAR_T", iconv_getcharset(codePage));
 	if (cd != (iconv_t)-1)
 	{
-		MgErr err = NumericArrayResize(uB, 1, (UHandle*)dest, len * sizeof(wchar_t));
+		MgErr err;
+		if (len < 0)
+			len = strlen(src);
+		err = NumericArrayResize(uB, 1, (UHandle*)dest, len * sizeof(wchar_t));
 		if (!err)
 		{
 			char *inbuf = (char*)src, *outbuf = (char*)LStrBuf(**dest);
 			size_t retval, inleft = len, outleft = len * sizeof(wchar_t);
 			retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
 			if (retval == (size_t)-1)
-				err = UnixToMgErr();
+				err = UnixToLVFileErr();
 			else
 			    LStrLen(**dest) = (len * sizeof(wchar_t) - outleft) / sizeof(uInt16);
 		}
 		if (iconv_close(cd) != 0 && !err)
-			err = UnixToMgErr();
+			err = UnixToLVFileErr();
 		return err;
 	}
-	return UnixToMgErr();
+	return UnixToLVFileErr();
+}
+
+static MgErr unix_convert_wtomb(UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+{
+	iconv_t cd = iconv_open(iconv_getcharset(codePage), "WCHAR_T");
+	Unused(defaultChar);
+	Unused(defaultCharWasUsed);
+	if (cd != (iconv_t)-1)
+	{
+		MgErr err = NumericArrayResize(uB, 1, (UHandle*)dest, LStrLen(*src) * sizeof(uInt16) * 2);
+		if (!err)
+		{
+			char *inbuf = (char*)UStrBuf(*src), *outbuf = (char*)LStrBuf(**dest);
+			size_t retval, inleft = LStrLen(*src) * sizeof(uInt16), outleft = LStrLen(*src) * sizeof(uInt16) * 2;
+			retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
+			if (retval == (size_t)-1)
+				err = UnixToLVFileErr();
+			else
+				LStrLen(**dest) = LStrLen(*src) * 2 - outleft;
+		}
+		if (iconv_close(cd) != 0 && !err)
+			err = UnixToLVFileErr();
+		return err;
+	}
+	return UnixToLVFileErr();
 }
 #else
 /* We don't have a good way of converting from an arbitrary character set to wide char and back.
    Just do default mbcs to wide char and vice versa ??? */
-static MgErr unix_convert_mbtow(const char *src, size_t len, UStrHandle *dest, const char *charset)
+static MgErr unix_convert_mbtow(const char *src, int32 len, UStrHandle *dest, uInt32 codePage)
 {
-	size_t max = len, numChars = 0, length;
-	char *pt = (char*)src;
-#if HAVE_MBRTOWC
-	mbstate_t mbs;
+	int32 offset = 0;
 
-	length = mbrtowc(NULL, NULL, 0, &mbs);
-	while (max > 0)
+	if (codePage == CP_UTF8)
+        err = utf8towchar(src, len, NULL, &offset, 0);
+	else
 	{
-		length = mbrtowc(NULL, pt, max, &mbs);
-		if (length > 0)
-		{
-			pt += length;
-			max -= length;
-			numChars++;
-		}
-	}
-#else
-	length = mbtowc(NULL, NULL, 0);
-	while (max > 0)
-	{
-		length = mbtowc(NULL, pt, max);
-		if (length > 0)
-		{
-			pt += length;
-			max += length;
-			numChars++;
-		}
-	}
+		size_t max, length;
+		char *pt = (char*)src;
+#if HAVE_MBRTOWC
+	    mbstate_t mbs;
 #endif
-	if (numChars > 0)
+		if (len < 0)
+			len = strlen(src);
+		max = len;
+#if HAVE_MBRTOWC
+	    length = mbrtowc(NULL, NULL, 0, &mbs);
+	    while (max > 0)
+	    {
+		    length = mbrtowc(NULL, pt, max, &mbs);
+		    if (length > 0)
+		    {
+			    pt += length;
+			    max -= length;
+			    offset++;
+		    }
+	    }
+#else
+	    length = mbtowc(NULL, NULL, 0);
+	    while (max > 0)
+	    {
+		    length = mbtowc(NULL, pt, max);
+		    if (length > 0)
+		    {
+			    pt += length;
+			    max -= length;
+			    offset++;
+		    }
+	     }
+#endif
+	}
+	if (offset > 0)
 	{
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, numChars * sizeof(wchar_t));
+		err = NumericArrayResize(uB, 1, (UHandle*)dest, offset * sizeof(wchar_t));
 		if (!err)
 		{
-			LStrLen(**dest) = mbstowcs(UStrBuf(**dest), LStrBuf(*src), numChars) * sizeof(wchar_t) / sizeof(uInt16);
+			if (codePage == CP_UTF8)
+			{
+				err = utf8towchar(src, len, UStrBuf(**dest), NULL, offset);
+			}
+			else
+			{
+				offset = mbstowcs(UStrBuf(**dest), LStrBuf(*src), offset);
+			}
+			if (!err)
+			    LStrLen(**dest) = offset * sizeof(wchar_t) / sizeof(uInt16); 
 		}
 	}
 }
-#endif
-#endif
-
-LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle *dest, uInt32 codePage)
+static MgErr unix_convert_wtomb(UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
-	if (*dest)
-		LStrLen(**dest) = 0;
-	if (src && src[0])
-	{
-		MgErr err = mgNotSupported;
-#if Win32
-		int32 numChars = MultiByteToWideChar(codePage, 0, src, srclen, NULL, 0);
-		if (numChars > 0)
-		{ 
-			err = NumericArrayResize(uW, 1, (UHandle*)dest, numChars);
-			if (!err)
-			{
-				LStrLen(**dest) = MultiByteToWideChar(codePage, 0, src, srclen, LStrBuf(**dest), numChars);	
-			}
-		}
-#elif MacOSX
-		CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
-		if (encoding != kCFStringEncodingInvalidId)
-		{
-			CFStringRef cfpath = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, src, encoding, kCFAllocatorNull);
-			if (cfpath)
-			{
-				CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
-				CFRelease(cfpath);
-				if (cfpath2)
-				{
-					CFIndex numChars;
-					
-					CFStringNormalize(cfpath2, kCFStringNormalizationFormC);
-    
-					numChars = CFStringGetLength(cfpath2);
-					if (numChars > 0)
-					{ 
-						err = NumericArrayResize(uB, 1, (UHandle*)dest, numChars * sizeof(UniChar));
-						if (!err)
-						{
-							CFStringGetCharacters(cfpath2, CFRangeMake(0, numChars), (UniChar*)LStrBuf(**dest));
-							LStrLen(**dest) = numChars;
-						}
-					}
-					CFRelease(cfpath2); 
-				}
-			}
-		}
-#elif Unix
-		err = unix_convert_mbtow(src, strlen(src), dest, iconv_getcharset(codePage));
-#endif
-		return err;
-	}
-	return mgNoErr;
-}
-
-LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt32 codePage)
-{
-	if (*dest)
-		LStrLen(**dest) = 0;
-	if (LStrLen(*src) > 0)
-	{
-		MgErr err = mgNotSupported;
-#if Win32
-		int32 numChars = MultiByteToWideChar(codePage, 0, LStrBuf(*src), LStrLen(*src), NULL, 0);
-		if (numChars > 0)
-		{ 
-			err = NumericArrayResize(uW, 1, (UHandle*)dest, numChars);
-			if (!err)
-			{
-				LStrLen(**dest) = MultiByteToWideChar(codePage, 0, LStrBuf(*src), LStrLen(*src), LStrBuf(**dest), numChars);	
-			}
-		}
-#elif MacOSX
-		CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
-		if (encoding != kCFStringEncodingInvalidId)
-		{
-			CFStringRef cfpath = CFStringCreateWithBytes(kCFAllocatorDefault, LStrBuf(*src), LStrLen(*src), encoding, false);
-			if (cfpath)
-			{
-				CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
-				CFRelease(cfpath);
-				if (cfpath2)
-				{
-					CFIndex numChars;
-					
-					CFStringNormalize(cfpath2, kCFStringNormalizationFormC);
-    
-					numChars = CFStringGetLength(cfpath2);
-					if (numChars > 0)
-					{ 
-						err = NumericArrayResize(uB, 1, (UHandle*)dest, numChars * sizeof(UniChar));
-						if (!err)
-						{
-							CFStringGetCharacters(cfpath2, CFRangeMake(0, numChars), (UniChar*)LStrBuf(**dest));
-							LStrLen(**dest) = numChars;
-						}
-					}
-					CFRelease(cfpath2); 
-				}
-			}
-		}
-#elif Unix
-		err = unix_convert_mbtow(LStrBuf(*src), LStrLen(*src), dest, iconv_getcharset(codePage));
-#endif
-		return err;
-	}
-	return mgNoErr;
-}
-
-static void TerminateLStr(LStrHandle *dest, int32 numBytes)
-{
-	LStrLen(**dest) = numBytes;
-	LStrBuf(**dest)[numBytes] = 0;
-}
-
-LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
-{
-	if (dest && *dest)
-		LStrLen(**dest) = 0;
-	if (defaultCharWasUsed)
-		*defaultCharWasUsed = LV_FALSE;
-	if (LStrLen(*src) > 0)
-	{
-		MgErr err = mgNotSupported;
-#if Win32 
-		int32 numBytes = WideCharToMultiByte(codePage, 0, LStrBuf(*src), LStrLen(*src), NULL, 0, NULL, NULL);
-		if (numBytes > 0)
-		{ 
-			BOOL defUsed;
-			err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
-			if (!err)
-			{
-				numBytes = WideCharToMultiByte(codePage, 0, LStrBuf(*src), LStrLen(*src), LStrBuf(**dest), numBytes, &defaultChar, &defUsed);
-				TerminateLStr(dest, numBytes);
-				if (defaultCharWasUsed)
-					*defaultCharWasUsed = (defUsed != FALSE);
-			}
-		}
-#elif MacOSX
-		CFStringRef cfpath = CFStringCreateWithCharacters(NULL, LStrBuf(*src), LStrLen(*src));
-		if (cfpath)
-		{
-			CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(NULL, 0, cfpath);
-			CFRelease(cfpath);
-			if (cpath2)
-			{
-				CFStringNormalize(cfpath2, kCFStringNormalizationFormD);
-				CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
-				if (encoding != kCFStringEncodingInvalidId)
-				{
-					CFIndex numBytes;
-					if (CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, NULL, 0, &numBytes) > 0)
-					{
-						err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
-						if (!err)
-						{
-							CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, (UInt8*)LStrBuf(**dest), numBytes, &numBytes);
-							TerminateLStr(dest, numBytes);
-						}
-					}
-				}
-				CFRelease(cfpath2);
-			}
-		}
-#elif Unix
-#ifdef HAVE_ICONV
-		iconv_t cd = iconv_open(iconv_getcharset(codePage), "WCHAR_T");
-		if (cd != (iconv_t)-1)
-		{
-			err = NumericArrayResize(uB, 1, (UHandle*)dest, LStrLen(*src) * 2);
-			if (!err)
-			{
-				char *inbuf = (char*)LStrBuf(*src), *outbuf = (char*)LStrBuf(**dest);
-				size_t retval, inleft = LStrLen(*src), outleft = LStrLen(*src) * 2;
-				retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
-				if (retval == (size_t)-1)
-					err = UnixToMgErr();
-				else
-					LStrLen(**dest) = LStrLen(*src) - outleft;
-			}
-			if (iconv_close(cd) != 0 && !err)
-				err = UnixToMgErr();
-		}
-		else
-		{
-			err = UnixToMgErr();
-		}
-#else
 		size_t length = LStrLen(*src) * sizeof(uInt16) / sizeof(wchar_t);
 		size_t dummy, size = 2 * length;
 		wchar_t wdefChar;
 
+		if (codePage == CP_UTF8)
+			err = utfwchartoutf8(src, len, NULL, &offset, 0);
+		else
+		{
 		if (defaultChar)
 		{
 			dummy = mbtowc(NULL, NULL, 0);
@@ -2049,7 +1947,175 @@ LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt
 				TerminateLStr(dest, length);
 			}
 		}
+}
 #endif
+#endif
+
+LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle *dest, uInt32 codePage)
+{
+	if (*dest)
+		LStrLen(**dest) = 0;
+	if (src && src[0])
+	{
+		MgErr err = mgNotSupported;
+#if Win32
+		int32 numChars = MultiByteToWideChar(codePage, 0, src, srclen, NULL, 0);
+		if (numChars > 0)
+		{ 
+			err = NumericArrayResize(uW, 1, (UHandle*)dest, numChars);
+			if (!err)
+			{
+				LStrLen(**dest) = MultiByteToWideChar(codePage, 0, src, srclen, LStrBuf(**dest), numChars);	
+			}
+		}
+#elif MacOSX
+		CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
+		if (encoding != kCFStringEncodingInvalidId)
+		{
+			CFStringRef cfpath = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, src, encoding, kCFAllocatorNull);
+			if (cfpath)
+			{
+				CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
+				CFRelease(cfpath);
+				if (cfpath2)
+				{
+					CFIndex numChars;
+					
+					CFStringNormalize(cfpath2, kCFStringNormalizationFormC);
+    
+					numChars = CFStringGetLength(cfpath2);
+					if (numChars > 0)
+					{ 
+						err = NumericArrayResize(uB, 1, (UHandle*)dest, numChars * sizeof(UniChar));
+						if (!err)
+						{
+							CFStringGetCharacters(cfpath2, CFRangeMake(0, numChars), (UniChar*)LStrBuf(**dest));
+							LStrLen(**dest) = numChars;
+						}
+					}
+					CFRelease(cfpath2); 
+				}
+			}
+		}
+#elif Unix
+	    err = unix_convert_mbtow((const char*)src, srclen, dest, codePage);
+#endif
+		return err;
+	}
+	return mgNoErr;
+}
+
+LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt32 codePage)
+{
+	if (*dest)
+		LStrLen(**dest) = 0;
+	if (LStrLen(*src) > 0)
+	{
+		MgErr err = mgNotSupported;
+#if Win32
+		int32 numChars = MultiByteToWideChar(codePage, 0, LStrBuf(*src), LStrLen(*src), NULL, 0);
+		if (numChars > 0)
+		{ 
+			err = NumericArrayResize(uW, 1, (UHandle*)dest, numChars);
+			if (!err)
+			{
+				LStrLen(**dest) = MultiByteToWideChar(codePage, 0, LStrBuf(*src), LStrLen(*src), LStrBuf(**dest), numChars);	
+			}
+		}
+#elif MacOSX
+		CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
+		if (encoding != kCFStringEncodingInvalidId)
+		{
+			CFStringRef cfpath = CFStringCreateWithBytes(kCFAllocatorDefault, LStrBuf(*src), LStrLen(*src), encoding, false);
+			if (cfpath)
+			{
+				CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
+				CFRelease(cfpath);
+				if (cfpath2)
+				{
+					CFIndex numChars;
+					
+					CFStringNormalize(cfpath2, kCFStringNormalizationFormC);
+    
+					numChars = CFStringGetLength(cfpath2);
+					if (numChars > 0)
+					{ 
+						err = NumericArrayResize(uB, 1, (UHandle*)dest, numChars * sizeof(UniChar));
+						if (!err)
+						{
+							CFStringGetCharacters(cfpath2, CFRangeMake(0, numChars), (UniChar*)LStrBuf(**dest));
+							LStrLen(**dest) = numChars;
+						}
+					}
+					CFRelease(cfpath2); 
+				}
+			}
+		}
+#elif Unix
+		err = unix_convert_mbtow((const char*)LStrBuf(*src), LStrLen(*src), dest, codePage);
+#endif
+		return err;
+	}
+	return mgNoErr;
+}
+
+static void TerminateLStr(LStrHandle *dest, int32 numBytes)
+{
+	LStrLen(**dest) = numBytes;
+	LStrBuf(**dest)[numBytes] = 0;
+}
+
+LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+{
+	if (dest && *dest)
+		LStrLen(**dest) = 0;
+	if (defaultCharWasUsed)
+		*defaultCharWasUsed = LV_FALSE;
+	if (LStrLen(*src) > 0)
+	{
+		MgErr err = mgNotSupported;
+#if Win32 
+		int32 numBytes = WideCharToMultiByte(codePage, 0, LStrBuf(*src), LStrLen(*src), NULL, 0, NULL, NULL);
+		if (numBytes > 0)
+		{ 
+			BOOL defUsed;
+			err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
+			if (!err)
+			{
+				numBytes = WideCharToMultiByte(codePage, 0, LStrBuf(*src), LStrLen(*src), LStrBuf(**dest), numBytes, &defaultChar, &defUsed);
+				TerminateLStr(dest, numBytes);
+				if (defaultCharWasUsed)
+					*defaultCharWasUsed = (defUsed != FALSE);
+			}
+		}
+#elif MacOSX
+		CFStringRef cfpath = CFStringCreateWithCharacters(NULL, LStrBuf(*src), LStrLen(*src));
+		if (cfpath)
+		{
+			CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(NULL, 0, cfpath);
+			CFRelease(cfpath);
+			if (cpath2)
+			{
+				CFStringNormalize(cfpath2, kCFStringNormalizationFormD);
+				CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
+				if (encoding != kCFStringEncodingInvalidId)
+				{
+					CFIndex numBytes;
+					if (CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, NULL, 0, &numBytes) > 0)
+					{
+						err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
+						if (!err)
+						{
+							CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, (UInt8*)LStrBuf(**dest), numBytes, &numBytes);
+							TerminateLStr(dest, numBytes);
+						}
+					}
+				}
+				CFRelease(cfpath2);
+			}
+		}
+#elif Unix
+		err = unix_convert_wtomb(src, dest, codePage, defaultChar, defaultCharWasUsed);
 #endif
 		return err;
 	}

@@ -1,3 +1,4 @@
+#define Z_PREFIX_SET
 #define z_errmsg                    z_z_errmsg
 
 #define unzClose                    z_unzClose

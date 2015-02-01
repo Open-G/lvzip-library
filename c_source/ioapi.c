@@ -25,7 +25,7 @@
 #define FSEEKO_FUNC(stream, offset, origin) fseeko64(stream, offset, origin)
 #endif
 
-
+#define Unused(var) var=var
 #include "ioapi.h"
 
 voidpf call_zopen64 (const zlib_filefunc64_32_def* pfilefunc,const void*filename,int mode)
@@ -96,6 +96,7 @@ static voidpf ZCALLBACK fopen_file_func (voidpf opaque, const char* filename, in
 {
     FILE* file = NULL;
     const char* mode_fopen = NULL;
+    Unused(opaque);
     if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER)==ZLIB_FILEFUNC_MODE_READ)
         mode_fopen = "rb";
     else
@@ -114,6 +115,7 @@ static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const void* filename, 
 {
     FILE* file = NULL;
     const char* mode_fopen = NULL;
+    Unused(opaque);
     if ((mode & ZLIB_FILEFUNC_MODE_READWRITEFILTER)==ZLIB_FILEFUNC_MODE_READ)
         mode_fopen = "rb";
     else
@@ -132,6 +134,7 @@ static voidpf ZCALLBACK fopen64_file_func (voidpf opaque, const void* filename, 
 static uLong ZCALLBACK fread_file_func (voidpf opaque, voidpf stream, void* buf, uLong size)
 {
     uLong ret;
+    Unused(opaque);
     ret = (uLong)fread(buf, 1, (size_t)size, (FILE *)stream);
     return ret;
 }
@@ -139,6 +142,7 @@ static uLong ZCALLBACK fread_file_func (voidpf opaque, voidpf stream, void* buf,
 static uLong ZCALLBACK fwrite_file_func (voidpf opaque, voidpf stream, const void* buf, uLong size)
 {
     uLong ret;
+    Unused(opaque);
     ret = (uLong)fwrite(buf, 1, (size_t)size, (FILE *)stream);
     return ret;
 }
@@ -146,6 +150,7 @@ static uLong ZCALLBACK fwrite_file_func (voidpf opaque, voidpf stream, const voi
 static long ZCALLBACK ftell_file_func (voidpf opaque, voidpf stream)
 {
     long ret;
+    Unused(opaque);
     ret = ftell((FILE *)stream);
     return ret;
 }
@@ -154,6 +159,7 @@ static long ZCALLBACK ftell_file_func (voidpf opaque, voidpf stream)
 static ZPOS64_T ZCALLBACK ftell64_file_func (voidpf opaque, voidpf stream)
 {
     ZPOS64_T ret;
+    Unused(opaque);
     ret = FTELLO_FUNC((FILE *)stream);
     return ret;
 }
@@ -162,18 +168,19 @@ static long ZCALLBACK fseek_file_func (voidpf  opaque, voidpf stream, uLong offs
 {
     int fseek_origin=0;
     long ret;
+    Unused(opaque);
     switch (origin)
     {
-    case ZLIB_FILEFUNC_SEEK_CUR :
-        fseek_origin = SEEK_CUR;
-        break;
-    case ZLIB_FILEFUNC_SEEK_END :
-        fseek_origin = SEEK_END;
-        break;
-    case ZLIB_FILEFUNC_SEEK_SET :
-        fseek_origin = SEEK_SET;
-        break;
-    default: return -1;
+    	case ZLIB_FILEFUNC_SEEK_CUR :
+    		fseek_origin = SEEK_CUR;
+    		break;
+    	case ZLIB_FILEFUNC_SEEK_END :
+    		fseek_origin = SEEK_END;
+    		break;
+    	case ZLIB_FILEFUNC_SEEK_SET :
+    		fseek_origin = SEEK_SET;
+    		break;
+    	default: return -1;
     }
     ret = 0;
     if (fseek((FILE *)stream, offset, fseek_origin) != 0)
@@ -185,18 +192,19 @@ static long ZCALLBACK fseek64_file_func (voidpf  opaque, voidpf stream, ZPOS64_T
 {
     int fseek_origin=0;
     long ret;
+    Unused(opaque);
     switch (origin)
     {
-    case ZLIB_FILEFUNC_SEEK_CUR :
-        fseek_origin = SEEK_CUR;
-        break;
-    case ZLIB_FILEFUNC_SEEK_END :
-        fseek_origin = SEEK_END;
-        break;
-    case ZLIB_FILEFUNC_SEEK_SET :
-        fseek_origin = SEEK_SET;
-        break;
-    default: return -1;
+    	case ZLIB_FILEFUNC_SEEK_CUR :
+    		fseek_origin = SEEK_CUR;
+    		break;
+    	case ZLIB_FILEFUNC_SEEK_END :
+    		fseek_origin = SEEK_END;
+    		break;
+    	case ZLIB_FILEFUNC_SEEK_SET :
+    		fseek_origin = SEEK_SET;
+    		break;
+    	default: return -1;
     }
     ret = 0;
 
@@ -210,6 +218,8 @@ static long ZCALLBACK fseek64_file_func (voidpf  opaque, voidpf stream, ZPOS64_T
 static int ZCALLBACK fclose_file_func (voidpf opaque, voidpf stream, voidp output)
 {
     int ret;
+    Unused(opaque);
+    Unused(output);
     ret = fclose((FILE *)stream);
     return ret;
 }
@@ -217,6 +227,7 @@ static int ZCALLBACK fclose_file_func (voidpf opaque, voidpf stream, voidp outpu
 static int ZCALLBACK ferror_file_func (voidpf opaque, voidpf stream)
 {
     int ret;
+    Unused(opaque);
     ret = ferror((FILE *)stream);
     return ret;
 }
