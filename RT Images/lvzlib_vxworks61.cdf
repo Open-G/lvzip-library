@@ -5,6 +5,7 @@
 	<TITLE>OpenG ZIP Tools</TITLE>
 	<ABSTRACT>Support files neccessary to use the OpenG ZIP library.</ABSTRACT>
 	<IMPLEMENTATION>
+		<DEVICECLASS VALUE="cRIO"/>	
 		<OS VALUE="VxWorks-PPC603" />
 		<CODEBASE FILENAME="vxworks61/lvzlib.out" TARGET="/ni-rt/system/lvzlib.out"/>
 		<DEPENDENCY>
