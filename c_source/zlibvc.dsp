@@ -36,14 +36,14 @@ CFG=zlibvc - Win32 DLL Release
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "zlibvc___Win32_DLL_Release"
-# PROP BASE Intermediate_Dir "zlibvc___Win32_DLL_Release"
+# PROP BASE Output_Dir "Win32_DLL_Release"
+# PROP BASE Intermediate_Dir "Win32_DLL_Release"
 # PROP BASE Ignore_Export_Lib 1
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "zlibvc___Win32_DLL_Release"
-# PROP Intermediate_Dir "zlibvc___Win32_DLL_Release"
+# PROP Output_Dir "Win32_DLL_Release"
+# PROP Intermediate_Dir "Win32_DLL_Release"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 LIB32=link.exe -lib
@@ -56,26 +56,26 @@ MTL=midl.exe
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 RSC=rc.exe
 # ADD BASE RSC /l 0x40c /d "WIN32" /d "NDEBUG"
-# ADD RSC /l 0x409 /fo"zlibvc___Win32_DLL_Release\lvzlib.res" /d "WIN32" /d "NDEBUG"
+# ADD RSC /l 0x409 /fo"Win32_DLL_Release\lvzlib.res" /d "WIN32" /d "NDEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /pdb:none /machine:I386
-# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"zlibvc___Win32_DLL_Release\lvzlib.dll"
+# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_Release\lvzlib.dll"
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
-# PROP BASE Output_Dir "zlibvc___Win32_DLL_Debug"
-# PROP BASE Intermediate_Dir "zlibvc___Win32_DLL_Debug"
+# PROP BASE Output_Dir "Win32_DLL_Debug"
+# PROP BASE Intermediate_Dir "Win32_DLL_Debug"
 # PROP BASE Ignore_Export_Lib 1
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "zlibvc___Win32_DLL_Debug"
-# PROP Intermediate_Dir "zlibvc___Win32_DLL_Debug"
+# PROP Output_Dir "Win32_DLL_Debug"
+# PROP Intermediate_Dir "Win32_DLL_Debug"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 LIB32=link.exe -lib
@@ -88,27 +88,27 @@ MTL=midl.exe
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /d "WIN32" /d "_DEBUG"
-# ADD RSC /l 0x409 /fo"zlibvc___Win32_DLL_Debug\lvzlib.res" /d "WIN32" /d "_DEBUG"
+# ADD RSC /l 0x409 /fo"Win32_DLL_Debug\lvzlib.res" /d "WIN32" /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib:"msvcrt" /out:"zlibvc___Win32_DLL_Debug\lvzlib.dll"
+# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib:"msvcrt" /out:"Win32_DLL_Debug\lvzlib.dll"
 # SUBTRACT LINK32 /incremental:no
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "zlibvc___Win32_DLL_ASM_Release"
-# PROP BASE Intermediate_Dir "zlibvc___Win32_DLL_ASM_Release"
+# PROP BASE Output_Dir "Win32_DLL_ASM_Release"
+# PROP BASE Intermediate_Dir "Win32_DLL_ASM_Release"
 # PROP BASE Ignore_Export_Lib 0
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "zlibvc___Win32_DLL_ASM_Release"
-# PROP Intermediate_Dir "zlibvc___Win32_DLL_ASM_Release"
+# PROP Output_Dir "Win32_DLL_ASM_Release"
+# PROP Intermediate_Dir "Win32_DLL_ASM_Release"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 LIB32=link.exe -lib
@@ -122,26 +122,26 @@ MTL=midl.exe
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /d "WIN32" /d "NDEBUG" /d "NO_vsnprintf"
-# ADD RSC /l 0x409 /fo"zlibvc___Win32_DLL_ASM_Release\lvzlib.res" /d "WIN32" /d "NDEBUG" /d "NO_vsnprintf"
+# ADD RSC /l 0x409 /fo"Win32_DLL_ASM_Release\lvzlib.res" /d "WIN32" /d "NDEBUG" /d "NO_vsnprintf"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /pdb:none /machine:I386
-# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"zlibvc___Win32_DLL_ASM_Release\lvzlib.dll"
+# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_ASM_Release\lvzlib.dll"
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "zlibvc___Win32_DLL_ASM_Debug"
-# PROP BASE Intermediate_Dir "zlibvc___Win32_DLL_ASM_Debug"
+# PROP BASE Output_Dir "Win32_DLL_ASM_Debug"
+# PROP BASE Intermediate_Dir "Win32_DLL_ASM_Debug"
 # PROP BASE Ignore_Export_Lib 0
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "zlibvc___Win32_DLL_ASM_Debug"
-# PROP Intermediate_Dir "zlibvc___Win32_DLL_ASM_Debug"
+# PROP Output_Dir "Win32_DLL_ASM_Debug"
+# PROP Intermediate_Dir "Win32_DLL_ASM_Debug"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 LIB32=link.exe -lib
@@ -155,27 +155,27 @@ MTL=midl.exe
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /d "WIN32" /d "_DEBUG"
-# ADD RSC /l 0x409 /fo"zlibvc___Win32_DLL_ASM_Debug\lvzlib.res" /d "WIN32" /d "_DEBUG"
+# ADD RSC /l 0x409 /fo"Win32_DLL_ASM_Debug\lvzlib.res" /d "WIN32" /d "_DEBUG"
 BSC32=bscmake.exe
 # ADD BASE BSC32 /nologo
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib:"msvcrt" /out:"zlibvc___Win32_DLL_ASM_Debug\lvzlib.dll"
+# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib:"msvcrt" /out:"Win32_DLL_ASM_Debug\lvzlib.dll"
 # SUBTRACT LINK32 /incremental:no
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Obj Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "zlibvc___Win32_DLL_ASM_Obj_Release"
-# PROP BASE Intermediate_Dir "zlibvc___Win32_DLL_ASM_Obj_Release"
+# PROP BASE Output_Dir "Win32_DLL_ASM_Obj_Release"
+# PROP BASE Intermediate_Dir "Win32_DLL_ASM_Obj_Release"
 # PROP BASE Ignore_Export_Lib 0
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "zlibvc___Win32_DLL_ASM_Obj_Release"
-# PROP Intermediate_Dir "zlibvc___Win32_DLL_ASM_Obj_Release"
+# PROP Output_Dir "Win32_DLL_ASM_Obj_Release"
+# PROP Intermediate_Dir "Win32_DLL_ASM_Obj_Release"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 LIB32=link.exe -lib
@@ -203,14 +203,14 @@ LINK32=link.exe
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "zlibvc___Win32_static_ASM_Release"
-# PROP BASE Intermediate_Dir "zlibvc___Win32_static_ASM_Release"
+# PROP BASE Output_Dir "Win32_static_ASM_Release"
+# PROP BASE Intermediate_Dir "Win32_static_ASM_Release"
 # PROP BASE Ignore_Export_Lib 1
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "zlibvc___Win32_static_ASM_Release"
-# PROP Intermediate_Dir "zlibvc___Win32_static_ASM_Release"
+# PROP Output_Dir "Win32_static_ASM_Release"
+# PROP Intermediate_Dir "Win32_static_ASM_Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 MTL=midl.exe
@@ -235,14 +235,14 @@ LIB32=link.exe -lib
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
-# PROP BASE Output_Dir "zlibvc___Win32_static_Release"
-# PROP BASE Intermediate_Dir "zlibvc___Win32_static_Release"
+# PROP BASE Output_Dir "Win32_static_Release"
+# PROP BASE Intermediate_Dir "Win32_static_Release"
 # PROP BASE Ignore_Export_Lib 1
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "zlibvc___Win32_static_Release"
-# PROP Intermediate_Dir "zlibvc___Win32_static_Release"
+# PROP Output_Dir "Win32_static_Release"
+# PROP Intermediate_Dir "Win32_static_Release"
 # PROP Ignore_Export_Lib 1
 # PROP Target_Dir ""
 MTL=midl.exe
@@ -251,7 +251,7 @@ MTL=midl.exe
 CPP=cl.exe
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /FD /c
 # SUBTRACT BASE CPP /YX /Yc /Yu
-# ADD CPP /nologo /MT /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /FD /c
+# ADD CPP /nologo /MT /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /FR /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 RSC=rc.exe
 # ADD BASE RSC /l 0x409 /d "WIN32" /d "NDEBUG"
@@ -323,11 +323,34 @@ SOURCE=.\iowin.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\lvapi.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\lvutil.c
 # End Source File
 # Begin Source File
 
 SOURCE=.\lvzlib.def
+
+!IF  "$(CFG)" == "zlibvc - Win32 DLL Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Debug"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Obj Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 static ASM Release"
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 static Release"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -473,7 +496,7 @@ SOURCE=.\gvmat32.asm
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
 # Begin Custom Build - Assembling...
-IntDir=.\zlibvc___Win32_DLL_ASM_Release
+IntDir=.\Win32_DLL_ASM_Release
 InputPath=.\gvmat32.asm
 InputName=gvmat32
 
@@ -485,7 +508,7 @@ InputName=gvmat32
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Debug"
 
 # Begin Custom Build - Assembling...
-IntDir=.\zlibvc___Win32_DLL_ASM_Debug
+IntDir=.\Win32_DLL_ASM_Debug
 InputPath=.\gvmat32.asm
 InputName=gvmat32
 
@@ -506,7 +529,7 @@ BuildCmds= \
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 static ASM Release"
 
 # Begin Custom Build - Assembling...
-IntDir=.\zlibvc___Win32_static_ASM_Release
+IntDir=.\Win32_static_ASM_Release
 InputPath=.\gvmat32.asm
 InputName=gvmat32
 
@@ -572,7 +595,7 @@ SOURCE=.\inffas32.asm
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
 # Begin Custom Build - Assembling...
-IntDir=.\zlibvc___Win32_DLL_ASM_Release
+IntDir=.\Win32_DLL_ASM_Release
 InputPath=.\inffas32.asm
 InputName=inffas32
 
@@ -584,7 +607,7 @@ InputName=inffas32
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Debug"
 
 # Begin Custom Build - Assembling...
-IntDir=.\zlibvc___Win32_DLL_ASM_Debug
+IntDir=.\Win32_DLL_ASM_Debug
 InputPath=.\inffas32.asm
 InputName=inffas32
 
@@ -605,7 +628,7 @@ BuildCmds= \
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 static ASM Release"
 
 # Begin Custom Build - Assembling...
-IntDir=.\zlibvc___Win32_static_ASM_Release
+IntDir=.\Win32_static_ASM_Release
 InputPath=.\inffas32.asm
 InputName=inffas32
 

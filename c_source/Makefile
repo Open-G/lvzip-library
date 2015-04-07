@@ -25,7 +25,7 @@ CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
 #           -Wstrict-prototypes -Wmissing-prototypes
 
 CINDIR=/usr/local/lv70/cintools
-SFLAGS=-O3 -fPIC -fvisibility=hidden -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -L$(CINDIR)
+SFLAGS=-O3 -fPIC -m64 -fvisibility=hidden -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -L$(CINDIR)
 LDFLAGS= 
 TEST_LDFLAGS=-L. libz.a
 LDSHARED=gcc
@@ -57,12 +57,12 @@ pkgconfigdir = ${libdir}/pkgconfig
 
 OBJZ = adler32.o crc32.o deflate.o infback.o inffast.o inflate.o inftrees.o trees.o zutil.o
 OBJG = compress.o uncompr.o gzclose.o gzlib.o gzread.o gzwrite.o
-OBJL = lvutil.o ioapi.o iomem.o mztools.o unzip.o zip.o 
+OBJL = lvutil.o ioapi.o iomem.o mztools.o unzip.o zip.o utf.o
 OBJC = $(OBJZ) $(OBJL) $(OBJG)
 
 PIC_OBJZ = adler32.lo crc32.lo deflate.lo infback.lo inffast.lo inflate.lo inftrees.lo trees.lo zutil.lo
 PIC_OBJG = compress.lo uncompr.lo gzclose.lo gzlib.lo gzread.lo gzwrite.lo
-PIC_OBJL = lvapi.lo lvutil.lo ioapi.lo iomem.lo mztools.lo unzip.lo zip.lo 
+PIC_OBJL = lvapi.lo lvutil.lo ioapi.lo iomem.lo mztools.lo unzip.lo zip.lo utf.lo
 PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJL) $(PIC_OBJG)
 
 # to use the asm code: make OBJA=match.o, PIC_OBJA=match.lo

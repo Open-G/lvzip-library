@@ -166,98 +166,64 @@ LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len)
 }
 
 LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment,
-                             zlib_filefunc64_def* pzlib_filefunc_def, LVRefNum *refnum)
+                             zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
 	zipcharpc comment;
-	zipFile node = zipOpen2_64(pathname, append, &comment, pzlib_filefunc_def);
+	zipFile node = zipOpen2_64(pathname, append, &comment, filefuncs);
+
 	*refnum = kNotARefNum;
 	if (*globalcomment)
 		LStrLen(**globalcomment) = 0;
+
 	if (node)
 	{
 		MgErr err = lvzlibCreateRefnum(node, refnum, ZipMagic, LV_FALSE);
+		if (!err && comment)
+		{
+			int32 len = (int32)strlen(comment);
+			err = NumericArrayResize(uB, 1, (UHandle*)globalcomment, len);
+			if (!err)
+			{
+				MoveBlock((ConstUPtr)comment, LStrBuf(**globalcomment), len);
+				LStrLen(**globalcomment) = len;
+			}
+			else
+			{
+				lvzlibDisposeRefnum(refnum, NULL, ZipMagic);		
+			}
+		}
 		if (err)
 		{
 			zipClose(node, NULL);
-		}
-		else if (comment)
-		{
-			err = ConvertCString((ConstCStr)comment, (int32)strlen(comment), CP_OEMCP, globalcomment, CP_ACP, 0, NULL);
-			if (err)
-			{
-				zipClose(node, NULL);
-				lvzlibDisposeRefnum(refnum, NULL, ZipMagic);		
-			}
 		}
 		return err;
 	}
 	return fNotFound;
 }
 
-static uInt32 determine_codepage(uLong *flags, LStrHandle string)
+LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
+						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
+						   LStrHandle comment, int method, int level, int raw, int windowBits,
+						   int memLevel, int strategy, const char* password, uLong crcForCrypting, uLong flags, int zip64)
 {
-	uInt32 cp = Hi16(*flags);
-	if (!cp)
+	zipFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, ZipMagic);
+	if (!err)
 	{
-		int32 i = LStrLen(*string) - 1;
-		UPtr ptr = LStrBuf(*string);
-
-		cp = CP_OEMCP;
-		// No codepage defined, try to find out if we have extended characters and set UTF_* in that case
-		for (; i >= 0; i--)
+		err = ZeroTerminateLString(&filename);
+		if (!err)
 		{
-			if (ptr[i] >= 0x80)
+			err = ZeroTerminateLString(&comment);
+			if (!err)
 			{
-				cp = CP_UTF8;
-				break;
+				err = LibToMgErr(zipOpenNewFileInZip4_64(node, (const char*)LStrBufH(filename), zipfi,
+						         LStrBufH(extrafield_local), LStrLenH(extrafield_local),
+								 LStrBufH(extrafield_global), LStrLenH(extrafield_global),
+								 (const char*)LStrBufH(comment), method, level, raw, windowBits, memLevel,
+								 strategy, password[0] ? password : NULL, crcForCrypting, VERSIONMADEBY, flags, zip64));
 			}
 		}
 	}
-	return cp;
-}
-
-LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, const LStrHandle filename, const zip_fileinfo* zipfi,
-						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
-						   const LStrHandle comment, int method, int level, int raw, int windowBits,
-						   int memLevel, int strategy, const char* password, uLong crcForCrypting, uLong flags, int zip64)
-{
-	LStrHandle tempfilename = NULL, tempcomment = NULL;
-	uInt32 cp1 = determine_codepage(&flags, filename); 
-	uInt32 cp2 = determine_codepage(&flags, comment);
-	MgErr err;
-
-	if (cp1 == CP_UTF8 || cp2 == CP_UTF8)
-	{
-		cp1 = cp2 = CP_UTF8;
-		flags = Lo16(flags) | FLAGS_UTF8;
-	}
-	else
-	{
-		flags = Lo16(flags) & ~FLAGS_UTF8;
-	}
-
-	err = ConvertLPath(filename, CP_ACP, &tempfilename, cp1, 0, NULL);
-	if (!err && LStrLen(*comment))
-	{
-	    err = ConvertLString(comment, CP_ACP, &tempcomment, cp1, 0, NULL);
-	}
-	if (!err)
-	{
-		zipFile node;
-		err = lvzlibGetRefnum(refnum, &node, ZipMagic);
-		if (!err)
-		{
-			err = LibToMgErr(zipOpenNewFileInZip4_64(node, (const char*)LStrBufH(tempfilename), zipfi,
-			                 LStrBufH(extrafield_local), LStrLenH(extrafield_local),
-	                         LStrBufH(extrafield_global), LStrLenH(extrafield_global),
-							 (const char*)LStrBufH(tempcomment), method, level, raw, windowBits, memLevel,
-							 strategy, password[0] ? password : NULL, crcForCrypting, VERSIONMADEBY, flags, zip64));
-		}
-	}
-	if (tempcomment)
-		DSDisposeHandle((UHandle)tempcomment);
-	if (tempfilename)
-		DSDisposeHandle((UHandle)tempfilename);
 	return err;
 }
 
@@ -319,9 +285,19 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const LStrHandle globalComment, 
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_unzOpen(const void *pathname, zlib_filefunc64_def* pzlib_filefunc_def, LVRefNum *refnum)
+/****************************************************************************************************
+ *
+ * Opens a ZIP archive for reading
+ *
+ * Parameters:
+ *  pathname: The path and filename of the archive to open for a disk based archive file
+ *  filefuncs: A pointer to a record containing the function pointers to use for access to the archive 
+ *  refnum: An archive extraction file reference
+ *
+ ****************************************************************************************************/
+LibAPI(MgErr) lvzlib_unzOpen(const void *pathname, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
-	unzFile node = unzOpen2_64(pathname, pzlib_filefunc_def);
+	unzFile node = unzOpen2_64(pathname, filefuncs);
 	*refnum = kNotARefNum;
 	if (node)
 	{
@@ -335,33 +311,36 @@ LibAPI(MgErr) lvzlib_unzOpen(const void *pathname, zlib_filefunc64_def* pzlib_fi
 	return fNotFound;
 }
 
+/****************************************************************************************************
+ *
+ * Closes a ZIP archive that was opened for reading
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_unzClose(LVRefNum *refnum)
 {
 	unzFile node;
 	MgErr err = lvzlibDisposeRefnum(refnum, &node, UnzMagic);
 	if (!err)
 	{
+		*refnum = kNotARefNum;
 		err = LibToMgErr(unzClose(node));
 	}
 	return err;
 }
 
-static MgErr lvzlib_unzGetGlobalComment(unzFile node, LStrHandle *comment, uInt32 len)
-{
-	void *temp = malloc(len);
-	if (temp)
-	{
-		MgErr err = LibToMgErr(unzGetGlobalComment(node, temp, len));
-		if (!err)
-		{
-			err = ConvertCString(temp, StrLen(temp), CP_OEMCP, comment, CP_ACP, 0, NULL);
-		}
-		free(temp);
-		return err;
-	}
-	return mFullErr;
-}
-
+/****************************************************************************************************
+ *
+ * Read the global commen and number of entries in the archive
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *  comment: The LabVIEW string to receive the global comment
+ *  nEntry: The number of file entries in the archive
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_unzGetGlobalInfo32(LVRefNum *refnum, LStrHandle *comment, uInt32 *nEntry)
 {
 	unzFile node;
@@ -369,11 +348,19 @@ LibAPI(MgErr) lvzlib_unzGetGlobalInfo32(LVRefNum *refnum, LStrHandle *comment, u
 	if (!err)
 	{
 		unz_global_info pglobal_info;
-		MgErr err = LibToMgErr(unzGetGlobalInfo(node, &pglobal_info));
+		err = LibToMgErr(unzGetGlobalInfo(node, &pglobal_info));
 		if (!err)
 		{
-			*nEntry = pglobal_info.number_entry;
-			err = lvzlib_unzGetGlobalComment(node, comment, pglobal_info.size_comment + 1);
+			err = NumericArrayResize(uB, 1, (UHandle*)comment, pglobal_info.size_comment);
+			if (!err)
+			{
+				err = LibToMgErr(unzGetGlobalComment(node, (char*)LStrBuf(**comment), pglobal_info.size_comment));
+				if (!err)
+				{
+					LStrLen(**comment) = pglobal_info.size_comment;
+					*nEntry = pglobal_info.number_entry;
+				}
+			}
 		}
 	}
 	return err;
@@ -389,38 +376,69 @@ LibAPI(MgErr) lvzlib_unzGetGlobalInfo64(LVRefNum *refnum, LStrHandle *comment, u
 		err = LibToMgErr(unzGetGlobalInfo64(node, &pglobal_info));
 		if (!err)
 		{
-			*nEntry = pglobal_info.number_entry;
-			err = lvzlib_unzGetGlobalComment(node, comment, pglobal_info.size_comment + 1);
-		}
-	}
-	return err;
-}
-
-LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, const LStrHandle fileName, int iCaseSensitivity)
-{
-	unzFile node;
-	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
-	if (!err)
-	{
-		unz_file_info pfile_info;
-		err = LibToMgErr(unzGetCurrentFileInfo(node, &pfile_info, NULL, 0, NULL, 0, NULL, 0));
-		if (!err)
-		{
-			uInt32 cp = pfile_info.flag & FLAGS_UTF8 ? CP_UTF8 : CP_OEMCP; 
-			LStrHandle name = NULL;
-			err = ConvertLString(fileName, CP_ACP, &name, cp, 0, NULL);
+			err = NumericArrayResize(uB, 1, (UHandle*)comment, pglobal_info.size_comment);
 			if (!err)
 			{
-				err = LibToMgErr(unzLocateFile(node, (const char*)LStrBufH(name), iCaseSensitivity));
-				DSDisposeHandle((UHandle)name);
+				err = LibToMgErr(unzGetGlobalComment(node, (char*)LStrBuf(**comment), pglobal_info.size_comment));
+				if (!err)
+				{
+					LStrLen(**comment) = pglobal_info.size_comment;
+					*nEntry = pglobal_info.number_entry;
+				}
 			}
 		}
 	}
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo32(LVRefNum *refnum, unz_file_info *pfile_info, LVBoolean getUTF,
-                                             LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
+/****************************************************************************************************
+ *
+ * Position the current file pointer to the file with fileName
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *  fileName: The name of the file in the archive. This is the full path in unix file notation
+ *            including the directory levels. This string is really a byte sequence that will
+ *            be compared as binary byte stream to the internal names. No encoding translation
+ *            will be done in either direction.
+ *  caseSensivity: Indicates if the filename comparison should be done case sensitive or not.
+ *                 Note that depending on the actual encoding of the string this might not
+ *                 always work as intended for case insensitive comparison since only the normal
+ *                 ASCII 7Bit alpha characters will be compared case insensitive, not any extended
+ *                 characters or multibyte characters.
+ *
+ ****************************************************************************************************/
+LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iCaseSensitivity)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		err = ZeroTerminateLString(&fileName);
+		if (!err)
+		{
+			err = LibToMgErr(unzLocateFile(node, (const char*)LStrBufH(fileName), iCaseSensitivity));
+		}
+	}
+	return err;
+}
+
+/****************************************************************************************************
+ *
+ * Retrieve the file information for the currently selected file entry
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *  pfile_info: A structure receiving different values and flags about the file entry.
+ *  fileName: The name of the file in the archive. This is the full path in unix file notation
+ *            including the directory levels. This string is really a byte sequence that could
+ *            be either in the OEM codepage or in UTF8 depending on the according flag
+ *  extraField: optional extra field information
+ *  comment: An optional comment entry for the file entry. This is encoded in the same way as the fileName
+ *
+ ****************************************************************************************************/
+LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo32(LVRefNum *refnum, unz_file_info *pfile_info, LStrHandle *fileName,
+											 LStrHandle *extraField, LStrHandle *comment)
 {
 	unzFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
@@ -429,47 +447,33 @@ LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo32(LVRefNum *refnum, unz_file_info *pf
 		err = LibToMgErr(unzGetCurrentFileInfo(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
 		if (!err)
 		{
-			char *szFileName = malloc(pfile_info->size_filename + 1);
-			if (szFileName)
+			err = NumericArrayResize(uB, 1, (UHandle*)extraField, pfile_info->size_file_extra);
+			if (!err)
 			{
-				err = NumericArrayResize(uB, 1, (UHandle*)extraField, pfile_info->size_file_extra);
+				err = NumericArrayResize(uB, 1, (UHandle*)fileName, pfile_info->size_filename);
 				if (!err)
 				{
-					char *szComment = malloc(pfile_info->size_file_comment + 1);
-					if (szComment)
+					err = NumericArrayResize(uB, 1, (UHandle*)comment, pfile_info->size_file_comment);
+					if (!err)
 					{
-						err = LibToMgErr(unzGetCurrentFileInfo(node, pfile_info, szFileName, pfile_info->size_filename + 1,
-                                 LStrBuf(**extraField), pfile_info->size_file_extra, szComment, pfile_info->size_file_comment + 1));
+						err = LibToMgErr(unzGetCurrentFileInfo(node, pfile_info, (char*)LStrBuf(**fileName), pfile_info->size_filename,
+								LStrBuf(**extraField), pfile_info->size_file_extra, (char*)LStrBuf(**comment), pfile_info->size_file_comment));
 						if (!err)
 						{
-							uInt32 cp = pfile_info->flag & FLAGS_UTF8 ? CP_UTF8 : CP_OEMCP; 
-							err = ConvertCString((ConstCStr)szComment, (int32)strlen(szComment), cp, comment, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
-							if (!err)
-							{
-								err = ConvertCPath((ConstCStr)szFileName, (int32)strlen(szFileName), cp, fileName, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
-							}
 							LStrLen(**extraField) = pfile_info->size_file_extra;
+							LStrLen(**fileName) = pfile_info->size_filename;
+							LStrLen(**comment) = pfile_info->size_file_comment;
 						}
-						free(szComment);
-					}
-					else
-					{
-						err = mFullErr;
 					}
 				}
-				free(szFileName);
-			}	
-			else
-			{
-				err = mFullErr;
 			}
 		}
 	}
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo64(LVRefNum *refnum, unz_file_info64 *pfile_info, LVBoolean getUTF,
-                                             LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
+LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName,
+											 LStrHandle *extraField, LStrHandle *comment)
 {
 	unzFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
@@ -478,45 +482,45 @@ LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo64(LVRefNum *refnum, unz_file_info64 *
 		err = LibToMgErr(unzGetCurrentFileInfo64(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
 		if (!err)
 		{
-			char *szFileName = malloc(pfile_info->size_filename + 1);
-			if (szFileName)
+			err = NumericArrayResize(uB, 1, (UHandle*)extraField, pfile_info->size_file_extra);
+			if (!err)
 			{
-				err = NumericArrayResize(uB, 1, (UHandle*)extraField, pfile_info->size_file_extra);
+				err = NumericArrayResize(uB, 1, (UHandle*)fileName, pfile_info->size_filename);
 				if (!err)
 				{
-					char *szComment = malloc(pfile_info->size_file_comment + 1);
-					if (szComment)
+					err = NumericArrayResize(uB, 1, (UHandle*)comment, pfile_info->size_file_comment);
+					if (!err)
 					{
-						err = LibToMgErr(unzGetCurrentFileInfo64(node, pfile_info, szFileName, pfile_info->size_filename + 1,
-                                 LStrBuf(**extraField), pfile_info->size_file_extra, szComment, pfile_info->size_file_comment + 1));
+						err = LibToMgErr(unzGetCurrentFileInfo64(node, pfile_info, (char*)LStrBuf(**fileName), pfile_info->size_filename,
+                                 LStrBuf(**extraField), pfile_info->size_file_extra, (char*)LStrBuf(**comment), pfile_info->size_file_comment));
 						if (!err)
 						{
-							uInt32 cp = pfile_info->flag & FLAGS_UTF8 ? CP_UTF8 : CP_OEMCP; 
-							err = ConvertCString((ConstCStr)szComment, (int32)strlen(szComment), cp, comment, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
-							if (!err)
-							{
-								err = ConvertCPath((ConstCStr)szFileName, (int32)strlen(szFileName), cp, fileName, getUTF ? CP_UTF8 : CP_ACP, '?', NULL);
-							}
 							LStrLen(**extraField) = pfile_info->size_file_extra;
+							LStrLen(**fileName) = pfile_info->size_filename;
+							LStrLen(**comment) = pfile_info->size_file_comment;
 						}
-						free(szComment);
-					}
-					else
-					{
-						err = mFullErr;
 					}
 				}
-				free(szFileName);
-			}	
-			else
-			{
-				err = mFullErr;
 			}
 		}
 	}
 	return err;
 }
 
+/****************************************************************************************************
+ *
+ * Opens the file the file pointer currently points to
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *  method: 
+ *  level: 
+ *  raw: Indicates if the file should be opened in raw mode which retrieves the raw bytes without
+ *       attempting to expand them or decode any password protection.
+ *  password: The password to use to open the file. Pass NULL for raw retrieval or if the file was
+ *            not stored with a password.
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_unzOpenCurrentFile(LVRefNum *refnum, int32* method, int32* level, int16 raw, const char* password)
 {
 	unzFile node;
@@ -528,6 +532,15 @@ LibAPI(MgErr) lvzlib_unzOpenCurrentFile(LVRefNum *refnum, int32* method, int32* 
 	return err;
 }
 
+/****************************************************************************************************
+ *
+ * Retrieve the local extrafield information for the current file
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *  extra: Receives the data of the local extrafield information as a byte stream.
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_unzGetLocalExtrafield(LVRefNum *refnum, LStrHandle *extra)
 {
 	unzFile node;
@@ -541,7 +554,8 @@ LibAPI(MgErr) lvzlib_unzGetLocalExtrafield(LVRefNum *refnum, LStrHandle *extra)
 			if (!err)
 			{
 				err = LibToMgErr(unzGetLocalExtrafield(node, LStrBuf(**extra), len));
-				LStrLen(**extra) = len;
+				if (!err)
+					LStrLen(**extra) = len;
 			}
 			return err;
 		}
@@ -550,6 +564,16 @@ LibAPI(MgErr) lvzlib_unzGetLocalExtrafield(LVRefNum *refnum, LStrHandle *extra)
 	return err;
 }
 
+/****************************************************************************************************
+ *
+ * Retrieve a block of data from the currently open file entry in the archive
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *  buffer: Receives the data of the file. The function retrieves as much data as the buffer is long
+ *          or less if the file data is smaller.
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_unzReadCurrentFile(LVRefNum *refnum, LStrHandle buffer)
 {
 	unzFile node;
@@ -564,6 +588,14 @@ LibAPI(MgErr) lvzlib_unzReadCurrentFile(LVRefNum *refnum, LStrHandle buffer)
 	return err;
 }
 
+/****************************************************************************************************
+ *
+ * Closes the current file entry in the archive
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_unzCloseCurrentFile(LVRefNum *refnum)
 {
 	unzFile node;
@@ -575,50 +607,14 @@ LibAPI(MgErr) lvzlib_unzCloseCurrentFile(LVRefNum *refnum)
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_unzGoToFilePos32(LVRefNum *refnum, unz_file_pos *rec)
-{
-	unzFile node;
-	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
-	if (!err)
-	{
-		err = LibToMgErr(unzGoToFilePos(node, rec));
-	}
-	return err;
-}
-
-LibAPI(MgErr) lvzlib_unzGetFilePos32(LVRefNum *refnum, unz_file_pos *rec)
-{
-	unzFile node;
-	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
-	if (!err)
-	{
-		err = LibToMgErr(unzGetFilePos(node, rec));
-	}
-	return err;
-}
-
-LibAPI(MgErr) lvzlib_unzGoToFilePos64(LVRefNum *refnum, unz64_file_pos *rec)
-{
-	unzFile node;
-	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
-	if (!err)
-	{
-		err = LibToMgErr(unzGoToFilePos64(node, rec));
-	}
-	return err;
-}
-
-LibAPI(MgErr) lvzlib_unzGetFilePos64(LVRefNum *refnum, unz64_file_pos *rec)
-{
-	unzFile node;
-	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
-	if (!err)
-	{
-		err = LibToMgErr(unzGetFilePos64(node, rec));
-	}
-	return err;
-}
-
+/****************************************************************************************************
+ *
+ * Positions the pointer to the first file entry in the archive
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_unzGoToFirstFile(LVRefNum *refnum)
 {
 	unzFile node;
@@ -630,6 +626,14 @@ LibAPI(MgErr) lvzlib_unzGoToFirstFile(LVRefNum *refnum)
 	return err;
 }
 
+/****************************************************************************************************
+ *
+ * Positions the pointer to the next file entre in the archive
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_unzGoToNextFile(LVRefNum *refnum)
 {
 	unzFile node;
@@ -640,3 +644,66 @@ LibAPI(MgErr) lvzlib_unzGoToNextFile(LVRefNum *refnum)
 	}
 	return err;
 }
+
+/****************************************************************************************************
+ *
+ * Low level function to position the current read pointer at a specific location inside the archive
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *  pos: The position to move too
+ *
+ ****************************************************************************************************/
+LibAPI(MgErr) lvzlib_unzGoToFilePos32(LVRefNum *refnum, unz_file_pos *pos)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		err = LibToMgErr(unzGoToFilePos(node, pos));
+	}
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_unzGoToFilePos64(LVRefNum *refnum, unz64_file_pos *pos)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		err = LibToMgErr(unzGoToFilePos64(node, pos));
+	}
+	return err;
+}
+
+/****************************************************************************************************
+ *
+ * Low level function to retrieve the read pointer at a current location inside the archive
+ *
+ * Parameters:
+ *  refnum: An archive extraction file reference
+ *  pos: Returns the current position
+ *
+ ****************************************************************************************************/
+LibAPI(MgErr) lvzlib_unzGetFilePos32(LVRefNum *refnum, unz_file_pos *pos)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		err = LibToMgErr(unzGetFilePos(node, pos));
+	}
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_unzGetFilePos64(LVRefNum *refnum, unz64_file_pos *pos)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		err = LibToMgErr(unzGetFilePos64(node, pos));
+	}
+	return err;
+}
+

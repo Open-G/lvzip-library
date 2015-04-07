@@ -387,7 +387,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 #elif Win32
     LStrPtr lstr;
     HANDLE handle = NULL;
-    WIN32_FIND_DATAA fi;
+	WIN32_FIND_DATAA fi = {0};
     uInt64 count = 0;
 #elif Unix
     LStrPtr lstr;
@@ -585,8 +585,6 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 			fileInfo->flags = (fi.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? 0x4000 : 0;
 			if (*isDirectory)
 			{
-				Path temp = path;
-
 				count = 1;
 
 				strcpy(LStrBuf(lstr) + LStrLen(lstr), "\\*.*");
@@ -1420,7 +1418,7 @@ LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size)
 	return err;
 }
 
-LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *offs, int32 mode)
+LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *offs, uInt16 mode)
 {
 	FileRefNum ioRefNum;
 	MgErr err = FRefNumToFD(*refnum, (File*)&ioRefNum);
@@ -1520,6 +1518,28 @@ LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp)
 		return CP_UTF8;
 	return acp ? CP_ACP : CP_OEMCP;
 #endif
+}
+
+LibAPI(uInt32) determine_codepage(uLong *flags, LStrHandle string)
+{
+	uInt32 cp = Hi16(*flags);
+	if (!cp)
+	{
+		int32 i = LStrLen(*string) - 1;
+		UPtr ptr = LStrBuf(*string);
+
+		cp = CP_OEMCP;
+		// No codepage defined, try to find out if we have extended characters and set UTF_* in that case
+		for (; i >= 0; i--)
+		{
+			if (ptr[i] >= 0x80)
+			{
+				cp = CP_UTF8;
+				break;
+			}
+		}
+	}
+	return cp;
 }
 
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
@@ -1653,13 +1673,26 @@ LibAPI(MgErr) ConvertLString(const LStrHandle src, uInt32 srccp, LStrHandle *des
 	}
 	else
 	{
-		return DSCopyHandle(*dest, src);
+		err = NumericArrayResize(uB, 1, (UHandle*)dest, LStrLen(*src));
+		if (!err)
+		{
+			MoveBlock((ConstCStr)*src, (CStr)**dest, LStrLen(*src) + sizeof(int32));
+		}
+		return err;
 	}
 	if (*dest)
 		LStrLen(**dest) = 0;
 
 	return mgNoErr;
 }
+
+#if !Unix || !defined(HAVE_ICONV)
+static void TerminateLStr(LStrHandle *dest, int32 numBytes)
+{
+	LStrLen(**dest) = numBytes;
+	LStrBuf(**dest)[numBytes] = 0;
+}
+#endif
 
 /* Converts a LabVIEW platform path to Unix style path */
 LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
@@ -1721,8 +1754,7 @@ LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest,
 						{
 							if (CFStringGetBytes(posixRef, range, encoding, 0, false, LStrBuf(**dest), len, &len) > 0)
 							{
-								LStrBuf(**dest)[len] = 0;
-								LStrLen(**dest) = len;
+								TerminateLStr(dest, len);
 								err = mgNoErr;
 							}
 							else
@@ -1816,12 +1848,13 @@ static MgErr unix_convert_wtomb(UStrHandle src, LStrHandle *dest, uInt32 codePag
 	}
 	return UnixToLVFileErr();
 }
-#else
+#else // HAVE_ICONV
 /* We don't have a good way of converting from an arbitrary character set to wide char and back.
    Just do default mbcs to wide char and vice versa ??? */
 static MgErr unix_convert_mbtow(const char *src, int32 len, UStrHandle *dest, uInt32 codePage)
 {
 	int32 offset = 0;
+	MgErr err = noErr;
 
 	if (codePage == CP_UTF8)
         err = utf8towchar(src, len, NULL, &offset, 0);
@@ -1872,23 +1905,26 @@ static MgErr unix_convert_mbtow(const char *src, int32 len, UStrHandle *dest, uI
 			}
 			else
 			{
-				offset = mbstowcs(UStrBuf(**dest), LStrBuf(*src), offset);
+				offset = mbstowcs(UStrBuf(**dest), src, offset);
 			}
 			if (!err)
 			    LStrLen(**dest) = offset * sizeof(wchar_t) / sizeof(uInt16); 
 		}
 	}
+	return err;
 }
+
 static MgErr unix_convert_wtomb(UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
-		size_t length = LStrLen(*src) * sizeof(uInt16) / sizeof(wchar_t);
-		size_t dummy, size = 2 * length;
-		wchar_t wdefChar;
+	size_t length = LStrLen(*src) * sizeof(uInt16) / sizeof(wchar_t);
+	size_t dummy, size = 2 * length;
+	wchar_t wdefChar;
+	MgErr err = noErr;
 
-		if (codePage == CP_UTF8)
-			err = utfwchartoutf8(src, len, NULL, &offset, 0);
-		else
-		{
+	if (codePage == CP_UTF8)
+		err = wchartoutf8(UStrBuf(*src), length, NULL, &size, 0);
+	else
+	{
 		if (defaultChar)
 		{
 			dummy = mbtowc(NULL, NULL, 0);
@@ -1952,6 +1988,8 @@ static MgErr unix_convert_wtomb(UStrHandle src, LStrHandle *dest, uInt32 codePag
 				TerminateLStr(dest, length);
 			}
 		}
+	}
+	return err;
 }
 #endif
 #endif
@@ -2064,13 +2102,14 @@ LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt
 	return mgNoErr;
 }
 
-#ifndef Unix
-static void TerminateLStr(LStrHandle *dest, int32 numBytes)
+LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest)
 {
-	LStrLen(**dest) = numBytes;
-	LStrBuf(**dest)[numBytes] = 0;
+	int32 size = dest ? LStrLen(**dest) : 0;
+	MgErr err = NumericArrayResize(uB, 1, (UHandle*)dest, size + 1);
+	if (!err)
+		LStrBuf(**dest)[size] = 0;
+	return err;
 }
-#endif
 
 LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
@@ -2092,7 +2131,7 @@ LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt
 				numBytes = WideCharToMultiByte(codePage, 0, LStrBuf(*src), LStrLen(*src), LStrBuf(**dest), numBytes, &defaultChar, &defUsed);
 				TerminateLStr(dest, numBytes);
 				if (defaultCharWasUsed)
-					*defaultCharWasUsed = (defUsed != FALSE);
+					*defaultCharWasUsed = (LVBoolean)(defUsed != FALSE);
 			}
 		}
 #elif MacOSX

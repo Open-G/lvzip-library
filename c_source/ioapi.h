@@ -45,12 +45,13 @@
 #include <stdlib.h>
 #include "zlib.h"
 
-#if defined(USE_FILE32API)
+#if defined(USE_FILE32API) || defined(__vxworks)
 #define fopen64 fopen
 #define ftello64 ftell
 #define fseeko64 fseek
+#define ftruncate64 ftruncate
 #else
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__)
 #define fopen64 fopen
 #define ftello64 ftello
 #define fseeko64 fseeko

@@ -2,8 +2,8 @@
 
 #define IDR_VERSION1  1
 IDR_VERSION1	VERSIONINFO	MOVEABLE IMPURE LOADONCALL DISCARDABLE
-  FILEVERSION	 2,7,1
-  PRODUCTVERSION 2,7,1
+  FILEVERSION	 4,1,0
+  PRODUCTVERSION 4,1,0
   FILEFLAGSMASK	VS_FFI_FILEFLAGSMASK
   FILEFLAGS	0
   FILEOS	VOS_DOS_WINDOWS32
@@ -17,12 +17,12 @@ BEGIN
 
     BEGIN
       VALUE "FileDescription",  "LabVIEW zlib data compression library\0"
-      VALUE "FileVersion",      "2.7.1.LV6\0"
+      VALUE "FileVersion",      "4.1.0.LV7\0"
       VALUE "InternalName",     "lvzlib\0"
       VALUE "OriginalFilename", "lvzlib.dll\0"
       VALUE "ProductName",      "LVZLib.DLL\0"
-      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\r\nZIP support by Gilles Vollant\r\nLabVIEW support by Rolf Kalbermatter\r\nBased on zlib 1.2.7.1 and minizip 1.1\0"
-      VALUE "LegalCopyright",   "(C) 1995-2013 Jean-loup Gailly & Mark Adler\0"
+      VALUE "Comments","DLL support by Alessandro Iacopetti & Gilles Vollant\r\nZIP support by Gilles Vollant\r\nLabVIEW support by Rolf Kalbermatter\r\nBased on zlib 1.2.8 and minizip 1.1\0"
+      VALUE "LegalCopyright",   "(C) 1995-2014 Jean-loup Gailly & Mark Adler\0"
     END
   END
   BLOCK "VarFileInfo"

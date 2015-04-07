@@ -428,7 +428,7 @@ LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum);
 LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, FileOffset *size);
 LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size);
 LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *offs);
-LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *offs, int32 mode);
+LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *offs, uInt16 mode);
 LibAPI(MgErr) LVFile_Read(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 
@@ -442,8 +442,10 @@ LibAPI(MgErr) InitializeStreamFuncs(LStrHandle  filefunc_def, LStrHandle *memory
 typedef struct
 {
 	int32 cnt;
-	uInt16 str[];
+	uInt16 str[1];
 } UString, **UStrHandle;
+
+LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
 LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp);
 LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle *dest, uInt32 codePage);

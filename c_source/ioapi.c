@@ -19,6 +19,10 @@
 #define FOPEN_FUNC(filename, mode) fopen(filename, mode)
 #define FTELLO_FUNC(stream) ftello(stream)
 #define FSEEKO_FUNC(stream, offset, origin) fseeko(stream, offset, origin)
+#elif defined(__vxworks)
+#define FOPEN_FUNC(filename, mode) fopen(filename, mode)
+#define FTELLO_FUNC(stream) ftell(stream)
+#define FSEEKO_FUNC(stream, offset, origin) fseek(stream, offset, origin)
 #else
 #define FOPEN_FUNC(filename, mode) fopen64(filename, mode)
 #define FTELLO_FUNC(stream) ftello64(stream)
@@ -208,8 +212,8 @@ static long ZCALLBACK fseek64_file_func (voidpf  opaque, voidpf stream, ZPOS64_T
     }
     ret = 0;
 
-    if(FSEEKO_FUNC((FILE *)stream, offset, fseek_origin) != 0)
-                        ret = -1;
+    if (FSEEKO_FUNC((FILE *)stream, offset, fseek_origin) != 0)
+        ret = -1;
 
     return ret;
 }
@@ -232,8 +236,7 @@ static int ZCALLBACK ferror_file_func (voidpf opaque, voidpf stream)
     return ret;
 }
 
-void fill_fopen_filefunc (pzlib_filefunc_def)
-  zlib_filefunc_def* pzlib_filefunc_def;
+void fill_fopen_filefunc (zlib_filefunc_def* pzlib_filefunc_def)
 {
     pzlib_filefunc_def->zopen_file = fopen_file_func;
     pzlib_filefunc_def->zread_file = fread_file_func;
