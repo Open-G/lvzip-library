@@ -1,7 +1,7 @@
-LabVIEW ZIP library, version 2.5.2
+LabVIEW ZIP library, version 4.1.0
 ----------------------------------
 
-Copyright 2002-2009 Rolf Kalbermatter
+Copyright 2002-2015 Rolf Kalbermatter
 
 
 Please read this document before you upgrade from a version of LVZIP
@@ -11,17 +11,22 @@ Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
 
-Release 2.6.1, Released: Jun. xx, 2010
+Release 4.1.0, Released: Mar. 05, 2015
 ======================================
 
 New features:
 -------------
-1) Upgraded to zlib 1.2.5 and minizip 1.1 sources
+1) Added some support for extended character codes with various character encodings.
 2) Support for ZIP64 Archives (>4GB) (an individual file inside the archive still
    needs to be smaller than 4GB when getting added or extracted and memory stream
    based retrieval is limited to < 2GB large archives due to LabVIEWs 2GB limit for
    string handles)
-3) Support for LabVIEW for 64 Bit
+3) Added support for Windows and Linux 64 bit platforms
+4) Added support for all NI-Linux RT platforrms
+
+Bug fixes:
+----------
+1) Upgraded to zlib 1.2.8 and included minizip
 
 
 Release 2.5.2, Released: Sep. 3, 2009

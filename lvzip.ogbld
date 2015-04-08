@@ -99,19 +99,4 @@ SourceFile 1=lvzlib.*
 SourceFile 2=submenus/*.mnu
 SourceFile 3=readme.txt
 SourceFile 4=PreInstall.vi
-
-[SupportFiles 2]
-TargetDir="vxWorks82"
-OverwriteExisting=TRUE
-FollowVIDirHierarchy=FALSE
-Recursive=FALSE
-Exclude=FALSE
-SourceFile 1="vxWorks LV8.2/lvzlib.*"
-
-[SupportFiles 3]
-TargetDir="vxWorks85"
-OverwriteExisting=TRUE
-FollowVIDirHierarchy=FALSE
-Recursive=FALSE
-Exclude=FALSE
-SourceFile 1="vxWorks LV8.5/lvzlib.*"
+SourceFile 5=PostInstall.vi

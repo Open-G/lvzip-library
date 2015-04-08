@@ -1,27 +1,41 @@
+[OGPB Header]
+File Version=1.0.0
+
 [Package Name]
 Name=oglib_lvzip
-Version=2.6.1
-Release=2
+Version=4.1.0
+Release=1
+Display Name="OpenG ZIP Library"
 
 [Description]
-Description="The lvzip package contains several routines for operating on zip files.\0D\0A\0D\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
-
+Description="The lvzip package contains several routines for operating on zip files.\0D\0A"
 Summary="OpenG Zip Tools"
 License="BSD (VIs), LGPL (Shared Library)"
-Copyright="1995-2010 Mark Adler, Jean-loup Gailly\0A1998-2010 Gilles Vollant\0A2002 - 2011 Christophe Salzmann, Jim Kring, Rolf Kalbermatter"
+Copyright="1995-2014 Mark Adler, Jean-loup Gailly\0A1998-2014 Gilles Vollant\0A2002 - 2015 Christophe Salzmann, Jim Kring, Rolf Kalbermatter"
 Distribution="OpenG Toolkit"
-Icon=lvzip.bmp
 Vendor=OpenG.org
 URL=http://wiki.openg.org/oglib_lvzip
 Packager="Jim Kring <jim@jimkring.com>"
+Release Notes="Version 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
+Demo=FALSE
+System Package=FALSE
+Sub Package=FALSE
+close labview before install=FALSE
+restart labview after install=FALSE
+skip mass compile after install=FALSE
+
+[Package Info]
+Icon=lvzip.bmp
+License File=""
 
 [Platform]
-Exclusive_LabVIEW_Version=>=6.1
+Exclusive_LabVIEW_Version=>=7.0
 Exclusive_LabVIEW_System=All
 Exclusive_OS=All
 
 [Script VIs]
 Source Dir=""
+PreInstall=""
 PostInstall=PostInstall.vi
 PreUninstall=PreUninstall.vi
 PostUninstall=""
@@ -31,105 +45,145 @@ PostBuild=""
 
 [Dependencies]
 AutoReqProv=FALSE
-Requires="oglib_error >= 2.0, oglib_file >= 2.5"
+Requires=oglib_error>=2.0,oglib_file>=2.5
 Conflicts=""
 
 [Files]
-Num File Groups=13
+Num File Groups=11
+Source Dir=""
+Target Dir=""
+Passwords.<size(s)>=0
+Documentation=""
+NameMode=2
+PPFix=ogtlk
+Doc Groups=""
 
 [File Group 0]
-Source Dir=built/lvzip
+Source Dir=source/submenus
+DirMode=0
+NameMode=0
+PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
-Num Files=2
+Num Files=1
 File 0=*.mnu
-File 1=*.txt
+Locked 0=-1
 
 [File Group 1]
+Source Dir=source
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<OpenG.lib>/lvzip
+Replace Mode=Always
+Num Files=1
+File 0=readme.txt
+Locked 0=-1
+
+[File Group 2]
 Source Dir=built/lvzip/lvzip.llb
+DirMode=0
+NameMode=0
+PPFix=""
 Target Dir=<OpenG.lib>/lvzip/lvzip.llb
 Replace Mode=Always
 Num Files=2
 File 0=*.vi
+Locked 0=-1
 File 1=*.ctl
+Locked 1=-1
 
-[File Group 2]
+[File Group 3]
 Source Dir=built/lvzip/macbin.llb
+DirMode=0
+NameMode=0
+PPFix=""
 Target Dir=<OpenG.lib>/lvzip/macbin.llb
 Replace Mode=Always
 Num Files=2
 File 0=*.vi
+Locked 0=-1
 File 1=*.ctl
-
-[File Group 3]
-Source Dir=built/lvzip
-Target Dir=<OpenG.lib>/lvzip
-Replace Mode=Always
-Exclusive_OS="Windows NT,Windows 9x"
-Num Files=1
-File 0=lvzlib.dll
+Locked 1=-1
 
 [File Group 4]
-Source Dir=built/lvzip/Win64
-Target Dir=<OpenG.lib>/lvzip
-Exclusive_OS="Win64"
-Num Files=1
-File 0=lvzlib.dll
-
-[File Group 5]
-Source Dir=built/lvzip
+Source Dir=source
+DirMode=0
+NameMode=0
+PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
-Exclusive_OS=Linux
+Exclusive_OS="Windows NT,Windows 9x,Windows x64"
 Num Files=1
-File 0=lvzlib.so
+File 0=*.dll
+Locked 0=-1
+
+[File Group 5]
+Source Dir=source
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<OpenG.lib>/lvzip
+Replace Mode=Always
+Exclusive_OS="Linux,Linux x64"
+Num Files=1
+File 0=*.so
+Locked 0=-1
 
 [File Group 6]
-Source Dir=built/lvzip
+Source Dir=source
+DirMode=0
+NameMode=0
+PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
 Exclusive_OS="Mac OS>=10"
 Num Files=1
 File 0=lvzlib.framework.zip
+Locked 0=-1
 
 [File Group 7]
-Source Dir=built/lvzip/vxWorks82
-Target Dir=<OpenG.lib>/lvzip
-Exclusive_LabVIEW_Version=<=8.2
+Source Dir="built/RT Images"
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir="<OpenG.lib>/lvzip/RT Images/"
+Replace Mode="If Newer"
+Exclusive_OS="Windows NT,Windows 9x"
 Num Files=1
-File 0=lvzlib.out
+File 0=setup.exe
+Locked 0=-1
 
 [File Group 8]
-Source Dir=built/lvzip/vxWorks85
-Target Dir=<OpenG.lib>/lvzip
-Exclusive_LabVIEW_Version=>=8.5
+Source Dir="Dynamic Palette MNUs"
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<menus>/Categories/OpenG
+Replace Mode=Always
 Num Files=1
-File 0=lvzlib.out
+File 0=oglib_lvzip.mnu
+Locked 0=-1
 
 [File Group 9]
 Source Dir="Dynamic Palette MNUs"
+DirMode=0
+NameMode=0
+PPFix=""
 Target Dir=<user.lib>/_dynamicpalette_dirs/file
 Replace Mode=Always
 Num Files=1
 File 0=oglib_lvzip.mnu
+Locked 0=-1
 
 [File Group 10]
 Source Dir="Dynamic Palette MNUs"
+DirMode=0
+NameMode=0
+PPFix=""
 Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
 Replace Mode=Always
 Num Files=1
 File 0=oglib_lvzip.mnu
+Locked 0=-1
 
-[File Group 11]
-Source Dir="Dynamic Palette MNUs"
-Target Dir="<application>/menus/Categories/OpenG"
-Replace Mode=Always
-Num Files=1
-File 0=oglib_lvzip.mnu
-
-[File Group 12]
-Source Dir="Dynamic Palette MNUs"
-Target Dir="<application>/menus/Categories/OpenG"
-Replace Mode=If Newer
-Num Files=1
-File 0=dir.mnu
