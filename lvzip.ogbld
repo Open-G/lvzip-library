@@ -88,15 +88,3 @@ Save Level=0
 Default Destination=FALSE
 Apply New Password=""
 Namespace=""
-
-[SupportFiles 1]
-TargetDir=""
-OverwriteExisting=TRUE
-FollowVIDirHierarchy=FALSE
-Recursive=FALSE
-Exclude=FALSE
-SourceFile 1=lvzlib.*
-SourceFile 2=submenus/*.mnu
-SourceFile 3=readme.txt
-SourceFile 4=PreInstall.vi
-SourceFile 5=PostInstall.vi

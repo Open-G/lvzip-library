@@ -46,7 +46,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.166571776" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option defaultValue="true" id="gnu.c.link.option.shared.2007093736" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
-								<option id="gnu.c.link.option.soname.2116511029" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="" valueType="string"/>
+								<option id="gnu.c.link.option.soname.2116511029" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="lvzlib.so" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.170246944" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -116,7 +116,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1269341061" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option defaultValue="true" id="gnu.c.link.option.shared.1568470041" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
-								<option id="gnu.c.link.option.soname.1221077034" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="" valueType="string"/>
+								<option id="gnu.c.link.option.soname.1221077034" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="lvzlib.so" valueType="string"/>
 								<option id="gnu.c.link.option.libs.898536949" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="c"/>
 								</option>
@@ -187,7 +187,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.477639206" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option defaultValue="true" id="gnu.c.link.option.shared.2029103574" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
-								<option id="gnu.c.link.option.soname.572765043" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="" valueType="string"/>
+								<option id="gnu.c.link.option.soname.572765043" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="lvzlib.so" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1838097184" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
@@ -256,7 +256,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.779141276" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option defaultValue="true" id="gnu.c.link.option.shared.424578524" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
-								<option id="gnu.c.link.option.soname.1244426688" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="" valueType="string"/>
+								<option id="gnu.c.link.option.soname.1244426688" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="lvzlib.so" valueType="string"/>
 								<option id="gnu.c.link.option.libs.1119215829" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="c"/>
 								</option>
@@ -324,7 +324,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.198870300" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option defaultValue="true" id="gnu.c.link.option.shared.1898938371" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
-								<option id="gnu.c.link.option.soname.1582106034" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="" valueType="string"/>
+								<option id="gnu.c.link.option.soname.1582106034" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="lvzlib.so" valueType="string"/>
 								<option id="gnu.c.link.option.libs.75776481" name="Libraries (-l)" superClass="gnu.c.link.option.libs" valueType="libs">
 									<listOptionValue builtIn="false" value="c"/>
 								</option>
@@ -389,7 +389,7 @@
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.961407367" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker">
 								<option defaultValue="true" id="gnu.c.link.option.shared.785968802" name="Shared (-shared)" superClass="gnu.c.link.option.shared" valueType="boolean"/>
-								<option id="gnu.c.link.option.soname.444747950" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="" valueType="string"/>
+								<option id="gnu.c.link.option.soname.444747950" name="Shared object name (-Wl,-soname=)" superClass="gnu.c.link.option.soname" value="lvzlib.so" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.2125924394" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

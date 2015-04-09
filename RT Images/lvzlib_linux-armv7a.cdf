@@ -5,6 +5,6 @@
 	<ABSTRACT>Support files neccessary to use the OpenG ZIP library.</ABSTRACT>
 	<IMPLEMENTATION>
 		<OS VALUE="Linux-ARMv7-A"/>
-		<CODEBASE FILENAME="LinuxRT_arm/lvzlib.so" TARGET="/usr/local/lib/lvzlib.so" OWNER="root" GROUP="root" />
+		<CODEBASE FILENAME="LinuxRT_arm/liblvzlib.so" TARGET="/usr/local/lib/liblvzlib.so"/>
 	</IMPLEMENTATION>
 </SOFTPKG>
