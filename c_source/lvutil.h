@@ -441,7 +441,9 @@ SEEK_START
 enum { fAbsPath, fRelPath, fNotAPath, fUNCPath, nPathTypes};                            /* path type codes */
 
 Private(File);
-PrivateH(Path);
+typedef struct PATHREF PathRef;
+typedef PathRef* Path;
+typedef const PathRef* ConstPath;
 
 typedef MagicCookie LVRefNum;
 #define kNotARefNum ((LVRefNum)0L)	/* canonical invalid magic cookie */
@@ -459,7 +461,7 @@ Bool32 FIsARefNum(LVRefNum);
 MgErr FDisposeRefNum(LVRefNum);
 MgErr FRefNumToFD(LVRefNum, File*);
 MgErr FGetInfo(ConstPath path, FInfoPtr infop);
-MgErr FGetInfo64(ConstPath path, FInfo64Ptr infop, FGetInfoWhich which));
+MgErr FGetInfo64(ConstPath path, FInfo64Ptr infop, FGetInfoWhich which);
 MgErr FSetInfo(ConstPath path, FInfoPtr infop);
 MgErr FSetInfo64(ConstPath path, FInfo64Ptr infop);
 
@@ -546,9 +548,9 @@ LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt
 LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
 
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
-LibAPI(MgErr) ConvertCPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
+LibAPI(MgErr) ConvertCPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir);
 LibAPI(MgErr) ConvertLString(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
-LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
+LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir);
 
 #ifdef __cplusplus
 }

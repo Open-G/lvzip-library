@@ -382,10 +382,10 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
                                   LStrHandle comment)
 {
     MgErr err = mgNoErr;
-#if MacOS
-#if !MacOSX
+#if MacOSX
+    FInfoRec64 infoRec;
+#elif MacOS
 	FSRef ref;
-#endif
 #elif Win32
     LStrPtr lstr;
     HANDLE handle = NULL;
@@ -404,11 +404,37 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 #if MacOSX
     if (write)
     {
-        err = FSetInfo(path, fileInfo);
+        infoRec.creator = fileInfo->creator;
+        infoRec.type = fileInfo->type;
+        infoRec.permissions = 0;
+        infoRec.size = fileInfo->size;
+        infoRec.rfSize = fileInfo->rfSize;
+        infoRec.cdate = fileInfo->cDate;
+        infoRec.mdate = fileInfo->mDate;
+        infoRec.folder = *isDirectory;
+        infoRec.isInvisible = fileInfo->flags & kFIsInvisible;
+        infoRec.location.v = fileInfo->location.v;
+        infoRec.location.h = fileInfo->location.h;
+        infoRec.owner[0] = 0;
+        infoRec.group[0] = 0;
+        err = FSetInfo64(path, &infoRec);
     }
     else
     {
-        err = FGetInfo(path, fileInfo);
+        err = FGetInfo64(path, &infoRec, kFGetInfoAll);
+        if (!err)
+        {
+            fileInfo->creator = infoRec.creator;
+            fileInfo->type = infoRec.type;
+            fileInfo->size = infoRec.size;
+            fileInfo->rfSize = infoRec.rfSize;
+            fileInfo->cDate = infoRec.cdate;
+            fileInfo->mDate = infoRec.mdate;
+            *isDirectory = infoRec.folder;
+            fileInfo->flags = infoRec.isInvisible ? kFIsInvisible : 0;
+            fileInfo->location.v = infoRec.location.v;
+            fileInfo->location.h = infoRec.location.h;
+        }
     }
 #elif MacOS
 	err = FSMakePathRef(path, &ref);
@@ -1021,7 +1047,7 @@ static MgErr lvfile_GetFilePos(FileRefNum ioRefNum, FileOffset *tell)
 	if (0 == ioRefNum)
 		return mgArgErr;
 #if MacOSX
-	return OSErrToLVErr(FSGetForkPosition(ioRefNum, tell));
+	return OSErrToLVErr(FSGetForkPosition(ioRefNum, &tell->q));
 #elif Unix
 	errno = 0;
 	tell->q = ftello64(ioRefNum);
@@ -1584,7 +1610,7 @@ LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHand
 }
 
 /* Converts a Unix style path to a LabVIEW platform path */
-LibAPI(MgErr) ConvertCPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
+LibAPI(MgErr) ConvertCPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
 {
     MgErr err = mgNotSupported;
 #if Win32
@@ -1707,7 +1733,7 @@ static void TerminateLStr(LStrHandle *dest, int32 numBytes)
 #endif
 
 /* Converts a LabVIEW platform path to Unix style path */
-LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
+LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
 {
     MgErr err = mgNotSupported;
 #if Win32
