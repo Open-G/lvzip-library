@@ -99,7 +99,7 @@ static MgErr utf8_increase_safely(const uInt8 *src, int32 *offset, int32 length)
     if (!utf8_is_trail(src[*offset]))
         return INCOMPLETE_SEQUENCE;
 
-    return noErr;
+    return mgNoErr;
 }
 
 #define UTF8_INCREASE_AND_RETURN_ON_ERROR(src, offset, length) {MgErr ret = utf8_increase_safely(src, offset, length); if (ret) return ret;}
@@ -112,7 +112,7 @@ static MgErr utf8_get_sequence_1(const uInt8 *src, int32 *offset, int32 length, 
 
     *code_point = utf8_mask(src[*offset]);
 	++(*offset);
-    return noErr;
+    return mgNoErr;
 }
 
 static MgErr utf8_get_sequence_2(const uInt8 *src, int32 *offset, int32 length, uInt32 *code_point)
@@ -126,7 +126,7 @@ static MgErr utf8_get_sequence_2(const uInt8 *src, int32 *offset, int32 length, 
 
     *code_point = ((*code_point << 6) & 0x7c0) + (src[*offset] & 0x3f);
 	++(*offset);
-    return noErr;
+    return mgNoErr;
 }
 
 static MgErr utf8_get_sequence_3(const uInt8 *src, int32 *offset, int32 length, uInt32 *code_point)
@@ -144,7 +144,7 @@ static MgErr utf8_get_sequence_3(const uInt8 *src, int32 *offset, int32 length, 
 
     *code_point += src[*offset] & 0x3f;
 	++(*offset);
-    return noErr;
+    return mgNoErr;
 }
 
 static MgErr utf8_get_sequence_4(const uInt8 *src, int32 *offset, int32 length, uInt32 *code_point)
@@ -166,7 +166,7 @@ static MgErr utf8_get_sequence_4(const uInt8 *src, int32 *offset, int32 length, 
 
     *code_point += src[*offset++] & 0x3f;
 
-    return noErr;
+    return mgNoErr;
 }
 
 static MgErr utf8_append(uInt32 cp, uInt8 *buffer, int32 *offset, int32 length)
@@ -226,7 +226,7 @@ static MgErr utf8_append(uInt32 cp, uInt8 *buffer, int32 *offset, int32 length)
         }
         *offset += 4;
     }
-    return noErr;
+    return mgNoErr;
 }
 
 static MgErr utf8_next(const uInt8 *buffer, int32 *offset, int32 length, uInt32 *cp)
@@ -256,7 +256,7 @@ static MgErr utf8_next(const uInt8 *buffer, int32 *offset, int32 length, uInt32 
                 break;
         }
         *offset = (int32)(ptr - buffer);
-        return noErr;
+        return mgNoErr;
     }
     return mgArgErr;
 }
@@ -278,7 +278,7 @@ static MgErr utf8_prior(const uInt8 *src, int32 *offset, int32 length, uInt32 *c
 
 MgErr utf8_advance(const uInt8 *src, int32 *offset, int32 length, int32 distance)
 {
-    MgErr err = noErr;
+    MgErr err = mgNoErr;
     int32 i = 0;
     uInt32 cp;
     for (; !err && i < distance; ++i)
@@ -290,7 +290,7 @@ MgErr utf8_advance(const uInt8 *src, int32 *offset, int32 length, int32 distance
 
 MgErr utf8_distance(const uInt8 *src, int32 *offset, int32 length)
 {
-    MgErr err = noErr;
+    MgErr err = mgNoErr;
     int32 i = 0;
     uInt32 cp;
     for (; !err && src[*offset] && (length < 0 || *offset < length); i++)
@@ -302,7 +302,7 @@ MgErr utf8_distance(const uInt8 *src, int32 *offset, int32 length)
 
 MgErr utf8_validate_next(const uInt8 *src, int32 *offset, int32 length, uInt32 *code_point)
 {
-    MgErr err = noErr;
+    MgErr err = mgNoErr;
     uInt32 cp = 0;
 
     // Save the original value of offset so we can go back in case of failure
@@ -341,7 +341,7 @@ MgErr utf8_validate_next(const uInt8 *src, int32 *offset, int32 length, uInt32 *
                 if (code_point)
                     *code_point = cp;
                 offset++;
-                return noErr;
+                return mgNoErr;
             }
             else
                 err = OVERLONG_SEQUENCE;
@@ -357,14 +357,14 @@ MgErr utf8_validate_next(const uInt8 *src, int32 *offset, int32 length, uInt32 *
 
 MgErr utf8_replace_invalid(const uInt8 *src, int32 *soff, int32 slen, uInt8 *dest, int32 *doff, int32 dlen, uInt32 replacement)
 {
-	MgErr err = noErr;
+	MgErr err = mgNoErr;
     while (src[*soff] && (slen < 0 || *soff < slen))
     {
         int32 off = *soff;
         err = utf8_validate_next(src, soff, slen, NULL);
         switch (err)
 		{
-            case noErr:
+            case mgNoErr:
                 for (; off < *soff && *doff < dlen; off++, (*doff)++)
                     dest[*doff] = src[off];
                 break;
@@ -390,7 +390,7 @@ MgErr utf8_replace_invalid(const uInt8 *src, int32 *soff, int32 slen, uInt8 *des
 
 MgErr utf8_is_valid(const uInt8 *src, int32 *offset, int32 length)
 {
-	MgErr err = noErr;
+	MgErr err = mgNoErr;
 	while (!err && src[*offset] && (length < 0 || *offset < length))
 	{
 		err = utf8_validate_next(src, offset, length, NULL);
@@ -400,7 +400,7 @@ MgErr utf8_is_valid(const uInt8 *src, int32 *offset, int32 length)
 
 MgErr utf16to8(const uInt16 *src, int32 slen, uInt8 *dest, int32 *offset, int32 length)
 {
-    MgErr err = noErr;
+    MgErr err = mgNoErr;
 	int32 soff = 0, doff = offset ? *offset : 0;
     uInt32 cp = 0;
     while (!err && src[soff] && (slen < 0 || soff < slen))
@@ -421,7 +421,7 @@ MgErr utf16to8(const uInt16 *src, int32 slen, uInt8 *dest, int32 *offset, int32 
 
 MgErr utf8to16(const uInt8 *src, int32 slen, uInt16 *dest, int32 *offset, int32 length)
 {
-    MgErr err = noErr;
+    MgErr err = mgNoErr;
     int32 soff = 0, doff = offset ? *offset : 0;
     uInt32 cp = 0;
     while (!err && src[soff] && (slen < 0 || soff < slen))
@@ -461,7 +461,7 @@ MgErr utf8to16(const uInt8 *src, int32 slen, uInt16 *dest, int32 *offset, int32 
 
 MgErr utf32to8(const uInt32 *src, int32 slen, uInt8 *dest, int32 *offset, int32 length)
 {
-    MgErr err = noErr;
+    MgErr err = mgNoErr;
     int32 soff = 0, doff = offset ? *offset : 0;
     while (!err && src[soff] && (slen < 0 || soff < slen))
     {
@@ -474,7 +474,7 @@ MgErr utf32to8(const uInt32 *src, int32 slen, uInt8 *dest, int32 *offset, int32 
 
 MgErr utf8to32(const uInt8 *src, int32 slen, uInt32 *dest, int32 *offset, int32 length)
 {
-    MgErr err = noErr;
+    MgErr err = mgNoErr;
     int32 soff = 0, doff = offset ? *offset : 0;
     uInt32 cp = 0;
     while (!err && src[soff] && (slen < 0 || soff < slen) && (!dest || doff < length))

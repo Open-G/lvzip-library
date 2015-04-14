@@ -12,7 +12,7 @@
 #include <String.h>
 
 #pragma once
-#pragma options align=mac68k
+//#pragma options align=mac68k
 /*
 000
             Byte
@@ -169,4 +169,4 @@ Boolean	FSpIsMacBinary(FSSpec *file);
 }
 #endif
 
-#pragma options align=reset
+//#pragma options align=reset

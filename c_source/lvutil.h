@@ -325,6 +325,7 @@ typedef struct {
 #define kUnknownFileType    RTToL('?','?','?','?')
 #define kUnknownCreator     RTToL('?','?','?','?')
 
+    
 enum { openReadWrite, openReadOnly, openWriteOnly, openWriteOnlyTruncate }; /* open modes */
 enum { denyReadWrite, denyWriteOnly, denyNeither}; /* deny modes */
 
@@ -364,7 +365,6 @@ Bool32 FIsAPathOfType(Path path, int32 ofType);
 MgErr FGetPathType(Path, int32*);
 int32 FDepth(Path path);
 MgErr FDisposePath(Path p);
-
 MgErr FNewRefNum(Path path, File fd, LVRefNum* refnum);
 Bool32 FIsARefNum(LVRefNum);
 MgErr FDisposeRefNum(LVRefNum);
