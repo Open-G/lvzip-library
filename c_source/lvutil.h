@@ -309,22 +309,111 @@ int32 RTSetCleanupProc(CleanupProcPtr, UPtr, int32);
 
 /* File Manager */
 typedef struct {
-    uInt32 type;    /* handled by LabVIEW Type & Creator */
-    uInt32 creator; /* handled by LabVIEW Type & Creator */
-    uInt64 size;    /* not modified, use EOF */
-    uInt64 rfSize;  /* Mac only, not modified, use EOF */
-    uInt32 cDate;
-    uInt32 mDate;
-    uInt16 flags;   
-    LVPoint location;  /* Mac only */
+	uInt32 type;    /* handled by LabVIEW Type & Creator */
+	uInt32 creator; /* handled by LabVIEW Type & Creator */
+	uInt64 size;    /* not modified, use EOF */
+	uInt64 rfSize;  /* Mac only, not modified, use EOF */
+	uInt32 cDate;
+	uInt32 mDate;
+	uInt16 flags;   
+	LVPoint location;  /* Mac only */
 	uInt16 finderId;   /* Mac only */
-    uInt16 xFlags;     /* Mac only */
-    int32 putAwayId;   /* Mac only */
+	uInt16 xFlags;     /* Mac only */
+	int32 putAwayId;   /* Mac only */
 } LVFileInfo;
 
-#define kUnknownFileType    RTToL('?','?','?','?')
-#define kUnknownCreator     RTToL('?','?','?','?')
+typedef enum _FMFileType {
+	kInvalidType	=0,
+	kUnknownFileType=RTToL('?','?','?','?'),
+	kTextFileType	=RTToL('T','E','X','T'),
+	/** Typical directory types */
+	kHardDiskDirType=RTToL('h','d','s','k'),
+	kFloppyDirType	=RTToL('f','l','p','y'),
+	kNetDriveDirType=RTToL('s','r','v','r')
+}FMFileType;
 
+typedef enum  {
+	kInvalidCreator	=0,
+	kUnknownCreator =RTToL('?','?','?','?'),
+	/** LabVIEW creator type */
+	kLVCreatorType	=RTToL('L','B','V','W')
+}FMFileCreator;
+
+/** Used for FGetInfo */
+typedef struct {			/**< file/directory information record */
+	FMFileType type;		/**< system specific file type-- 0 for directories */
+	FMFileCreator creator;	/**< system specific file creator-- 0 for directories */
+	int32	permissions;	/**< system specific file access rights */
+	int32	size;			/**< file size in bytes (data fork on Mac) or entries in folder */
+	int32	rfSize;			/**< resource fork size (on Mac only) */
+	uInt32	cdate;			/**< creation date */
+	uInt32	mdate;			/**< last modification date */
+	Bool32	folder;			/**< indicates whether path refers to a folder */
+	Bool32	isInvisible; /**< indicates whether the file is visible in File Dialog */
+	struct {
+		int16 v, h;
+	} location;			/**< system specific geographical location */
+	Str255	owner;			/**< owner (in pascal string form) of file or folder */
+	Str255	group;			/**< group (in pascal string form) of file or folder */
+} FInfoRec, *FInfoPtr;
+
+/** Used for FGetInfo, 64-bit version */
+typedef uInt32	FGetInfoWhich;
+enum {
+	kFGetInfoType			= 1L << 0,
+	kFGetInfoCreator		= 1L << 1,
+	kFGetInfoPermissions	= 1L << 2,
+	kFGetInfoSize			= 1L << 3,
+	kFGetInfoRFSize			= 1L << 4,
+	kFGetInfoCDate			= 1L << 5,
+	kFGetInfoMDate			= 1L << 6,
+	kFGetInfoFolder			= 1L << 7,
+	kFGetInfoIsInvisible	= 1L << 8,
+	kFGetInfoLocation		= 1L << 9,
+	kFGetInfoOwner			= 1L << 10,
+	kFGetInfoGroup			= 1L << 11,
+	kFGetInfoAll			= 0xEFFFFFFFL
+};
+typedef struct {			/**< file/directory information record */
+	FMFileType type;		/**< system specific file type-- 0 for directories */
+	FMFileCreator creator;	/**< system specific file creator-- 0 for directories */
+	int32	permissions;	/**< system specific file access rights */
+	int64	size;			/**< file size in bytes (data fork on Mac) or entries in folder */
+	int64	rfSize;			/**< resource fork size (on Mac only) */
+	uInt32	cdate;			/**< creation date */
+	uInt32	mdate;			/**< last modification date */
+	Bool32	folder;			/**< indicates whether path refers to a folder */
+	Bool32	isInvisible; /**< indicates whether the file is visible in File Dialog */
+	struct {
+		int16 v, h;
+	} location;			/**< system specific geographical location */
+	Str255	owner;			/**< owner (in pascal string form) of file or folder */
+	Str255	group;			/**< group (in pascal string form) of file or folder */
+} FInfoRec64, *FInfo64Ptr;
+
+/** Used for FGetVolInfo */
+typedef struct {
+	uInt32	size;			/**< size in bytes of a volume */
+	uInt32	used;			/**< number of bytes used on volume */
+	uInt32	free;			/**< number of bytes available for use on volume */
+} VInfoRec;
+
+/** Used with FListDir2 */
+typedef struct {
+	int32 flags;
+	FMFileType type;
+} FMListDetails;
+
+/** Type Flags used with FMListDetails */
+#define kIsFile				0x01
+#define kRecognizedType		0x02
+#define kIsLink				0x04
+#define kFIsInvisible		0x08
+#define kIsTopLevelVI		0x10	/**< Used only for VIs in archives */
+#define kErrGettingType		0x20	/**< error occurred getting type info */
+#if Mac
+#define kFIsStationery		0x40
+#endif
     
 enum { openReadWrite, openReadOnly, openWriteOnly, openWriteOnlyTruncate }; /* open modes */
 enum { denyReadWrite, denyWriteOnly, denyNeither}; /* deny modes */
@@ -369,6 +458,10 @@ MgErr FNewRefNum(Path path, File fd, LVRefNum* refnum);
 Bool32 FIsARefNum(LVRefNum);
 MgErr FDisposeRefNum(LVRefNum);
 MgErr FRefNumToFD(LVRefNum, File*);
+MgErr FGetInfo(ConstPath path, FInfoPtr infop);
+MgErr FGetInfo64(ConstPath path, FInfo64Ptr infop, FGetInfoWhich which));
+MgErr FSetInfo(ConstPath path, FInfoPtr infop);
+MgErr FSetInfo64(ConstPath path, FInfo64Ptr infop);
 
 int32 DbgPrintf(CStr fmt, ...);
 
