@@ -49,6 +49,7 @@
 #elif MacOSX
  #include <CoreFoundation/CoreFoundation.h>
  #include "MacBinaryIII.h"
+ #include <sys/stat.h>
 
  #define MacSpec	FSRef
  #define MacIsInvisible(cpb) ((cpb).hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)
@@ -192,7 +193,8 @@ static MgErr OSErrToLVErr(OSErr err)
     }
     return fIOErr; /* fIOErr generally signifies some unknown file error */
 }
-#elif Unix || Win32
+#endif
+
 static int32 MakePathDSString(Path path, LStrPtr *lstr, int32 reserve)
 {
     int32 pathLen = -1;
@@ -329,7 +331,6 @@ static MgErr UnixToLVFileErr(void)
     return fIOErr;   /* fIOErr generally signifies some unknown file error */
 }
 
-#endif 
 #endif
 
 LibAPI(void) DLLVersion(uChar* version)
@@ -383,7 +384,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 {
     MgErr err = mgNoErr;
 #if MacOSX
-    FInfoRec64 infoRec;
+    FInfoRec infoRec;
 #elif MacOS
 	FSRef ref;
 #elif Win32
@@ -417,11 +418,11 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
         infoRec.location.h = fileInfo->location.h;
         infoRec.owner[0] = 0;
         infoRec.group[0] = 0;
-        err = FSetInfo64(path, &infoRec);
+        err = FSetInfo(path, &infoRec);
     }
     else
     {
-        err = FGetInfo64(path, &infoRec, kFGetInfoAll);
+        err = FGetInfo(path, &infoRec /*, kFGetInfoAll*/);
         if (!err)
         {
             fileInfo->creator = infoRec.creator;
@@ -705,7 +706,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 
 LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
 {
-#if MacOS
+#if MacOS && !MacOSX
     MacSpec srcFSSpec;
     MacSpec dstFSSpec;
     MgErr  err;
@@ -727,7 +728,7 @@ LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
 
 LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcPath, Path dstPath)
 {
-#if MacOS
+#if MacOS && !MacOSX
     MacSpec srcFSSpec;
     MacSpec dstFSSpec;
     MgErr  err;
@@ -1186,6 +1187,7 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
     FSRef ref;
 	HFSUniStr255 forkName;
     int8 perm;
+    struct stat statbuf;
     char theMode[4];
     OSErr ret;
 #elif Win32

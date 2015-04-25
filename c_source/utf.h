@@ -9,7 +9,7 @@
 extern "C" {
 #endif
 
-LibAPI(LVBoolean) utf8_is_current_mbcs();
+LibAPI(LVBoolean) utf8_is_current_mbcs(void);
 
 MgErr utf8_validate_next(const uInt8 *src, int32 *offset, int32 length, uInt32 *code_point);
 

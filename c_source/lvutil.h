@@ -4,6 +4,7 @@
 
    Copyright (C) 2002-2007 Rolf Kalbermatter
 */
+#define test
 #ifndef _lvUtil_H
 #define _lvUtil_H
 
@@ -13,25 +14,86 @@
 extern "C" {
 #endif
 
+    /* Possible values for ProcessorType */
+#define kM68000		1		/* OBSOLETE */
+#define kX86		2
+#define kSparc		3
+#define kPPC		4
+#define kPARISC		5
+#define kMIPS		6
+#define kDECAlpha	7		/* OBSOLETE */
+#define kPIC		8
+#define kARM		9
+#define kX64		10
+
 #if defined(macintosh) || defined(__PPCC__) || defined(THINK_C) || defined(__SC__) || defined(__MWERKS__) || defined(__APPLE_CC__)
+ #ifdef __APPLE_CC__
+  #define MacOSX 1
+ #endif
+ #if defined(__powerc) || defined(__ppc__)
+  #define ProcessorType	kPPC
+  #define BigEndian 1
+ #elif defined(__i386__)
+  #define ProcessorType	kX86
+  #define BigEndian 0
+ #elif defined(__x86_64)
+  #define ProcessorType	kX64
+  #define BigEndian 0
+ #else
+  #define ProcessorType	kM68000
+  #define BigEndian 1
+ #endif
  #define MacOS 1
  #ifdef __APPLE_CC__
   #define MacOSX 1
  #endif
- #if defined(__i386__)
-  #define BigEndian 0
- #else
-  #define BigEndian 1
- #endif
 #elif defined(WIN32) || defined(_WIN32)  || defined(__WIN32__) || defined(_WIN32_WCE)
+ #ifdef _M_PPC
+  #define ProcessorType	kPPC
+ #elif defined(_M_IX86)
+  #define ProcessorType	kX86
+ #elif defined(_M_X64)
+  #define ProcessorType	kX64
+ #elif defined(_M_ALPHA)
+  #define ProcessorType	kDECAlpha
+ #elif Compiler == kBorlandC
+  #define ProcessorType	kX86
+ #elif defined(_ARM_)
+  #define ProcessorType 	kARM
+ #else
+  #error "We don't know the ProcessorType architecture"
+ #endif
  #define Win32 1
  #if defined(_DEBUG) || defined(_CVI_DEBUG_)
   #define DEBUG 1
  #endif
  #define BigEndian 0
-#elif defined(linux)
+#elif defined(linux) || defined(__linux) || defined(__linux__)
+ #if defined(i386)
+  #define ProcessorType	kX86
+  #define BigEndian		0
+ #elif defined(__alpha)
+  #define ProcessorType	kDECAlpha
+  #define BigEndian		0
+ #elif defined(powerpc)
+  #define ProcessorType	kPPC
+  #define BigEndian		1
+ #elif defined(sparc)
+  #define ProcessorType	kSparc
+  #define BigEndian		1
+ #elif defined(mips)
+  #define ProcessorType	kMIPS
+  #define BigEndian		1
+ #elif defined(arm) || defined(__arm__)
+  #define ProcessorType	kARM
+  #define BigEndian		0
+ #elif defined(__x86_64__)
+  #define ProcessorType	kX64
+  #define BigEndian		0
+ #else
+  #error "Unknown Linux platform"
+ #endif
  #define Unix 1
- #define BigEndian 0
  #define HAVE_FCNTL
  #define HAVE_ICONV
  #define HAVE_WCRTOMB
@@ -39,8 +101,10 @@ extern "C" {
  #define Unix 1
  #define VxWorks 1
  #if defined (__ppc)
+  #define ProcessorType	kPPC
   #define BigEndian 1
  #else
+  #define ProcessorType	kX86
   #define BigEndian 0
  #endif
 #else
@@ -514,11 +578,7 @@ typedef union
 #endif
 } FileOffset;
 
-LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum,
-                   Path path,
-                   uInt8 rsrc,
-				   uInt32 openMode,
-				   uInt32 denyMode);
+LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 openMode, uInt32 denyMode);
 LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum);
 LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, FileOffset *size);
 LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size);

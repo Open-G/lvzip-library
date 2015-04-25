@@ -16,42 +16,49 @@
 // Maximum valid value for a Unicode code point
 #define CODE_POINT_MAX      0x0010ffffu
 
-__inline uInt8 utf8_mask(uInt8 oc)
+static MgErr utf8_is_valid(const uInt8 *src, int32 *offset, int32 length);
+static MgErr utf8_replace_invalid(const uInt8 *src, int32 *soff, int32 slen, uInt8 *dest, int32 *doff, int32 dlen, uInt32 replacement);
+static MgErr utf8_advance(const uInt8 *src, int32 *offset, int32 length, int32 distance);
+static MgErr utf8_distance(const uInt8 *src, int32 *offset, int32 length);
+
+static uInt8 utf8_mask(uInt8 oc)
 {
     return (uInt8)(0xff & oc);
 }
 
-__inline uInt16 utf16_mask(uInt16 oc)
+static uInt16 utf16_mask(uInt16 oc)
 {
     return (uInt16)(0xffff & oc);
 }
 
-__inline LVBoolean utf8_is_trail(uInt8 oc)
+static LVBoolean utf8_is_trail(uInt8 oc)
 {
     return ((utf8_mask(oc) >> 6) == 0x2);
 }
 
-__inline LVBoolean utf16_is_lead_surrogate(uInt16 cp)
+static LVBoolean utf16_is_lead_surrogate(uInt16 cp)
 {
     return (LVBoolean)(cp >= LEAD_SURROGATE_MIN && cp <= LEAD_SURROGATE_MAX);
 }
 
-__inline LVBoolean utf16_is_trail_surrogate(uInt16 cp)
+/*
+static LVBoolean utf16_is_trail_surrogate(uInt16 cp)
 {
     return (LVBoolean)(cp >= TRAIL_SURROGATE_MIN && cp <= TRAIL_SURROGATE_MAX);
 }
+*/
 
-__inline LVBoolean utf32_is_surrogate(uInt32 cp)
+static LVBoolean utf32_is_surrogate(uInt32 cp)
 {
     return (LVBoolean)(cp >= LEAD_SURROGATE_MIN && cp <= TRAIL_SURROGATE_MAX);
 }
 
-__inline LVBoolean utf32_is_code_point_valid(uInt32 cp)
+static LVBoolean utf32_is_code_point_valid(uInt32 cp)
 {
     return (LVBoolean)(cp <= CODE_POINT_MAX && !utf32_is_surrogate(cp));
 }
 
-__inline int32 utf8_sequence_length(uInt8 oc)
+static int32 utf8_sequence_length(uInt8 oc)
 {
     uInt8 lead = utf8_mask(oc);
     if (lead < 0x80)
@@ -65,7 +72,7 @@ __inline int32 utf8_sequence_length(uInt8 oc)
     return 0;
 }
 
-__inline LVBoolean utf32_is_overlong_sequence(uInt32 cp, int32 length)
+static LVBoolean utf32_is_overlong_sequence(uInt32 cp, int32 length)
 {
     if (cp < 0x80)
     {
@@ -355,7 +362,7 @@ MgErr utf8_validate_next(const uInt8 *src, int32 *offset, int32 length, uInt32 *
     return err;
 }
 
-MgErr utf8_replace_invalid(const uInt8 *src, int32 *soff, int32 slen, uInt8 *dest, int32 *doff, int32 dlen, uInt32 replacement)
+static MgErr utf8_replace_invalid(const uInt8 *src, int32 *soff, int32 slen, uInt8 *dest, int32 *doff, int32 dlen, uInt32 replacement)
 {
 	MgErr err = mgNoErr;
     while (src[*soff] && (slen < 0 || *soff < slen))
@@ -388,7 +395,7 @@ MgErr utf8_replace_invalid(const uInt8 *src, int32 *soff, int32 slen, uInt8 *des
     return err;
 }
 
-MgErr utf8_is_valid(const uInt8 *src, int32 *offset, int32 length)
+static MgErr utf8_is_valid(const uInt8 *src, int32 *offset, int32 length)
 {
 	MgErr err = mgNoErr;
 	while (!err && src[*offset] && (length < 0 || *offset < length))
@@ -512,15 +519,16 @@ LibAPI(MgErr) wchartoutf8(const wchar_t *src, int32 slen, uInt8 *dest, int32 *of
 #endif
 }
 
+static wchar_t testchar = 0x00B0;
+
 LibAPI(LVBoolean) utf8_is_current_mbcs()
 {
-    static wchar_t test = 0x00B0;
     LVBoolean is_utf8 = LV_FALSE;
     char *result = malloc(MB_CUR_MAX);
     if (result)
     {
-        int len = wctomb(NULL, test);
-        len = wctomb(result, test);
+        int len = wctomb(NULL, testchar);
+        len = wctomb(result, testchar);
         if ((len == 2) && (result[0] == (char)0xC2) && (result[1] == (char)0xB0))
             is_utf8 = LV_TRUE;
         free(result);

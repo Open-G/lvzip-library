@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 44;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -29,7 +29,6 @@
 		839542DD0894F2490020C3E2 /* zlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 839542A60894F2490020C3E2 /* zlib.h */; };
 		839542DF0894F2490020C3E2 /* zip.h in Headers */ = {isa = PBXBuildFile; fileRef = 839542A80894F2490020C3E2 /* zip.h */; };
 		839542E00894F2490020C3E2 /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = 839542A90894F2490020C3E2 /* zip.c */; };
-		839542E10894F2490020C3E2 /* zconf.in.h in Headers */ = {isa = PBXBuildFile; fileRef = 839542AA0894F2490020C3E2 /* zconf.in.h */; };
 		839542E20894F2490020C3E2 /* zconf.h in Headers */ = {isa = PBXBuildFile; fileRef = 839542AB0894F2490020C3E2 /* zconf.h */; };
 		839542E30894F2490020C3E2 /* unzip.h in Headers */ = {isa = PBXBuildFile; fileRef = 839542AC0894F2490020C3E2 /* unzip.h */; };
 		839542E40894F2490020C3E2 /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = 839542AD0894F2490020C3E2 /* unzip.c */; };
@@ -46,8 +45,6 @@
 		888E743A1ADD96A900C5AEFE /* utf.c in Sources */ = {isa = PBXBuildFile; fileRef = 888E74391ADD96A900C5AEFE /* utf.c */; };
 		888E743C1ADD96C200C5AEFE /* utf.h in Headers */ = {isa = PBXBuildFile; fileRef = 888E743B1ADD96C200C5AEFE /* utf.h */; };
 		888E743E1ADD96D700C5AEFE /* lvapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 888E743D1ADD96D700C5AEFE /* lvapi.c */; };
-		C77CC6BF0C9C7D3200886AB2 /* liblvexports.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C77CC6BE0C9C7D3200886AB2 /* liblvexports.a */; };
-		C77CC6C20C9C7D6500886AB2 /* liblabviewcin.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C77CC6C10C9C7D6500886AB2 /* liblabviewcin.a */; };
 		C79368AC0C9ED687006083BF /* iomem.c in Sources */ = {isa = PBXBuildFile; fileRef = C79368AA0C9ED687006083BF /* iomem.c */; };
 		C79368AD0C9ED687006083BF /* iomem.h in Headers */ = {isa = PBXBuildFile; fileRef = C79368AB0C9ED687006083BF /* iomem.h */; };
 /* End PBXBuildFile section */
@@ -75,7 +72,6 @@
 		839542A60894F2490020C3E2 /* zlib.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = zlib.h; sourceTree = "<group>"; };
 		839542A80894F2490020C3E2 /* zip.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = zip.h; sourceTree = "<group>"; };
 		839542A90894F2490020C3E2 /* zip.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = zip.c; sourceTree = "<group>"; };
-		839542AA0894F2490020C3E2 /* zconf.in.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = zconf.in.h; sourceTree = "<group>"; };
 		839542AB0894F2490020C3E2 /* zconf.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = zconf.h; sourceTree = "<group>"; };
 		839542AC0894F2490020C3E2 /* unzip.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = unzip.h; sourceTree = "<group>"; };
 		839542AD0894F2490020C3E2 /* unzip.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = unzip.c; sourceTree = "<group>"; };
@@ -93,8 +89,6 @@
 		888E74391ADD96A900C5AEFE /* utf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utf.c; sourceTree = "<group>"; };
 		888E743B1ADD96C200C5AEFE /* utf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utf.h; sourceTree = "<group>"; };
 		888E743D1ADD96D700C5AEFE /* lvapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lvapi.c; sourceTree = "<group>"; };
-		C77CC6BE0C9C7D3200886AB2 /* liblvexports.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblvexports.a; path = "/Applications/National Instruments/LabVIEW 8.2/cintools/Mach-O/liblvexports.a"; sourceTree = "<absolute>"; };
-		C77CC6C10C9C7D6500886AB2 /* liblabviewcin.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = liblabviewcin.a; path = "/Applications/National Instruments/LabVIEW 8.2/cintools/Mach-O/liblabviewcin.a"; sourceTree = "<absolute>"; };
 		C79368AA0C9ED687006083BF /* iomem.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = iomem.c; sourceTree = "<group>"; };
 		C79368AB0C9ED687006083BF /* iomem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = iomem.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -106,8 +100,6 @@
 			files = (
 				83D3E26D080D117700DE332C /* Carbon.framework in Frameworks */,
 				836583B4088D13980083EC20 /* System.framework in Frameworks */,
-				C77CC6BF0C9C7D3200886AB2 /* liblvexports.a in Frameworks */,
-				C77CC6C20C9C7D6500886AB2 /* liblabviewcin.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,8 +111,6 @@
 			children = (
 				C79368AA0C9ED687006083BF /* iomem.c */,
 				C79368AB0C9ED687006083BF /* iomem.h */,
-				C77CC6C10C9C7D6500886AB2 /* liblabviewcin.a */,
-				C77CC6BE0C9C7D3200886AB2 /* liblvexports.a */,
 				83D3E1B5080D116E00DE332C /* zlib Sources */,
 				83D3E26B080D117700DE332C /* Frameworks */,
 				83D3E19A080D116E00DE332C /* Products */,
@@ -162,7 +152,6 @@
 				839542A60894F2490020C3E2 /* zlib.h */,
 				839542A80894F2490020C3E2 /* zip.h */,
 				839542A90894F2490020C3E2 /* zip.c */,
-				839542AA0894F2490020C3E2 /* zconf.in.h */,
 				839542AB0894F2490020C3E2 /* zconf.h */,
 				839542AC0894F2490020C3E2 /* unzip.h */,
 				839542AD0894F2490020C3E2 /* unzip.c */,
@@ -207,7 +196,6 @@
 				839542DB0894F2490020C3E2 /* inftrees.h in Headers */,
 				839542DD0894F2490020C3E2 /* zlib.h in Headers */,
 				839542DF0894F2490020C3E2 /* zip.h in Headers */,
-				839542E10894F2490020C3E2 /* zconf.in.h in Headers */,
 				839542E20894F2490020C3E2 /* zconf.h in Headers */,
 				839542E30894F2490020C3E2 /* unzip.h in Headers */,
 				839542E60894F2490020C3E2 /* trees.h in Headers */,
@@ -306,7 +294,7 @@
 		C77CC6B50C9C7C6500886AB2 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COPY_PHASE_STRIP = NO;
 				GCC_ALTIVEC_EXTENSIONS = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
@@ -325,12 +313,7 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "";
-				LIBRARY_SEARCH_PATHS = (
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS = "$(SYSTEM_APPS_DIR)/National\\ Instruments/LabVIEW\\ 2014/cintools/Mach-O";
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
@@ -338,12 +321,13 @@
 				OTHER_LDFLAGS = (
 					"-multiply_defined",
 					warning,
+					"-llvexports",
 				);
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = lvzlib;
 				REZ_SCRIPT_TYPE = Roman;
 				REZ_SUPPRESS_REDECLARED_RESOURCE_TYPE_WARNINGS = NO;
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx10.8;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -357,7 +341,7 @@
 		C77CC6B60C9C7C6500886AB2 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COPY_PHASE_STRIP = YES;
 				GCC_ALTIVEC_EXTENSIONS = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
@@ -373,12 +357,7 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "";
-				LIBRARY_SEARCH_PATHS = (
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS = "$(SYSTEM_APPS_DIR)/National\\ Instruments/LabVIEW\\ 2014/cintools/Mach-O";
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
@@ -386,12 +365,13 @@
 				OTHER_LDFLAGS = (
 					"-multiply_defined",
 					warning,
+					"-llvexports",
 				);
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = lvzlib;
 				REZ_SCRIPT_TYPE = Roman;
 				REZ_SUPPRESS_REDECLARED_RESOURCE_TYPE_WARNINGS = NO;
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx10.8;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -405,7 +385,7 @@
 		C77CC6B70C9C7C6500886AB2 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				GCC_ALTIVEC_EXTENSIONS = NO;
 				GCC_CHAR_IS_UNSIGNED_CHAR = NO;
 				GCC_ENABLE_CPP_EXCEPTIONS = NO;
@@ -419,12 +399,7 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "";
-				LIBRARY_SEARCH_PATHS = (
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
-				);
-				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
-				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SYSTEM_APPS_DIR)/National Instruments/LabVIEW 2009/cintools/Mach-O\"";
+				LIBRARY_SEARCH_PATHS = "$(SYSTEM_APPS_DIR)/National\\ Instruments/LabVIEW\\ 2014/cintools/Mach-O";
 				LIBRARY_STYLE = DYNAMIC;
 				MACH_O_TYPE = mh_dylib;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
@@ -432,12 +407,13 @@
 				OTHER_LDFLAGS = (
 					"-multiply_defined",
 					warning,
+					"-llvexports",
 				);
 				OTHER_REZFLAGS = "";
 				PRODUCT_NAME = lvzlib;
 				REZ_SCRIPT_TYPE = Roman;
 				REZ_SUPPRESS_REDECLARED_RESOURCE_TYPE_WARNINGS = NO;
-				SDKROOT = macosx10.9;
+				SDKROOT = macosx10.8;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = (
 					"-Wmost",
@@ -450,18 +426,59 @@
 		C77CC6B90C9C7C6500886AB2 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"ADDITIONAL_SDKS[arch=i386]" = "";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Applications/National\\ Instruments/LabVIEW\\ 2014/cintools",
+				);
+				LD_DYLIB_INSTALL_NAME = lvzlib.framework;
+				LIBRARY_SEARCH_PATHS = "/Application/National\\ Instruments/LabVIEW\\ 2014/cintools";
+				MACH_O_TYPE = mh_dylib;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = macosx10.8;
 			};
 			name = Development;
 		};
 		C77CC6BA0C9C7C6500886AB2 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Applications/National\\ Instruments/LabVIEW\\ 2014/cintools",
+				);
+				LD_DYLIB_INSTALL_NAME = lvzlib.framework;
+				LIBRARY_SEARCH_PATHS = "/Application/National\\ Instruments/LabVIEW\\ 2014/cintools";
+				MACH_O_TYPE = mh_dylib;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = macosx10.8;
 			};
 			name = Deployment;
 		};
 		C77CC6BB0C9C7C6500886AB2 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				"ADDITIONAL_SDKS[arch=*]" = "";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_CHAR_IS_UNSIGNED_CHAR = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Applications/National\\ Instruments/LabVIEW\\ 2014/cintools",
+				);
+				LD_DYLIB_INSTALL_NAME = lvzlib.framework;
+				LIBRARY_SEARCH_PATHS = "/Application/National\\ Instruments/LabVIEW\\ 2014/cintools";
+				MACH_O_TYPE = mh_dylib;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = NO;
+				SDKROOT = macosx10.8;
 			};
 			name = Default;
 		};
