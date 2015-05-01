@@ -72,10 +72,9 @@ static MgErr ConvertToPosixPath(const LStrHandle hfsPath, LStrHandle *posixPath,
 	if (!posixPath)
 		return mgArgErr;
 
-	if (*posixPath)
-		LStrLen(**posixPath) = 0;
-
 	fileRef = CFStringCreateWithBytes(kCFAllocatorDefault, LStrBuf(*hfsPath), LStrLen(*hfsPath), encoding, false);
+    if (*posixPath)
+        LStrLen(**posixPath) = 0;
     if (!fileRef)
     {
 		return mFullErr;
@@ -759,7 +758,7 @@ LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str)
 		{
 			err = FPathToText(path, **str);
 			LStrLen(**str) = pathLen;
-#if MacOSX
+#if MacOSX && (ProcessorType == kX86)
 			if (!err)
 				err = ConvertToPosixPath(*str, str, false);
 #endif
@@ -1081,7 +1080,7 @@ static MgErr lvfile_Read(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount, 
 	if (0 == ioRefNum)
 		return mgArgErr;
 #if MacOSX
-	err = FSRead(ioRefNum, (int32*)&inCount, buffer);
+	err = FMRead(ioRefNum, (int32*)&inCount, buffer);
 	if (outCount)
 	{
 		if (err && err != eofErr)
@@ -1144,7 +1143,7 @@ static MgErr lvfile_Write(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount,
 	if (0 == ioRefNum)
 		return mgArgErr;
 #if MacOSX
-	err = FSWrite(ioRefNum, (int32*)&inCount, buffer);
+	err = FMWrite(ioRefNum, (int32*)&inCount, buffer);
 	if (outCount)
 	{
 		if (err && err != dskFulErr)

@@ -4,6 +4,7 @@
 #include "zip.h"
 #include "unzip.h"
 #include <string.h>
+#include "lvapi.h"
 
 #ifndef VERSIONMADEBY
 # define VERSIONMADEBY   (0x0) /* platform depedent */
@@ -231,12 +232,11 @@ LibAPI(MgErr) lvzlib_zipWriteInFileInZip(LVRefNum *refnum, const LStrHandle buff
 {
 	zipFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, ZipMagic);
-	if(!err)
+	if (!err)
 	{
 		int retval = zipWriteInFileInZip(node, LStrBuf(*buffer), LStrLen(*buffer));
 		if (retval < 0)
 			return LibToMgErr(retval);
-		LStrLen(*buffer) = retval;
 	}
 	return err;
 }
@@ -271,7 +271,10 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const LStrHandle globalComment, 
 	{
 		int retval;
 		LStrHandle comment = NULL;
-		if (globalComment && LStrLen(*globalComment) > 0)
+        
+        *refnum = kNotARefNum;
+
+        if (globalComment && LStrLen(*globalComment) > 0)
 		{
 			err = ConvertLString(globalComment, CP_ACP, &comment, CP_OEMCP, 0, NULL);
 			if (err)
