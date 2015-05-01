@@ -1674,6 +1674,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\lvapi.h"
+				>
+			</File>
+			<File
 				RelativePath="lvutil.h"
 				>
 			</File>
