@@ -528,6 +528,8 @@ MgErr FGetInfo(ConstPath path, FInfoPtr infop);
 MgErr FGetInfo64(ConstPath path, FInfo64Ptr infop, FGetInfoWhich which);
 MgErr FSetInfo(ConstPath path, FInfoPtr infop);
 MgErr FSetInfo64(ConstPath path, FInfo64Ptr infop);
+MgErr FMRead(File fd, int32 inCount, int32* outCount, UPtr buffer);
+MgErr FMWrite(File fd, int32 inCount, int32* outCount, UPtr buffer);
 
 int32 DbgPrintf(CStr fmt, ...);
 

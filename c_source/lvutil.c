@@ -1068,9 +1068,7 @@ static MgErr lvfile_GetFilePos(FileRefNum ioRefNum, FileOffset *tell)
 
 static MgErr lvfile_Read(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount, UPtr buffer)
 {
-#if MacOSX
-	OSErr	err;
-#elif Unix
+#if Unix
 	MgErr	err = mgNoErr;
 	int		actCount;
 #elif Win32
@@ -1080,19 +1078,7 @@ static MgErr lvfile_Read(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount, 
 	if (0 == ioRefNum)
 		return mgArgErr;
 #if MacOSX
-	err = FMRead(ioRefNum, (int32*)&inCount, buffer);
-	if (outCount)
-	{
-		if (err && err != eofErr)
-		{
-			*outCount = 0L;
-		}
-		else
-		{
-			*outCount = inCount;
-		}
-	}
-	return OSErrToLVErr(err);
+	return FMRead(ioRefNum, inCount, (int32*)&outCount, buffer);
 #elif Unix
 	errno = 0;
 	actCount = fread((char *)buffer, 1, inCount, ioRefNum);
@@ -1133,9 +1119,7 @@ static MgErr lvfile_Read(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount, 
 
 static MgErr lvfile_Write(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount, UPtr buffer)
 {
-#if MacOSX
-	OSErr err;
-#elif Unix || Win32
+#if Unix || Win32
 	MgErr err = mgNoErr;
 	int actCount;
 #endif
@@ -1143,19 +1127,7 @@ static MgErr lvfile_Write(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount,
 	if (0 == ioRefNum)
 		return mgArgErr;
 #if MacOSX
-	err = FMWrite(ioRefNum, (int32*)&inCount, buffer);
-	if (outCount)
-	{
-		if (err && err != dskFulErr)
-		{
-			*outCount = 0L;
-		}
-		else
-		{
-			*outCount = inCount;
-		}
-	}
-	return OSErrToLVErr(err);
+	return FMWrite(ioRefNum, inCount, (int32*)outCount, buffer);
 #elif Win32
 	if (!WriteFile(ioRefNum, buffer, inCount, &actCount, NULL))
 		err = Win32ToLVFileErr();
