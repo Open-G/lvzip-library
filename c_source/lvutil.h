@@ -27,9 +27,6 @@ extern "C" {
 #define kX64		10
 
 #if defined(macintosh) || defined(__PPCC__) || defined(THINK_C) || defined(__SC__) || defined(__MWERKS__) || defined(__APPLE_CC__)
- #ifdef __APPLE_CC__
-  #define MacOSX 1
- #endif
  #if defined(__powerc) || defined(__ppc__)
   #define ProcessorType	kPPC
   #define BigEndian 1
@@ -320,10 +317,18 @@ int32 StrCpy(CStr t, const CStr s);
 int32 StrNCpy(CStr t, const CStr s, int32 l);
 int32 StrLen(ConstCStr str);
 
+/** @brief Concatenated Pascal string types. */
+typedef struct {
+    int32	cnt;		/* number of pascal strings that follow */
+    uChar	str[1];		/* cnt bytes of concatenated pascal strings */
+} CPStr, *CPStrPtr, **CPStrHandle;
+
 typedef struct {
     int32   cnt; 
     uChar   str[1];
 } LStr, *LStrPtr, **LStrHandle;
+typedef LStr const* ConstLStrP;
+typedef LStr const*const* ConstLStrH;
 
 #define LStrLen(p)  ((p)->cnt)
 #define LStrBuf(p)  ((p)->str)
@@ -468,6 +473,9 @@ typedef struct {
 	FMFileType type;
 } FMListDetails;
 
+/** @brief Data types used to describe a list of entries from a directory. */
+typedef CPStr FDirEntRec, *FDirEntPtr, **FDirEntHandle;
+
 /** Type Flags used with FMListDetails */
 #define kIsFile				0x01
 #define kRecognizedType		0x02
@@ -530,6 +538,7 @@ MgErr FSetInfo(ConstPath path, FInfoPtr infop);
 MgErr FSetInfo64(ConstPath path, FInfo64Ptr infop);
 MgErr FMRead(File fd, int32 inCount, int32* outCount, UPtr buffer);
 MgErr FMWrite(File fd, int32 inCount, int32* outCount, UPtr buffer);
+MgErr FListDir(ConstPath path, FDirEntHandle list, FMListDetails **);
 
 int32 DbgPrintf(CStr fmt, ...);
 
@@ -605,6 +614,7 @@ typedef struct
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
 LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp);
+LibAPI(uInt32) determine_codepage(uLong *flags, LStrHandle string);
 LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
