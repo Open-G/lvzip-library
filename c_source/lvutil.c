@@ -1059,8 +1059,8 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
     {
 #if MacOSX || Unix
         struct stat st;
-        char *buf;
-        int len;
+        char *buf = NULL;
+        int len = 0;
 
         if (lstat((const char*)LStrBuf(*src), &st))
         {
@@ -1085,7 +1085,7 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
             }
             else if (retval < len)
             {
-				err = LVPath_FromText(buf, retval, target, LV_FALSE);
+				err = LVPath_FromText((CStr)buf, retval, target, LV_FALSE);
                 free(buf);
                 break;
             }
