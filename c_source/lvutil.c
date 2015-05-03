@@ -168,6 +168,58 @@ static MgErr ConvertToPosixPath(const LStrHandle hfsPath, LStrHandle *posixPath,
     return err;
 }
 
+static MgErr ConvertFromPosixPath(ConstCStr posixPath, int32 len, LStrHandle *hfsPath, Boolean isDir)
+{
+    MgErr err = mFullErr;
+    CFURLRef urlRef = NULL;
+    CFStringRef hfsRef;
+    uInt32 encoding = CFStringGetSystemEncoding();
+
+	if (!hfsPath)
+		return mgArgErr;
+
+    if (*hsfPath)
+        LStrLen(**hsfPath) = 0;
+
+    urlRef = CFURLCreateFromFileSystemRepresentation(NULL, posixPath, len, false);
+    if (!urlRef)
+    {
+		return mFullErr;
+	}
+    hsfRef = CFURLCopyFileSystemPath(urlRef, kCFURLHFSPathStyle);
+    CFRelease(urlRef);
+    if (hfsRef)
+    {
+		CFIndex len;
+		CFRange range = CFRangeMake(0, CFStringGetLength(hfsRef));
+		if (CFStringGetBytes(hfsRef, range, encoding, 0, false, NULL, 0, &len) > 0)
+		{
+			if (len > 0)
+			{
+				err = NumericArrayResize(uB, 1, (UHandle*)hfsPath, len + 1);
+				if (!err)
+				{
+					if (CFStringGetBytes(hsfRef, range, encoding, 0, false, LStrBuf(**hfsPath), len, &len) > 0)
+					{
+						LStrBuf(**hfsPath)[len] = 0;
+						LStrLen(**hfsPath) = len;
+					}
+					else
+					{
+						err = bogusError;
+					}
+				}
+			}
+		}
+		else
+		{
+			err = bogusError;
+		}
+        CFRelease(hfsRef);
+    }
+    return err;
+}
+
 static MgErr FSMakePathRef(Path path, FSRef *ref)
 {
 	LStrHandle str = NULL;
@@ -914,6 +966,24 @@ LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str)
 	return err;
 }
 
+LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir)
+{
+	MgErr err = mgNoErr;
+#if usesHFSPath
+	LStrHandle hsfPath = NULL;
+	/* Convert the posix path to an HFS path */
+	err = ConvertFromPosixPath(str, len, &hfsPath, isDir);
+	if (!err)
+	{
+		err = FTextToPath(LStrBuf(*hfsPath), LStrLen(*hsfPath), path);
+	}
+#else
+	Unused(isDir);
+	err = FTextToPath(str, len, path);
+#endif
+	return err;
+}
+
 LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
 {
     MgErr err = mgNoErr;
@@ -954,7 +1024,7 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
                 {
                     if (flags & kLinkDir)
                         err = mgNotSupported;
-                    else if (!CreateHardLinkA(LStrBuf(*src), LStrBuf(*tgt), NULL)
+                    else if (!CreateHardLinkA(LStrBuf(*src), LStrBuf(*tgt), NULL))
                     {
                         err = Win32ToLVFileErr();
                     }
@@ -973,6 +1043,8 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
     }
     return err;
 }
+
+#define PREPARSE_DATA_BUFFER_SIZE 16*1024
 
 LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
 {
@@ -1013,7 +1085,7 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
             }
             else if (retval < len)
             {
-
+				err = LVPath_FromText(buf, retval, target, LV_FALSE);
                 free(buf);
                 break;
             }
@@ -1021,28 +1093,64 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
             buf = realloc(buf, len);
         }
 #elif Win32
-        if (GetFileAttributes(fpath) & REPARSE_FOLDER == REPARSE_FOLDER)
+        if ((GetFileAttributesA(LStrBuf(*src)) & REPARSE_FOLDER) == REPARSE_FOLDER)
         {
-            // Open the file correctly depending on the string type.
-            HANDLE handle = CreateFileA(fpath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, 0);
+			PREPARSE_DATA_BUFFER buffer = NULL;
+            // Open the target file
+            HANDLE handle = CreateFileA(LStrBuf(*src), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+            if (handle != INVALID_HANDLE_VALUE)
+			{
+				DWORD bytes;
+				// Maximum REPARSE_DATA_BUFFER_SIZE = 16384 = (16*1024)
+                buffer = (PREPARSE_DATA_BUFFER)malloc(PREPARSE_DATA_BUFFER_SIZE);
+				if (DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, NULL, 0, buffer, PREPARSE_DATA_BUFFER_SIZE, &bytes, NULL))
+                    err = Win32ToLVFileErr();
+
+				if (bytes < 9)
+					err = fEOF;
+
+                // Close the handle to our file so we're not locking it anymore.
+                CloseHandle(handle);
+			}
+			else
+			{
+                err = Win32ToLVFileErr();
+			}
             
-            // MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16384 = (16*1024)
-            buffer = DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, NULL, 16*1024)
-            // Above will return an ugly string (byte array), so we'll need to parse it.
-            // But first, we'll close the handle to our file so we're not locking it anymore.
-            CloseHandle(handle)
-            
-            // Minimum possible length (assuming that the length of the target is bigger than 0)
-            if len(buffer) < 9:
-                return None
-            // Parse and return our result.
-            result = parse_reparse_buffer(buffer)
-            offset = result[SYMBOLIC_LINK]['substitute_name_offset']
-            ending = offset + result[SYMBOLIC_LINK]['substitute_name_length']
-            rpath = result[SYMBOLIC_LINK]['buffer'][offset:ending].replace('\x00','')
-            if len(rpath) > 4 and rpath[0:4] == '\\??\\':
-                rpath = rpath[4:]
-                return rpath;
+			if (!err)
+			{
+				PWCHAR start;
+				USHORT length;
+				int32 numBytes;
+				LStrHandle dest = NULL;
+
+				switch (buffer->ReparseTag)
+				{
+				    case IO_REPARSE_TAG_SYMLINK:
+						start = (PWCHAR)((char)buffer->SymbolicLinkReparseBuffer.PathBuffer + buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset);
+						length = buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
+						break;
+					default:
+						start = (PWCHAR)((char)buffer->MountPointReparseBuffer.PathBuffer + buffer->MountPointReparseBuffer.SubstituteNameOffset);
+						length = buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
+						break;
+				}
+				// Skip possible path prefix
+				if (length > 4 && !CompareStringW(LOCALE_SYSTEM_DEFAULT, 0, start, 4, L"\\\\??\\", 4));
+				    start += 4;
+		
+				numBytes = WideCharToMultiByte(CP_ACP, 0, start, length, NULL, 0, NULL, NULL);
+				if (numBytes > 0 && numBytes <= PREPARSE_DATA_BUFFER_SIZE)
+				{ 
+					numBytes = WideCharToMultiByte(CP_ACP, 0, start, length, (LPSTR)buffer, numBytes, NULL, NULL);
+					if (numBytes > 0)
+					{ 
+						err = LVPath_FromText((CStr)buffer, numBytes, target, LV_FALSE);
+					}
+				}
+			}
+			if (buffer)
+				free(buffer);
         }
 #else
         err = mgNotSupported;
