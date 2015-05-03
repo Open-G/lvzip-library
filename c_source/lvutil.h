@@ -310,7 +310,7 @@ typedef struct
     int16 h;
 } LVPoint;
 
-typedef uChar        Str255[256], *PStr, *CStr, *UPtr, **UHandle;
+typedef uChar        Str255[256], *PStr, *CStr, *UPtr, **UHandle, **PStrHandle;
 typedef const uChar  *ConstCStr, *ConstPStr, *ConstUPtr, ConstStr255[256];
 
 #define PStrBuf(b)  (&((PStr)(b))[1])
@@ -531,14 +531,28 @@ typedef MagicCookie LVRefNum;
 #define kNotARefNum ((LVRefNum)0L)	/* canonical invalid magic cookie */
 
 /* LabVIEW exported functions */
+MgErr FRelPath(ConstPath start, ConstPath end, Path relPath);
+MgErr FAddPath(ConstPath basePath, ConstPath relPath, Path newPath);
+MgErr FAppendName(Path path, ConstPStr name);
+MgErr FName(ConstPath path, PStrHandle name);
+MgErr FNamePtr(ConstPath path, PStr name);
+MgErr FDirName(ConstPath path, Path dir);
+MgErr FVolName(ConstPath path, Path vol);
+Path FMakePath(Path path, int32 type, ...);
+Path FEmptyPath(Path);
+Path FNotAPath(Path);
 Bool32 FIsAPath(Path path);
+Bool32 FIsAbsPath(Path path);
 MgErr FPathToText(Path path, LStrPtr lstr);
 MgErr FPathToPath(Path *p);
-MgErr FAppendName(Path path, PStr name);
 Bool32 FIsAPathOfType(Path path, int32 ofType);
 MgErr FGetPathType(Path, int32*);
 int32 FDepth(Path path);
 MgErr FDisposePath(Path p);
+
+#define FIsAbsPath(path) FIsAPathOfType(path, fAbsPath)
+#define FIsRelPath(path) FIsAPathOfType(path, fRelPath)
+
 MgErr FNewRefNum(Path path, File fd, LVRefNum* refnum);
 Bool32 FIsARefNum(LVRefNum);
 MgErr FDisposeRefNum(LVRefNum);
@@ -588,20 +602,35 @@ typedef struct
 	FMListDetails elm[1];
 } FileInfoArrRec, *FileInfoArrPtr, **FileInfoArrHdl;
 
+#define kLinkNone 0
+#define kLinkHard 1
+#define kLinkDir  2
+
 /* Our exported functions */
+/**************************/
+    
+/* Version string of the zlib library */
 LibAPI(void) DLLVersion OF((uChar*  Version));
 
+/* Convert the path into a string representation for the current platform */
 LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str);
+
+/* Check if the file path points to has a resource fork */
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh);
+
+/* List the directory contents with an additional array with flags and file type for each file in the names array */
+LibAPI(MgErr) LVPath_ListDirectory(Path dirname, LStrArrHdl *names, FileInfoArrHdl *fileInfo);
+    
+/* Retrieve MacOS finder information from the file, unsupported on non Mac platforms */
+LibAPI(MgErr) LVPath_UtilFileInfo(Path path, uInt8 write, uInt8 *isDirectory, LVFileInfo *finderInfo, LStrHandle comment);
+
+/* Create and read a link */
+LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target);
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target);
+
+/* Legacy functions not supported on Mac OSX and all non-Mac platforms */
 LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcFileName, Path dstFileName);
 LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcFileName, Path dstFileName);
-LibAPI(MgErr) LVPath_ListDirectory(Path dirname, LStrArrHdl *names, FileInfoArrHdl *fileInfo);
-
-LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
-                   uInt8 write,
-                   uInt8 *isDirectory,
-                   LVFileInfo *finderInfo,
-                   LStrHandle comment);
 
 typedef union
 {

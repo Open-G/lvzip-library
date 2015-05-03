@@ -32,6 +32,37 @@
  #ifndef INVALID_FILE_ATTRIBUTES
   #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
  #endif
+ #define REPARSE_FOLDER (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
+ typedef struct _REPARSE_DATA_BUFFER
+ {
+    ULONG  ReparseTag;
+    USHORT ReparseDataLength;
+    USHORT Reserved;
+    union
+    {
+        struct
+        {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            ULONG Flags;
+            WCHAR PathBuffer[1];
+        } SymbolicLinkReparseBuffer;
+        struct
+        {
+            USHORT SubstituteNameOffset;
+            USHORT SubstituteNameLength;
+            USHORT PrintNameOffset;
+            USHORT PrintNameLength;
+            WCHAR PathBuffer[1];
+        } MountPointReparseBuffer;
+        struct
+        {
+            UCHAR  DataBuffer[1];
+        } GenericReparseBuffer;
+    } DUMMYUNIONNAME;
+ } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 #elif Unix
  #include <errno.h>
  #include <dirent.h>
@@ -307,7 +338,7 @@ static void UnixConvertToLVTime(time_t sTime, uInt32 *time)
 }
 #endif
 
-#if usesPosixPath
+#if MacOSX || Unix
 static MgErr UnixToLVFileErr(void)
 {
     switch (errno)
@@ -882,6 +913,145 @@ LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str)
 	}
 	return err;
 }
+
+LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
+{
+    MgErr err = mgNoErr;
+    LStrHandle src = NULL;
+    LStrHandle tgt = NULL;
+
+    if (!FIsAbsPath(path))
+        return mgArgErr;
+
+    err = LVPath_ToText(path, &src);
+    if (!err)
+    {
+        err = LVPath_ToText(target, &tgt);
+        if (!err)
+        {
+#if MacOSX || Unix
+            if (flags & kLinkHard)
+            {
+                if (link((const char*)LStrBuf(*src), (const char*)LStrBuf(*tgt)))
+                    err = UnixToLVFileErr();
+            }
+            else
+            {
+                if (symlink((const char*)LStrBuf(*src), (const char*)LStrBuf(*tgt)))
+                    err = UnixToLVFileErr();
+            }
+#elif Win32
+            if (FExists(target))
+            {
+                FInfoRec finfo;
+                err = FGetInfo(target, &finfo);
+                if (!err && finfo.folder)
+                    flags |= kLinkDir;
+            }
+            if (!err)
+            {
+                if (flags & kLinkHard)
+                {
+                    if (flags & kLinkDir)
+                        err = mgNotSupported;
+                    else if (!CreateHardLinkA(LStrBuf(*src), LStrBuf(*tgt), NULL)
+                    {
+                        err = Win32ToLVFileErr();
+                    }
+                }
+                else if (!CreateSymbolicLinkA(LStrBuf(*src), LStrBuf(*tgt), flags & kLinkDir ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0))
+                {
+                    err = Win32ToLVFileErr();
+                }
+            }
+#else
+            err = mgNotSupported;
+#endif
+            DSDisposeHandle((UHandle)tgt);
+        }
+        DSDisposeHandle((UHandle)src);
+    }
+    return err;
+}
+
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
+{
+    MgErr err = mgNoErr;
+    LStrHandle src = NULL;
+
+    if (!FIsAbsPath(path))
+        return mgArgErr;
+
+    err = LVPath_ToText(path, &src);
+    if (!err)
+    {
+#if MacOSX || Unix
+        struct stat st;
+        char *buf;
+        int len;
+
+        if (lstat((const char*)LStrBuf(*src), &st))
+        {
+            err = UnixToLVFileErr();
+        }
+        else
+        {
+            len = st.st_size + 1;
+            buf = malloc(len);
+            if (!buf)
+            {
+                err = mFullErr;
+            }
+        }
+        
+        while (!err)
+        {
+            ssize_t retval = readlink((const char*)LStrBuf(*src), buf, len);
+            if (retval < 0)
+            {
+                err = UnixToLVFileErr();
+            }
+            else if (retval < len)
+            {
+
+                free(buf);
+                break;
+            }
+            len += len;
+            buf = realloc(buf, len);
+        }
+#elif Win32
+        if (GetFileAttributes(fpath) & REPARSE_FOLDER == REPARSE_FOLDER)
+        {
+            // Open the file correctly depending on the string type.
+            HANDLE handle = CreateFileA(fpath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, 0);
+            
+            // MAXIMUM_REPARSE_DATA_BUFFER_SIZE = 16384 = (16*1024)
+            buffer = DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, NULL, 16*1024)
+            // Above will return an ugly string (byte array), so we'll need to parse it.
+            // But first, we'll close the handle to our file so we're not locking it anymore.
+            CloseHandle(handle)
+            
+            // Minimum possible length (assuming that the length of the target is bigger than 0)
+            if len(buffer) < 9:
+                return None
+            // Parse and return our result.
+            result = parse_reparse_buffer(buffer)
+            offset = result[SYMBOLIC_LINK]['substitute_name_offset']
+            ending = offset + result[SYMBOLIC_LINK]['substitute_name_length']
+            rpath = result[SYMBOLIC_LINK]['buffer'][offset:ending].replace('\x00','')
+            if len(rpath) > 4 and rpath[0:4] == '\\??\\':
+                rpath = rpath[4:]
+                return rpath;
+        }
+#else
+        err = mgNotSupported;
+#endif
+        DSDisposeHandle((UHandle)src);
+    }
+    return err;
+}
+
 
 static MgErr lvfile_CloseFile(FileRefNum ioRefNum)
 {
