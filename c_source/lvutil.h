@@ -186,6 +186,12 @@ typedef int32           MgErr;
 
 typedef int32           Bool32;
 
+#if ProcessorType==kX64
+#define uPtr uQ
+#else
+#define uPtr uL
+#endif
+
 /*** The Support Manager ***/
 
 #define HiNibble(x)		(uInt8)(((x)>>4) & 0x0F)
@@ -335,6 +341,10 @@ typedef LStr const*const* ConstLStrH;
 
 #define LStrLenH(h) ((h) ? (*(h))->cnt : 0)
 #define LStrBufH(h) ((h) ? (*(h))->str : NULL)
+
+/*** Concatenated Pascal String Support Functions ***/
+#define CPStrLen		LStrLen			/* concatenated Pascal vs. LabVIEW strings */
+#define CPStrBuf		LStrBuf			/* concatenated Pascal vs. LabVIEW strings */
 
 typedef struct {
     int32   cnt;
@@ -521,6 +531,7 @@ typedef MagicCookie LVRefNum;
 #define kNotARefNum ((LVRefNum)0L)	/* canonical invalid magic cookie */
 
 /* LabVIEW exported functions */
+Bool32 FIsAPath(Path path);
 MgErr FPathToText(Path path, LStrPtr lstr);
 MgErr FPathToPath(Path *p);
 MgErr FAppendName(Path path, PStr name);
@@ -544,11 +555,19 @@ int32 DbgPrintf(CStr fmt, ...);
 
 UPtr DSNewPClr(size_t size);
 MgErr DSDisposePtr(UPtr);
+UHandle DSNewHandle(size_t size);
 UHandle DSNewHClr(size_t size);
 MgErr DSSetHandleSize(UHandle, size_t);
 int32 DSGetHandleSize(UHandle);
 MgErr DSDisposeHandle(UHandle);
 MgErr DSCopyHandle(void *ph, const void *hsrc);
+
+UHandle AZNewHandle(size_t size);
+UHandle AZNewHClr(size_t size);
+MgErr AZSetHandleSize(UHandle, size_t);
+int32 AZGetHandleSize(UHandle);
+MgErr AZDisposeHandle(UHandle);
+MgErr AZCopyHandle(void *ph, const void *hsrc);
 
 void MoveBlock(ConstUPtr ps, UPtr pd, size_t size);
 
@@ -557,6 +576,18 @@ MgErr NumericArrayResize(int32, int32, UHandle*, size_t);
 #define Min(a, b)      ((a) < (b)) ? (a) : (b) 
 #define Max(a, b)      ((a) > (b)) ? (a) : (b) 
 
+typedef struct
+{
+	int32 numItems;
+	LStrHandle elm[1];
+} LStrArrRec, *LStrArrPtr, **LStrArrHdl;
+
+typedef struct
+{
+	int32 numItems;
+	FMListDetails elm[1];
+} FileInfoArrRec, *FileInfoArrPtr, **FileInfoArrHdl;
+
 /* Our exported functions */
 LibAPI(void) DLLVersion OF((uChar*  Version));
 
@@ -564,6 +595,7 @@ LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str);
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh);
 LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcFileName, Path dstFileName);
 LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcFileName, Path dstFileName);
+LibAPI(MgErr) LVPath_ListDirectory(Path dirname, LStrArrHdl *names, FileInfoArrHdl *fileInfo);
 
 LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
                    uInt8 write,

@@ -2040,7 +2040,6 @@ ZEXTERN int ZEXPORT unzCloseCurrentFile (unzFile file)
     return err;
 }
 
-
 /*
   Get the global comment string of the ZipFile, in the szComment buffer.
   uSizeBuf is the size of the szComment buffer.
@@ -2119,5 +2118,5 @@ ZEXTERN int ZEXPORT unzSetOffset64(unzFile file, ZPOS64_T pos)
 
 ZEXTERN int ZEXPORT unzSetOffset (unzFile file, uLong pos)
 {
-    return unzSetOffset64(file,pos);
+    return unzSetOffset64(file, pos);
 }

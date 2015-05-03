@@ -338,7 +338,10 @@ static MgErr UnixToLVFileErr(void)
     }
     return fIOErr;   /* fIOErr generally signifies some unknown file error */
 }
+#endif
+#endif
 
+#if usesPosixPath || usesWinPath
 static int32 MakePathDSString(Path path, LStrPtr *lstr, int32 reserve)
 {
     int32 pathLen = -1;
@@ -357,11 +360,79 @@ static int32 MakePathDSString(Path path, LStrPtr *lstr, int32 reserve)
     return err;
 }
 #endif
-#endif
 
 LibAPI(void) DLLVersion(uChar* version)
 {
     sprintf((char*)version, "lvzlib V 2.2, date: %s, time: %s",__DATE__,__TIME__);
+}
+
+LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr)
+{
+	MgErr err;
+	FInfoRec foldInfo;
+	FMListDetails **typeList = NULL;
+	FDirEntHandle nameList = NULL;
+
+	if (!FIsAPath(folderPath))
+		return mgArgErr;
+	/* Check that we have actually a folder */
+	err = FGetInfo(folderPath, &foldInfo);
+	if (err)
+		return err;
+	if (!foldInfo.folder)
+		return mgArgErr;
+
+	nameList = (FDirEntHandle)AZNewHClr(4);
+	if (!nameList)
+		return mFullErr;
+	typeList = (FMListDetails **)AZNewHandle(0);
+	if (!typeList)
+	{
+		AZDisposeHandle((UHandle)nameList);
+		return mFullErr;
+	}
+	err = FListDir(folderPath, nameList, typeList);
+	if (!err)
+	{
+		int32 i = 0, n = CPStrLen(*nameList);
+	    UPtr fName = CPStrBuf(*nameList);
+		err = NumericArrayResize(uPtr, 1, (UHandle*)nameArr, n);
+		if (!err)
+		{
+			LStrHandle *names = (**nameArr)->elm;
+		    err = NumericArrayResize(uL, 1, (UHandle*)typeArr, n * 2);
+			if (!err)
+			{
+				for (i = 0; i < n; i++, names++)
+				{
+					err = NumericArrayResize(uB, 1, (UHandle*)names, PStrLen(fName));
+					if (err)
+				        break;
+
+					MoveBlock(PStrBuf(fName), LStrBuf(**names), PStrLen(fName));
+					LStrLen(**names) = PStrLen(fName);
+					fName += PStrSize(fName);
+				}
+				MoveBlock((ConstUPtr)*typeList, (UPtr)((**typeArr)->elm), n * sizeof(FMListDetails));
+				(**typeArr)->numItems = i;
+			}
+			n = (**nameArr)->numItems;
+			(**nameArr)->numItems = i;
+			/* Clear out possibly superfluous handles */
+			if (n > i)
+			{
+				for (; i < n; i++, names++)
+				{
+					if (*names)
+						DSDisposeHandle((UHandle)*names);
+					*names = NULL;
+				}
+			}
+		}
+	}
+	AZDisposeHandle((UHandle)nameList);
+	AZDisposeHandle((UHandle)typeList);
+	return err;
 }
 
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh)
