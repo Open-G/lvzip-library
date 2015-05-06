@@ -144,9 +144,12 @@ static MgErr lvzlibDisposeRefnum(LVRefNum *refnum, voidp *node, uInt32 magic)
 	return err;
 }
 
+static char version[250];
+
 LibAPI(const char *) lvzlib_zlibVersion(void)
 {
-	return zlibVersion();
+    snprintf(version, sizeof(version), "LabVIEW ZIP library, version: 4.1\nzlib version: %s", zlibVersion());
+    return version;
 }
 
 LibAPI(int) lvzlib_compress(Bytef *dest, uLongf *destLen,
