@@ -539,7 +539,7 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
     if (!err)
     {
         ssize_t len = getxattr((const char)LStrBuf(*lstr), XATTR_RESOURCEFORK_NAME, NULL, 0, 0, O_NOFOLLOW);
-        if (len)
+        if (len != -1)
         {
             if (hasResFork)
                 *hasResFork = LV_TRUE;
