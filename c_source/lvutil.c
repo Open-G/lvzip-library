@@ -178,15 +178,15 @@ static MgErr ConvertFromPosixPath(ConstCStr posixPath, int32 len, LStrHandle *hf
 	if (!hfsPath)
 		return mgArgErr;
 
-    if (*hsfPath)
-        LStrLen(**hsfPath) = 0;
+    if (*hfsPath)
+        LStrLen(**hfsPath) = 0;
 
-    urlRef = CFURLCreateFromFileSystemRepresentation(NULL, posixPath, len, false);
+    urlRef = CFURLCreateFromFileSystemRepresentation(NULL, posixPath, len, isDir);
     if (!urlRef)
     {
 		return mFullErr;
 	}
-    hsfRef = CFURLCopyFileSystemPath(urlRef, kCFURLHFSPathStyle);
+    hfsRef = CFURLCopyFileSystemPath(urlRef, kCFURLHFSPathStyle);
     CFRelease(urlRef);
     if (hfsRef)
     {
@@ -199,7 +199,7 @@ static MgErr ConvertFromPosixPath(ConstCStr posixPath, int32 len, LStrHandle *hf
 				err = NumericArrayResize(uB, 1, (UHandle*)hfsPath, len + 1);
 				if (!err)
 				{
-					if (CFStringGetBytes(hsfRef, range, encoding, 0, false, LStrBuf(**hfsPath), len, &len) > 0)
+					if (CFStringGetBytes(hfsRef, range, encoding, 0, false, LStrBuf(**hfsPath), len, &len) > 0)
 					{
 						LStrBuf(**hfsPath)[len] = 0;
 						LStrLen(**hfsPath) = len;
@@ -970,12 +970,12 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir)
 {
 	MgErr err = mgNoErr;
 #if usesHFSPath
-	LStrHandle hsfPath = NULL;
+	LStrHandle hfsPath = NULL;
 	/* Convert the posix path to an HFS path */
 	err = ConvertFromPosixPath(str, len, &hfsPath, isDir);
 	if (!err)
 	{
-		err = FTextToPath(LStrBuf(*hfsPath), LStrLen(*hsfPath), path);
+		err = FTextToPath(LStrBuf(*hfsPath), LStrLen(*hfsPath), path);
 	}
 #else
 	Unused(isDir);

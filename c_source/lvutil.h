@@ -616,6 +616,7 @@ LibAPI(void) DLLVersion OF((uChar*  Version));
 
 /* Convert the path into a string representation for the current platform */
 LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str);
+LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir);
 
 /* Check if the file path points to has a resource fork */
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh);
