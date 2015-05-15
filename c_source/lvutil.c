@@ -1066,7 +1066,7 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
         {
             err = UnixToLVFileErr();
         }
-        else
+        else if (S_ISLNK(st.st_mode))
         {
             len = st.st_size + 1;
             buf = malloc(len);
@@ -1074,6 +1074,10 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
             {
                 err = mFullErr;
             }
+        }
+        else
+        {
+            err = mgArgErr;
         }
         
         while (!err)
@@ -1535,6 +1539,10 @@ static MgErr lvfile_Write(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount,
     return err;
 }
 
+#if MacOSX && usesPosixPath
+static char *namedResourceFork = "/..namedfork/rsrc";
+#endif
+
 LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 openMode, uInt32 denyMode)
 {
     MgErr err;
@@ -1663,10 +1671,10 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
 				return mgArgErr;
 		}
 
-		err = MakePathDSString(path, &lstr, 5);
+		err = MakePathDSString(path, &lstr, strlen(namedResourceFork));
 		if (!err && rsrc)
 		{
-			strcpy((char*)(LStrBuf(lstr) + LStrLen(lstr)), "/rsrc");
+			strcpy((char*)(LStrBuf(lstr) + LStrLen(lstr)), namedResourceFork);
 		}
 		if (err)
 			return err;
