@@ -83,13 +83,13 @@ static voidpf win32_build_iowin(HANDLE hFile, LPCWSTR filename)
 
     if ((hFile != NULL) && (hFile != INVALID_HANDLE_VALUE))
     {
-		int len = wcslen(filename);
+		size_t len = wcslen(filename);
         w32fiow = (WIN32FILE_IOWIN *)malloc(sizeof(WIN32FILE_IOWIN) + len);
         if (w32fiow)
 		{
 			w32fiow->hf = hFile;
             w32fiow->error = 0;
-			w32fiow->filenameLength = len;
+			w32fiow->filenameLength = (int)len;
 			wcsncpy(w32fiow->filename, filename, len + 1);
 		}
         else

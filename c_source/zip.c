@@ -1463,16 +1463,16 @@ ZEXTERN int ZEXPORT zipOpenNewFileInZip4_64 (zipFile file, const char* filename,
             zi->ci.pcrc_32_tab = get_crc_table();
             /*init_keys(password,zi->ci.keys,zi->ci.pcrc_32_tab);*/
 
-            sizeHead = crypthead(password,bufHead,RAND_HEAD_LEN,zi->ci.keys,zi->ci.pcrc_32_tab,crcForCrypting);
+            sizeHead = crypthead(password, bufHead, RAND_HEAD_LEN, zi->ci.keys, zi->ci.pcrc_32_tab, crcForCrypting);
             zi->ci.crypt_header_size = sizeHead;
 
-            if (ZWRITE64(zi->z_filefunc,zi->filestream,bufHead,sizeHead) != sizeHead)
+            if (ZWRITE64(zi->z_filefunc, zi->filestream, bufHead, sizeHead) != sizeHead)
                 err = ZIP_ERRNO;
         }
 #endif
     }
 
-    if (err==Z_OK)
+    if (err == Z_OK)
         zi->in_opened_file_inzip = 1;
     return err;
 }
