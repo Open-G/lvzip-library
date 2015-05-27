@@ -1680,7 +1680,7 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
 		return mgNotSupported;
 	}
 	else
-#endif
+ #endif
 	{
 		switch (openMode)
 		{
@@ -1710,11 +1710,19 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
 				return mgArgErr;
 		}
 
-		err = MakePathDSString(path, &lstr, strlen(namedResourceFork));
-		if (!err && rsrc)
+ #if MacOSX
+		if (rsrc)
 		{
-			strcpy((char*)(LStrBuf(lstr) + LStrLen(lstr)), namedResourceFork);
+			err = MakePathDSString(path, &lstr, strlen(namedResourceFork));
+			if (!err)
+			{
+				strcpy((char*)(LStrBuf(lstr) + LStrLen(lstr)), namedResourceFork);
+			}
 		}
+		else
+ #else
+			err = MakePathDSString(path, &lstr, 0);
+ #endif
 		if (err)
 			return err;
 

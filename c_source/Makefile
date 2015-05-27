@@ -18,6 +18,7 @@
 
 CC=gcc
 
+
 CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
 #CFLAGS=-g -DDEBUG
@@ -25,7 +26,7 @@ CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
 #           -Wstrict-prototypes -Wmissing-prototypes
 
 CINDIR=/usr/local/lv70/cintools
-SFLAGS=-O3 -fPIC -m64 -fvisibility=hidden -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -L$(CINDIR)
+SFLAGS=-O3 -fPIC $(CC_ARCH_SPEC) -fvisibility=hidden -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -L$(CINDIR)
 LDFLAGS= 
 TEST_LDFLAGS=-L. libz.a
 LDSHARED=gcc
@@ -58,12 +59,17 @@ pkgconfigdir = ${libdir}/pkgconfig
 OBJZ = adler32.o crc32.o deflate.o infback.o inffast.o inflate.o inftrees.o trees.o zutil.o
 OBJG = compress.o uncompr.o gzclose.o gzlib.o gzread.o gzwrite.o
 OBJL = lvutil.o ioapi.o iomem.o mztools.o unzip.o zip.o utf.o
-OBJC = $(OBJZ) $(OBJL) $(OBJG)
+OBJE = aes/aescrypt.o aes/aeskey.o aes/aestab.o aes/entropy.o aes/filenc.o aes/hmac.o aes/prng.o aes/pwd2key.o aes/sha1.o
+OBJ2 = bzip2/blocksort.o bzip2/huffman.o bzip2/crctable.o bzip2/randtable.o bzip2/compress.o bzip2/decompress.o bzip2/bzlib.o
+
+OBJC = $(OBJZ) $(OBJL) $(OBJG) $(OBJ2) $(OBJE)
 
 PIC_OBJZ = adler32.lo crc32.lo deflate.lo infback.lo inffast.lo inflate.lo inftrees.lo trees.lo zutil.lo
 PIC_OBJG = compress.lo uncompr.lo gzclose.lo gzlib.lo gzread.lo gzwrite.lo
 PIC_OBJL = lvapi.lo lvutil.lo ioapi.lo iomem.lo mztools.lo unzip.lo zip.lo utf.lo
-PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJL) $(PIC_OBJG)
+PIC_OBJE = aes/aescrypt.lo aes/aeskey.lo aes/aestab.lo aes/entropy.lo aes/filenc.lo aes/hmac.lo aes/prng.lo aes/pwd2key.lo aes/sha1.lo
+PIC_OBJ2 = bzip2/blocksort.lo bzip2/huffman.lo bzip2/crctable.lo bzip2/randtable.lo bzip2/compress.lo bzip2/decompress.lo bzip2/bzlib.lo
+PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJL) $(PIC_OBJG) $(PIC_OBJ2) $(PIC_OBJE)
 
 # to use the asm code: make OBJA=match.o, PIC_OBJA=match.lo
 OBJA =
@@ -73,8 +79,13 @@ OBJS = $(OBJC) $(OBJA)
 
 PIC_OBJS = $(PIC_OBJC) $(PIC_OBJA)
 
-#all: static all64
-all: clean $(SHAREDLIBV)
+all: static all64
+
+linux32: clean
+	$(MAKE) $(SHAREDLIBV) ARCH_DIR=./Linux_x86 CC_ARCH_SPEC="-m32"
+
+linux64: clean
+	$(MAKE) $(SHAREDLIBV) ARCH_DIR=./Linux_x64 CC_ARCH_SPEC="-m64"
 
 static: example$(EXE) minigzip$(EXE)
 
@@ -156,16 +167,17 @@ minigzip64.o: test/minigzip.c zlib.h zconf.h
 .SUFFIXES: .lo
 
 .c.lo: 
-	-@mkdir objs 2>/dev/null || test -d objs
-	$(CC) $(SFLAGS) -DPIC -c -o objs/$*.o $<
-	-@mv objs/$*.o $@
+	-@mkdir $(ARCH_DIR) 2>/dev/null || test -d $(ARCH_DIR)
+	-@mkdir $(ARCH_DIR)/aes 2>/dev/null || test -d $(ARCH_DIR)/aes
+	-@mkdir $(ARCH_DIR)/bzip2 2>/dev/null || test -d $(ARCH_DIR)/bzip2
+	$(CC) $(SFLAGS) -DPIC -c -o $(ARCH_DIR)/$*.o $<
+	-@mv $(ARCH_DIR)/$*.o $(ARCH_DIR)/$@
 
 placebo $(SHAREDLIBV): $(PIC_OBJS)
 	$(LDSHARED) $(SFLAGS) -shared -o $@ $(PIC_OBJS) $(LDSHAREDLIBC) $(LDFLAGS)
 	rm -f $(SHAREDLIB) $(SHAREDLIBM)
 #	ln -s $@ $(SHAREDLIB)
 #	ln -s $@ $(SHAREDLIBM)
-	-@rmdir objs
 
 example$(EXE): example.o $(STATICLIB)
 	$(CC) $(CFLAGS) -o $@ example.o $(TEST_LDFLAGS)
@@ -248,7 +260,7 @@ clean:
 	   infcover \
 	   libz.* foo.gz so_locations \
 	   _match.s maketree contrib/infback9/*.o
-	rm -rf objs
+	rm -rf $(ARCH_DIR)/*.lo
 	rm -f *.gcda *.gcno *.gcov
 	rm -f contrib/infback9/*.gcda contrib/infback9/*.gcno contrib/infback9/*.gcov
 

@@ -1,5 +1,7 @@
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <fcntl.h>
 #endif
 
 #if defined(__cplusplus)
@@ -14,7 +16,6 @@ int entropy_fun(unsigned char buf[], unsigned int len)
     unsigned __int64 pentium_tsc[1];
     unsigned int i;
     int result = 0;
-
 
     if (CryptAcquireContext(&provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
     {
