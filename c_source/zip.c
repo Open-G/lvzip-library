@@ -1852,7 +1852,7 @@ ZEXTERN int ZEXPORT zipCloseFileInZipRaw64 (zipFile file, ZPOS64_T uncompressed_
 #endif
     if (!zi->ci.raw)
     {
-        if ((zi->ci.compression_method == Z_DEFLATED))
+        if (zi->ci.compression_method == Z_DEFLATED)
         {
             int tmp_err = deflateEnd(&zi->ci.stream);
             if (err == ZIP_OK)

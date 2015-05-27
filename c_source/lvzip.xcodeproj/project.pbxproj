@@ -210,9 +210,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		83D3E1AE080D116E00DE332C /* OSX DLL */ = {
+		83D3E1AE080D116E00DE332C /* LVZIP Framework */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C77CC6B40C9C7C6500886AB2 /* Build configuration list for PBXNativeTarget "OSX DLL" */;
+			buildConfigurationList = C77CC6B40C9C7C6500886AB2 /* Build configuration list for PBXNativeTarget "LVZIP Framework" */;
 			buildPhases = (
 				83D3E1A9080D116E00DE332C /* Headers */,
 				83D3E1AA080D116E00DE332C /* Sources */,
@@ -223,7 +223,7 @@
 			);
 			dependencies = (
 			);
-			name = "OSX DLL";
+			name = "LVZIP Framework";
 			productName = "OSX DLL";
 			productReference = 83D3E1AF080D116E00DE332C /* lvzlib.framework */;
 			productType = "com.apple.product-type.framework";
@@ -247,7 +247,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				83D3E1AE080D116E00DE332C /* OSX DLL */,
+				83D3E1AE080D116E00DE332C /* LVZIP Framework */,
 			);
 		};
 /* End PBXProject section */
@@ -487,7 +487,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C77CC6B40C9C7C6500886AB2 /* Build configuration list for PBXNativeTarget "OSX DLL" */ = {
+		C77CC6B40C9C7C6500886AB2 /* Build configuration list for PBXNativeTarget "LVZIP Framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C77CC6B50C9C7C6500886AB2 /* Development */,
