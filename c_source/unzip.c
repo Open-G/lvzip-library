@@ -1684,45 +1684,45 @@ ZEXTERN int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
     if ((compressionMethod == Z_BZIP2ED) && (!raw))
     {
 #ifdef HAVE_BZIP2
-      pfile_in_zip_read_info->bstream.bzalloc = (void *(*) (void *, int, int))0;
-      pfile_in_zip_read_info->bstream.bzfree = (free_func)0;
-      pfile_in_zip_read_info->bstream.opaque = (voidpf)0;
-      pfile_in_zip_read_info->bstream.state = (voidpf)0;
+        pfile_in_zip_read_info->bstream.bzalloc = (void *(*) (void *, int, int))0;
+        pfile_in_zip_read_info->bstream.bzfree = (free_func)0;
+        pfile_in_zip_read_info->bstream.opaque = (voidpf)0;
+        pfile_in_zip_read_info->bstream.state = (voidpf)0;
 
-      pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
-      pfile_in_zip_read_info->stream.zfree = (free_func)0;
-      pfile_in_zip_read_info->stream.opaque = (voidpf)0;
-      pfile_in_zip_read_info->stream.next_in = (voidpf)0;
-      pfile_in_zip_read_info->stream.avail_in = 0;
+        pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
+        pfile_in_zip_read_info->stream.zfree = (free_func)0;
+        pfile_in_zip_read_info->stream.opaque = (voidpf)0;
+        pfile_in_zip_read_info->stream.next_in = (voidpf)0;
+        pfile_in_zip_read_info->stream.avail_in = 0;
 
-      err=BZ2_bzDecompressInit(&pfile_in_zip_read_info->bstream, 0, 0);
-      if (err == Z_OK)
-        pfile_in_zip_read_info->stream_initialised=Z_BZIP2ED;
-      else
-      {
-        TRYFREE(pfile_in_zip_read_info);
-        return err;
-      }
+        err = BZ2_bzDecompressInit(&pfile_in_zip_read_info->bstream, 0, 0);
+        if (err == Z_OK)
+            pfile_in_zip_read_info->stream_initialised=Z_BZIP2ED;
+        else
+        {
+            TRYFREE(pfile_in_zip_read_info);
+            return err;
+        }
 #else
-      pfile_in_zip_read_info->raw = 1;
+        pfile_in_zip_read_info->raw = 1;
 #endif
     }
     else if ((compressionMethod == Z_DEFLATED) && (!raw))
     {
-      pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
-      pfile_in_zip_read_info->stream.zfree = (free_func)0;
-      pfile_in_zip_read_info->stream.opaque = (voidpf)0;
-      pfile_in_zip_read_info->stream.next_in = 0;
-      pfile_in_zip_read_info->stream.avail_in = 0;
+        pfile_in_zip_read_info->stream.zalloc = (alloc_func)0;
+        pfile_in_zip_read_info->stream.zfree = (free_func)0;
+        pfile_in_zip_read_info->stream.opaque = (voidpf)0;
+        pfile_in_zip_read_info->stream.next_in = 0;
+        pfile_in_zip_read_info->stream.avail_in = 0;
 
-      err=inflateInit2(&pfile_in_zip_read_info->stream, -MAX_WBITS);
-      if (err == Z_OK)
-        pfile_in_zip_read_info->stream_initialised=Z_DEFLATED;
-      else
-      {
-        TRYFREE(pfile_in_zip_read_info);
-        return err;
-      }
+        err = inflateInit2(&pfile_in_zip_read_info->stream, -MAX_WBITS);
+        if (err == Z_OK)
+            pfile_in_zip_read_info->stream_initialised = Z_DEFLATED;
+        else
+        {
+            TRYFREE(pfile_in_zip_read_info);
+            return err;
+        }
         /* windowBits is passed < 0 to tell that there is no zlib header.
          * Note that in this case inflate *requires* an extra "dummy" byte
          * after the compressed stream in order to complete decompression and
@@ -1737,7 +1737,7 @@ ZEXTERN int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
     pfile_in_zip_read_info->stream.avail_in = (uInt)0;
 
     s->pfile_in_zip_read = pfile_in_zip_read_info;
-                s->encrypted = 0;
+    s->encrypted = 0;
 
 #ifndef NOUNCRYPT
     if (password != NULL && ((s->cur_file_info.flag & 1) != 0))
@@ -1762,7 +1762,7 @@ ZEXTERN int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
             if (ZREAD64(s->z_filefunc, s->filestream, passverify, AES_PWVERIFYSIZE) != AES_PWVERIFYSIZE)
                 return UNZ_INTERNALERROR;
 
-            fcrypt_init(s->cur_file_info_internal.aes_encryption_mode, password, strlen(password), saltvalue,
+            fcrypt_init(s->cur_file_info_internal.aes_encryption_mode, password, (unsigned long)strlen(password), saltvalue,
                 passverify, &s->pfile_in_zip_read->aes_ctx);
 
             pfile_in_zip_read_info->rest_read_compressed -= saltlength + AES_PWVERIFYSIZE;

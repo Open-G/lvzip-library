@@ -110,6 +110,16 @@ typedef FILE* FileRefNum;
 typedef HANDLE FileRefNum;
 #endif
 
+#if HAVE_BZIP2
+void bz_internal_error(int errcode)
+{
+	// if we have a debug build then print the error in the LabVIEW debug console
+#if DEBUG
+	DbgPrintf("BZIP2 internal error %ld occurred!!", errcode);
+#endif
+}
+#endif
+
 #if MacOS
 #if usesHFSPath
 static MgErr ConvertToPosixPath(const LStrHandle hfsPath, LStrHandle *posixPath, Boolean isDir)

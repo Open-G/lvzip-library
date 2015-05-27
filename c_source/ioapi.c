@@ -34,6 +34,7 @@
 
 #define Unused(var) var=var
 #include "ioapi.h"
+#include "string.h"
 
 voidpf call_zopen64 (const zlib_filefunc64_32_def* pfilefunc,const void*filename,int mode)
 {
