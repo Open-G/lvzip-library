@@ -95,15 +95,15 @@ typedef struct tm_unz_s
    These data comes from the end of central dir */
 typedef struct unz_global_info64_s
 {
-    ZPOS64_T number_entry;         /* total number of entries in
-                                     the central dir on this disk */
+    ZPOS64_T number_entry;      /* total number of entries in the central dir on this disk */
+    uLong number_disk_with_CD;  /* number the the disk with central dir, used for spanning ZIP*/
     uLong size_comment;         /* size of the global comment of the zipfile */
 } unz_global_info64;
 
 typedef struct unz_global_info_s
 {
-    uLong number_entry;         /* total number of entries in
-                                     the central dir on this disk */
+    uLong number_entry;         /* total number of entries in the central dir on this disk */
+    uLong number_disk_with_CD;  /* number the the disk with central dir, used for spanning ZIP*/
     uLong size_comment;         /* size of the global comment of the zipfile */
 } unz_global_info;
 
@@ -127,6 +127,8 @@ typedef struct unz_file_info64_s
     uLong external_fa;          /* external file attributes        4 bytes */
 
     tm_unz tmu_date;
+    ZPOS64_T disk_offset;
+    uLong size_file_extra_internal;
 } unz_file_info64;
 
 typedef struct unz_file_info_s

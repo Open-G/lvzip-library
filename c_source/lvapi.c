@@ -10,6 +10,10 @@
 # define VERSIONMADEBY   (0x0) /* platform depedent */
 #endif
 
+#if Win32
+#define snprintf _snprintf
+#endif
+
 #define FLAGS_UTF8  0x0800
 
 static MgErr LibToMgErr(int err)
@@ -173,7 +177,7 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
                              zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
 	zipcharpc comment;
-	zipFile node = zipOpen2_64(pathname, append, &comment, filefuncs);
+	zipFile node = zipOpen3_64(pathname, append, 0, &comment, filefuncs);
 
 	*refnum = kNotARefNum;
 	if (*globalcomment)
@@ -208,7 +212,7 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
 						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
 						   LStrHandle comment, int method, int level, int raw, int windowBits,
-						   int memLevel, int strategy, const char* password, uLong crcForCrypting, uLong flags, int zip64)
+						   int memLevel, int strategy, const char* password, uLong crcForCrypting, uLong version, uLong flags, int zip64)
 {
 	zipFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, ZipMagic);
@@ -224,7 +228,7 @@ LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, 
 						         LStrBufH(extrafield_local), LStrLenH(extrafield_local),
 								 LStrBufH(extrafield_global), LStrLenH(extrafield_global),
 								 (const char*)LStrBufH(comment), method, level, raw, windowBits, memLevel,
-								 strategy, password[0] ? password : NULL, crcForCrypting, VERSIONMADEBY, flags, zip64));
+								 strategy, password[0] ? password : NULL, crcForCrypting, version, flags, zip64));
 			}
 		}
 	}

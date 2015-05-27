@@ -13,7 +13,7 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
 						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
 						   LStrHandle comment, int method, int level, int raw, int windowBits,
-						   int memLevel, int strategy, const char* password, uLong crcForCrypting, uLong flags, int zip64);
+						   int memLevel, int strategy, const char* password, uLong crcForCrypting, uLong version, uLong flags, int zip64);
 LibAPI(MgErr) lvzlib_zipWriteInFileInZip(LVRefNum *refnum, const LStrHandle buffer);
 LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw32(LVRefNum *refnum, uInt32 uncompressedSize, uInt32 crc32);
 LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw64(LVRefNum *refnum, uInt64 uncompressedSize, uInt32 crc32);

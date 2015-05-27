@@ -33,6 +33,7 @@
   #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
  #endif
  #define REPARSE_FOLDER (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT)
+ #define SYMLINK_FLAG_RELATIVE 1
  typedef struct _REPARSE_DATA_BUFFER
  {
     ULONG  ReparseTag;
@@ -46,7 +47,7 @@
             USHORT SubstituteNameLength;
             USHORT PrintNameOffset;
             USHORT PrintNameLength;
-            ULONG Flags;
+            ULONG Flags;                    // contains SYMLINK_FLAG_RELATIVE(1) or 0
             WCHAR PathBuffer[1];
         } SymbolicLinkReparseBuffer;
         struct
@@ -61,7 +62,7 @@
         {
             UCHAR  DataBuffer[1];
         } GenericReparseBuffer;
-    } DUMMYUNIONNAME;
+    } u;
  } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 #elif Unix
  #include <errno.h>
@@ -465,6 +466,8 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInf
 	if (!foldInfo.folder)
 		return mgArgErr;
 
+#if Win32
+#else
 	nameList = (FDirEntHandle)AZNewHClr(4);
 	if (!nameList)
 		return mFullErr;
@@ -515,6 +518,7 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInf
 	}
 	AZDisposeHandle((UHandle)nameList);
 	AZDisposeHandle((UHandle)typeList);
+#endif
 	return err;
 }
 
@@ -1044,8 +1048,6 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
     return err;
 }
 
-#define PREPARSE_DATA_BUFFER_SIZE 16*1024
-
 LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
 {
     MgErr err = mgNoErr;
@@ -1097,17 +1099,35 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
             buf = realloc(buf, len);
         }
 #elif Win32
-        if ((GetFileAttributesA(LStrBuf(*src)) & REPARSE_FOLDER) == REPARSE_FOLDER)
+		WIN32_FILE_ATTRIBUTE_DATA data;
+		BOOL ret = GetFileAttributesExA(LStrBuf(*src), GetFileExInfoStandard, &data);
+        if (ret && (data.dwFileAttributes & REPARSE_FOLDER) == REPARSE_FOLDER)
         {
+			HANDLE handle;
+			DWORD bytes = MAXIMUM_REPARSE_DATA_BUFFER_SIZE;
 			PREPARSE_DATA_BUFFER buffer = NULL;
-            // Open the target file
-            HANDLE handle = CreateFileA(LStrBuf(*src), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT, NULL);
+			// Need to acquire backup privileges in order to be able to retrive a handle to a directory below
+			BOOL success = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &handle);
+			if (success)
+			{
+				TOKEN_PRIVILEGES tokenPrivileges;
+				// NULL for local system
+				success = LookupPrivilegeValue(NULL, SE_BACKUP_NAME, &tokenPrivileges.Privileges[0].Luid);
+				if (success)
+				{
+					tokenPrivileges.PrivilegeCount = 1;
+					tokenPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+					success = AdjustTokenPrivileges(handle, FALSE, &tokenPrivileges, sizeof(TOKEN_PRIVILEGES), NULL, NULL);
+				}
+				CloseHandle(handle);
+			}
+//          handle = CreateFileA(LStrBuf(*src), 0, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, 0);
+			// Open the link file or directory
+            handle = CreateFileA(LStrBuf(*src), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
             if (handle != INVALID_HANDLE_VALUE)
 			{
-				DWORD bytes;
-				// Maximum REPARSE_DATA_BUFFER_SIZE = 16384 = (16*1024)
-                buffer = (PREPARSE_DATA_BUFFER)malloc(PREPARSE_DATA_BUFFER_SIZE);
-				if (DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, NULL, 0, buffer, PREPARSE_DATA_BUFFER_SIZE, &bytes, NULL))
+                buffer = (PREPARSE_DATA_BUFFER)malloc(bytes);
+				if (DeviceIoControl(handle, FSCTL_GET_REPARSE_POINT, NULL, 0, buffer, bytes, &bytes, NULL))
                     err = Win32ToLVFileErr();
 
 				if (bytes < 9)
@@ -1123,35 +1143,44 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
             
 			if (!err)
 			{
-				PWCHAR start;
-				USHORT length;
+				BOOL relative = FALSE;
+				PWCHAR start = 0;
+				USHORT length = 0;
 				int32 numBytes;
-				LStrHandle dest = NULL;
 
 				switch (buffer->ReparseTag)
 				{
 				    case IO_REPARSE_TAG_SYMLINK:
-						start = (PWCHAR)((char)buffer->SymbolicLinkReparseBuffer.PathBuffer + buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset);
-						length = buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
+						start = (PWCHAR)((char*)buffer->u.SymbolicLinkReparseBuffer.PathBuffer + buffer->u.SymbolicLinkReparseBuffer.SubstituteNameOffset);
+						length = buffer->u.SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
+						relative = buffer->u.SymbolicLinkReparseBuffer.Flags & SYMLINK_FLAG_RELATIVE;
 						break;
-					default:
-						start = (PWCHAR)((char)buffer->MountPointReparseBuffer.PathBuffer + buffer->MountPointReparseBuffer.SubstituteNameOffset);
-						length = buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
+					case IO_REPARSE_TAG_MOUNT_POINT:
+						start = (PWCHAR)((char*)buffer->u.MountPointReparseBuffer.PathBuffer + buffer->u.MountPointReparseBuffer.SubstituteNameOffset);
+						length = buffer->u.SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR);
 						break;
 				}
-				// Skip possible path prefix
-				if (length > 4 && !CompareStringW(LOCALE_SYSTEM_DEFAULT, 0, start, 4, L"\\\\??\\", 4));
-				    start += 4;
+				if (length)
+				{
+					// Skip possible path prefix
+					if (length > 4 && !CompareStringW(LOCALE_SYSTEM_DEFAULT, 0, start, 4, L"\\\\??\\", 4));
+						start += 4;
 		
-				numBytes = WideCharToMultiByte(CP_ACP, 0, start, length, NULL, 0, NULL, NULL);
-				if (numBytes > 0 && numBytes <= PREPARSE_DATA_BUFFER_SIZE)
-				{ 
-					numBytes = WideCharToMultiByte(CP_ACP, 0, start, length, (LPSTR)buffer, numBytes, NULL, NULL);
-					if (numBytes > 0)
-					{ 
-						err = LVPath_FromText((CStr)buffer, numBytes, target, LV_FALSE);
+					numBytes = WideCharToMultiByte(CP_ACP, 0, start, length, NULL, 0, NULL, NULL);
+					if (numBytes > 0 && numBytes <= MAXIMUM_REPARSE_DATA_BUFFER_SIZE)
+					{	
+						/* We reuse buffer here as the actual widechar string is located behind the start so the function never should overwrite the string before it is read */
+						numBytes = WideCharToMultiByte(CP_ACP, 0, start, length, (LPSTR)buffer, numBytes, NULL, NULL);
+						if (numBytes > 0)
+						{ 
+							err = LVPath_FromText((CStr)buffer, numBytes, target, LV_FALSE);
+						}
 					}
 				}
+			}
+			else
+			{
+				err = mgNotSupported;
 			}
 			if (buffer)
 				free(buffer);
@@ -1626,7 +1655,7 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
 				Sleep(50);
 		}
 		else
-			attempts = 0;
+			break;
     }
     DSDisposePtr((UPtr)lstr);
 

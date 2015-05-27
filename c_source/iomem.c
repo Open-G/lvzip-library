@@ -14,6 +14,12 @@ voidpf ZCALLBACK mem_open_file_func OF((
    const void* filename,
    int mode));
 
+voidpf ZCALLBACK mem_opendisk_file_func OF((
+   voidpf opaque,
+   voidpf stream,
+   int number_disk,
+   int mode));
+
 uLong ZCALLBACK mem_read_file_func OF((
    voidpf opaque,
    voidpf stream,
@@ -72,6 +78,19 @@ voidpf ZCALLBACK mem_open_file_func (opaque, filename, mode)
     return memio;
 }
 
+voidpf ZCALLBACK mem_opendisk_file_func (opaque, stream, number_disk, mode)
+   voidpf opaque;
+   voidpf stream;
+   int number_disk;
+   int mode;
+{
+    if (stream)
+    {
+        MEMORY_IO* mem = (MEMORY_IO*)stream;
+		mem->error = fNotEnabled;
+	}
+	return NULL;
+}
 
 uLong ZCALLBACK mem_read_file_func (opaque, stream, buf, size)
    voidpf opaque;
@@ -256,6 +275,7 @@ void fill_mem_filefunc (pzlib_filefunc_def, memory)
   LStrHandle *memory;
 {
     pzlib_filefunc_def->zopen64_file = mem_open_file_func;
+    pzlib_filefunc_def->zopendisk64_file = mem_opendisk_file_func;
     pzlib_filefunc_def->zread_file = mem_read_file_func;
     pzlib_filefunc_def->zwrite_file = mem_write_file_func;
     pzlib_filefunc_def->ztell64_file = mem_tell_file_func;

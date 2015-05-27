@@ -134,17 +134,15 @@ ZEXTERN zipFile ZEXPORT zipOpen64 OF((const void *pathname, int append));
    Of couse, you can use RAW reading and writing to copy the file you did not want delte
 */
 
-ZEXTERN zipFile ZEXPORT zipOpen2 OF((const char *pathname,
-                                   int append,
-                                   zipcharpc* globalcomment,
-                                   zlib_filefunc_def* pzlib_filefunc_def));
+ZEXTERN zipFile ZEXPORT zipOpen2 OF((const char *pathname, int append, zipcharpc* globalcomment, zlib_filefunc_def* pzlib_filefunc_def));
 
-ZEXTERN zipFile ZEXPORT zipOpen2_64 OF((const void *pathname,
-                                   int append,
-                                   zipcharpc* globalcomment,
-                                   zlib_filefunc64_def* pzlib_filefunc_def));
+ZEXTERN zipFile ZEXPORT zipOpen2_64 OF((const void *pathname, int append, zipcharpc* globalcomment, zlib_filefunc64_def* pzlib_filefunc_def));
     
-ZEXTERN zipFile ZEXPORT zipOpen3 (const void *pathname, int append, zipcharpc* globalcomment, zlib_filefunc64_32_def* pzlib_filefunc64_32_def);
+ZEXTERN zipFile ZEXPORT zipOpen3 (const char *pathname, int append, ZPOS64_T disk_size, zipcharpc* globalcomment, zlib_filefunc_def* pzlib_filefunc_def);
+
+ZEXTERN zipFile ZEXPORT zipOpen3_64 (const void *pathname, int append, ZPOS64_T disk_size, zipcharpc* globalcomment, zlib_filefunc64_def* pzlib_filefunc_def);
+
+ZEXTERN zipFile ZEXPORT zipOpen4 (const void *pathname, int append, ZPOS64_T disk_size, zipcharpc* globalcomment, zlib_filefunc64_32_def* pzlib_filefunc64_32_def);
 
 ZEXTERN int ZEXPORT zipOpenNewFileInZip OF((zipFile file,
                        const char* filename,

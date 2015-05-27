@@ -4,8 +4,10 @@
    Version 1.01e, February 12th, 2005
 
    Copyright (C) 1998-2005 Gilles Vollant
+   Modifications for Info-ZIP crypting
+     Copyright (C) 2003 Terry Thorsen
 
-   This code is a modified version of crypting code in Infozip distribution
+   This code is a modified version of crypting code in Info-ZIP distribution
 
    The encryption/decryption parts of this source code (as opposed to the
    non-echoing password parts) were originally written in Europe.  The

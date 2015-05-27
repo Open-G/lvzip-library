@@ -130,10 +130,8 @@ extern "C" {
  #endif
 #endif
 
-
-
-
 typedef voidpf   (ZCALLBACK *open_file_func)      OF((voidpf opaque, const char* filename, int mode));
+typedef voidpf   (ZCALLBACK *opendisk_file_func)  OF((voidpf opaque, voidpf stream, int number_disk, int mode));
 typedef uLong    (ZCALLBACK *read_file_func)      OF((voidpf opaque, voidpf stream, void* buf, uLong size));
 typedef uLong    (ZCALLBACK *write_file_func)     OF((voidpf opaque, voidpf stream, const void* buf, uLong size));
 typedef int      (ZCALLBACK *close_file_func)     OF((voidpf opaque, voidpf stream, voidp output));
@@ -147,6 +145,7 @@ typedef long     (ZCALLBACK *seek_file_func)      OF((voidpf opaque, voidpf stre
 typedef struct zlib_filefunc_def_s
 {
     open_file_func      zopen_file;
+	opendisk_file_func  zopendisk_file;
     read_file_func      zread_file;
     write_file_func     zwrite_file;
     tell_file_func      ztell_file;
@@ -156,20 +155,22 @@ typedef struct zlib_filefunc_def_s
     voidpf              opaque;
 } zlib_filefunc_def;
 
-typedef ZPOS64_T (ZCALLBACK *tell64_file_func)    OF((voidpf opaque, voidpf stream));
-typedef long     (ZCALLBACK *seek64_file_func)    OF((voidpf opaque, voidpf stream, ZPOS64_T offset, int origin));
-typedef voidpf   (ZCALLBACK *open64_file_func)    OF((voidpf opaque, const void* filename, int mode));
+typedef voidpf   (ZCALLBACK *open64_file_func)      OF((voidpf opaque, const void* filename, int mode));
+typedef voidpf   (ZCALLBACK *opendisk64_file_func)  OF((voidpf opaque, voidpf stream, int number_disk, int mode));
+typedef ZPOS64_T (ZCALLBACK *tell64_file_func)      OF((voidpf opaque, voidpf stream));
+typedef long     (ZCALLBACK *seek64_file_func)      OF((voidpf opaque, voidpf stream, ZPOS64_T offset, int origin));
 
 typedef struct zlib_filefunc64_def_s
 {
-    open64_file_func    zopen64_file;
-    read_file_func      zread_file;
-    write_file_func     zwrite_file;
-    tell64_file_func    ztell64_file;
-    seek64_file_func    zseek64_file;
-    close_file_func     zclose_file;
-    testerror_file_func zerror_file;
-    voidpf              opaque;
+    open64_file_func     zopen64_file;
+	opendisk64_file_func zopendisk64_file;
+    read_file_func       zread_file;
+    write_file_func      zwrite_file;
+    tell64_file_func     ztell64_file;
+    seek64_file_func     zseek64_file;
+    close_file_func      zclose_file;
+    testerror_file_func  zerror_file;
+    voidpf               opaque;
 } zlib_filefunc64_def;
 
 void fill_fopen64_filefunc OF((zlib_filefunc64_def* pzlib_filefunc_def));
@@ -180,27 +181,28 @@ typedef struct zlib_filefunc64_32_def_s
 {
     zlib_filefunc64_def zfile_func64;
     open_file_func      zopen32_file;
+    opendisk_file_func  zopendisk32_file;
     tell_file_func      ztell32_file;
     seek_file_func      zseek32_file;
 } zlib_filefunc64_32_def;
 
 
-#define ZREAD64(filefunc,filestream,buf,size)     ((*((filefunc).zfile_func64.zread_file))   ((filefunc).zfile_func64.opaque,filestream,buf,size))
-#define ZWRITE64(filefunc,filestream,buf,size)    ((*((filefunc).zfile_func64.zwrite_file))  ((filefunc).zfile_func64.opaque,filestream,buf,size))
-/*#define ZTELL64(filefunc,filestream)            ((*((filefunc).ztell64_file)) ((filefunc).opaque,filestream))*/
-/*#define ZSEEK64(filefunc,filestream,pos,mode)   ((*((filefunc).zseek64_file)) ((filefunc).opaque,filestream,pos,mode))*/
-#define ZCLOSE64(filefunc,filestream, output)     ((*((filefunc).zfile_func64.zclose_file))  ((filefunc).zfile_func64.opaque,filestream,output))
-#define ZERROR64(filefunc,filestream)             ((*((filefunc).zfile_func64.zerror_file))  ((filefunc).zfile_func64.opaque,filestream))
+#define ZREAD64(filefunc,stream,buf,size)     ((*((filefunc).zfile_func64.zread_file))   ((filefunc).zfile_func64.opaque,stream,buf,size))
+#define ZWRITE64(filefunc,stream,buf,size)    ((*((filefunc).zfile_func64.zwrite_file))  ((filefunc).zfile_func64.opaque,stream,buf,size))
+#define ZCLOSE64(filefunc,stream,output)      ((*((filefunc).zfile_func64.zclose_file))  ((filefunc).zfile_func64.opaque,stream,output))
+#define ZERROR64(filefunc,stream)             ((*((filefunc).zfile_func64.zerror_file))  ((filefunc).zfile_func64.opaque,stream))
 
 voidpf call_zopen64 OF((const zlib_filefunc64_32_def* pfilefunc,const void*filename,int mode));
-long    call_zseek64 OF((const zlib_filefunc64_32_def* pfilefunc,voidpf filestream, ZPOS64_T offset, int origin));
+voidpf call_zopendisk64 OF((const zlib_filefunc64_32_def* pfilefunc,voidpf filestream,int number_disk, int mode));
+long   call_zseek64 OF((const zlib_filefunc64_32_def* pfilefunc,voidpf filestream, ZPOS64_T offset, int origin));
 ZPOS64_T call_ztell64 OF((const zlib_filefunc64_32_def* pfilefunc,voidpf filestream));
 
 void    fill_zlib_filefunc64_32_def_from_filefunc32(zlib_filefunc64_32_def* p_filefunc64_32,const zlib_filefunc_def* p_filefunc32);
 
-#define ZOPEN64(filefunc,filename,mode)         (call_zopen64((&(filefunc)),(filename),(mode)))
-#define ZTELL64(filefunc,filestream)            (call_ztell64((&(filefunc)),(filestream)))
-#define ZSEEK64(filefunc,filestream,pos,mode)   (call_zseek64((&(filefunc)),(filestream),(pos),(mode)))
+#define ZOPEN64(filefunc,filename,mode)       (call_zopen64((&(filefunc)),(filename),(mode)))
+#define ZOPENDISK64(filefunc,stream,num,mode) (call_zopendisk64((&(filefunc)),(stream),(num),(mode)))
+#define ZTELL64(filefunc,stream)              (call_ztell64((&(filefunc)),(stream)))
+#define ZSEEK64(filefunc,stream,pos,mode)     (call_zseek64((&(filefunc)),(stream),(pos),(mode)))
 
 #ifdef __cplusplus
 }
