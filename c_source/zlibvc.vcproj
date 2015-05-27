@@ -45,7 +45,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;"
+				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;"
+				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -192,7 +192,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;NO_vsnprintf;HAVE_AES;_CRT_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories="bzip2"
+				PreprocessorDefinitions="WIN32;_DEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="3"
 				PrecompiledHeaderFile="$(IntDir)\zlibvc.pch"
 				AssemblerListingLocation="$(IntDir)\"
@@ -291,7 +292,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;NO_vsnprintf;HAVE_AES;_CRT_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories="bzip2"
+				PreprocessorDefinitions="WIN32;_DEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="3"
 				PrecompiledHeaderFile="$(IntDir)\zlibvc.pch"
 				AssemblerListingLocation="$(IntDir)\"
@@ -391,7 +393,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;_CRT_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories="bzip2"
+				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -488,7 +491,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;_CRT_SECURE_NO_WARNINGS"
+				AdditionalIncludeDirectories="bzip2"
+				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -2086,6 +2090,96 @@
 		<Filter
 			Name="bzip2"
 			>
+			<File
+				RelativePath=".\bzip2\blocksort.c"
+				>
+			</File>
+			<File
+				RelativePath=".\bzip2\bzlib.c"
+				>
+			</File>
+			<File
+				RelativePath=".\bzip2\bzlib.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bzip2\bzlib_private.h"
+				>
+			</File>
+			<File
+				RelativePath=".\bzip2\compress.c"
+				>
+				<FileConfiguration
+					Name="static Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="static Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DLL Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DLL Debug|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DLL Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DLL Release|x64"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)\$(InputName)1.obj"
+						XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\bzip2\crctable.c"
+				>
+			</File>
+			<File
+				RelativePath=".\bzip2\decompress.c"
+				>
+			</File>
+			<File
+				RelativePath=".\bzip2\huffman.c"
+				>
+			</File>
+			<File
+				RelativePath=".\bzip2\randtable.c"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
