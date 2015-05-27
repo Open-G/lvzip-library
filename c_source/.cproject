@@ -63,7 +63,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -136,7 +136,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -204,7 +204,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -276,7 +276,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -344,7 +344,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -406,7 +406,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

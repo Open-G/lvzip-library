@@ -843,7 +843,7 @@ local  int LoadCentralDirectoryRecord(zip64_internal* pziinit)
   if (err == ZIP_OK) 
   {
 	err = zip64local_SearchCentralDir64(&pziinit->z_filefunc, pziinit->filestream, &central_pos);
-    if (err = ZIP_OK)
+    if (err == ZIP_OK)
     {
       ZPOS64_T sizeEndOfCentralDirectory;
       if (ZSEEK64(pziinit->z_filefunc, pziinit->filestream, central_pos, ZLIB_FILEFUNC_SEEK_SET) != 0)

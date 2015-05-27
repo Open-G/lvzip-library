@@ -1,6 +1,7 @@
 #ifdef _WIN32
 #include <windows.h>
 #else
+#include <stdio.h>
 #include <fcntl.h>
 #endif
 
@@ -35,12 +36,12 @@ int entropy_fun(unsigned char buf[], unsigned int len)
 #else
 int entropy_fun(unsigned char buf[], unsigned int len)
 {
-    int frand = open("/dev/random", O_RDONLY);
+    FILE *frand = fopen("/dev/random", "r");
     int rlen = 0;
-    if (frand != -1)
+    if (frand != NULL)
     {
-        rlen = read(frand, buf, len);
-        close(frand);
+        rlen = fread(buf, sizeof(unsigned char), len, frand);
+        fclose(frand);
     }
     return rlen;
 }
