@@ -227,15 +227,15 @@ typedef struct
 local int unz64local_getByte OF((
     const zlib_filefunc64_32_def* pzlib_filefunc_def,
     voidpf filestream,
-    int *pi));
+    uLong *pi));
 
-local int unz64local_getByte(const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream, int *pi)
+local int unz64local_getByte(const zlib_filefunc64_32_def* pzlib_filefunc_def, voidpf filestream, uLong *pi)
 {
     unsigned char c;
-    int err = (int)ZREAD64(*pzlib_filefunc_def,filestream,&c,1);
-    if (err==1)
+    int err = (int)ZREAD64(*pzlib_filefunc_def, filestream, &c,1 );
+    if (err == 1)
     {
-        *pi = (int)c;
+        *pi = (uLong)c;
         return UNZ_OK;
     }
     else
@@ -260,18 +260,17 @@ local int unz64local_getShort (const zlib_filefunc64_32_def* pzlib_filefunc_def,
                              voidpf filestream,
                              uLong *pX)
 {
-    uLong x ;
-    int i = 0;
+    uLong x, i = 0 ;
     int err;
 
-    err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
+    err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
     x = (uLong)i;
 
     if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((uLong)i)<<8;
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= ((uLong)i) << 8;
 
-    if (err==UNZ_OK)
+    if (err == UNZ_OK)
         *pX = x;
     else
         *pX = 0;
@@ -287,26 +286,25 @@ local int unz64local_getLong (const zlib_filefunc64_32_def* pzlib_filefunc_def,
                             voidpf filestream,
                             uLong *pX)
 {
-    uLong x ;
-    int i = 0;
+    uLong x, i = 0 ;
     int err;
 
-    err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x = (uLong)i;
+    err = unz64local_getByte(pzlib_filefunc_def, filestream,&i);
+    x = i;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((uLong)i)<<8;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= i << 8;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((uLong)i)<<16;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= i << 16;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x += ((uLong)i)<<24;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= i << 24;
 
-    if (err==UNZ_OK)
+    if (err == UNZ_OK)
         *pX = x;
     else
         *pX = 0;
@@ -324,41 +322,41 @@ local int unz64local_getLong64 (const zlib_filefunc64_32_def* pzlib_filefunc_def
                             ZPOS64_T *pX)
 {
     ZPOS64_T x ;
-    int i = 0;
+    uLong i = 0;
     int err;
 
-    err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
+    err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
     x = (ZPOS64_T)i;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((ZPOS64_T)i)<<8;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= ((ZPOS64_T)i) << 8;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((ZPOS64_T)i)<<16;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= ((ZPOS64_T)i) << 16;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((ZPOS64_T)i)<<24;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= ((ZPOS64_T)i) << 24;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((ZPOS64_T)i)<<32;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= ((ZPOS64_T)i) << 32;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((ZPOS64_T)i)<<40;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= ((ZPOS64_T)i) << 40;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((ZPOS64_T)i)<<48;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= ((ZPOS64_T)i) << 48;
 
-    if (err==UNZ_OK)
-        err = unz64local_getByte(pzlib_filefunc_def,filestream,&i);
-    x |= ((ZPOS64_T)i)<<56;
+    if (err == UNZ_OK)
+        err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
+    x |= ((ZPOS64_T)i) << 56;
 
-    if (err==UNZ_OK)
+    if (err == UNZ_OK)
         *pX = x;
     else
         *pX = 0;
@@ -370,19 +368,19 @@ local int strcmpcasenosensitive_internal (const char* fileName1, const char* fil
 {
     for (;;)
     {
-        char c1=*(fileName1++);
-        char c2=*(fileName2++);
-        if ((c1>='a') && (c1<='z'))
+        char c1 = *(fileName1++);
+        char c2 = *(fileName2++);
+        if ((c1 >= 'a') && (c1 <= 'z'))
             c1 -= 0x20;
-        if ((c2>='a') && (c2<='z'))
+        if ((c2 >= 'a') && (c2 <= 'z'))
             c2 -= 0x20;
-        if (c1=='\0')
+        if (c1 == '\0')
             return ((c2=='\0') ? 0 : -1);
-        if (c2=='\0')
+        if (c2 == '\0')
             return 1;
-        if (c1<c2)
+        if (c1 < c2)
             return -1;
-        if (c1>c2)
+        if (c1 > c2)
             return 1;
     }
 }
@@ -1762,7 +1760,7 @@ ZEXTERN int ZEXPORT unzOpenCurrentFile3 (unzFile file, int* method,
             if (ZREAD64(s->z_filefunc, s->filestream, passverify, AES_PWVERIFYSIZE) != AES_PWVERIFYSIZE)
                 return UNZ_INTERNALERROR;
 
-            fcrypt_init(s->cur_file_info_internal.aes_encryption_mode, password, (unsigned long)strlen(password), saltvalue,
+            fcrypt_init(s->cur_file_info_internal.aes_encryption_mode, (const unsigned char)password, (unsigned long)strlen(password), saltvalue,
                 passverify, &s->pfile_in_zip_read->aes_ctx);
 
             pfile_in_zip_read_info->rest_read_compressed -= saltlength + AES_PWVERIFYSIZE;
@@ -1894,7 +1892,7 @@ ZEXTERN int ZEXPORT unzReadCurrentFile  (unzFile file, voidp buf, unsigned len)
 #ifdef HAVE_AES
                 if (s->cur_file_info.compression_method == AES_METHOD)
                 {
-                    fcrypt_decrypt(pfile_in_zip_read_info->read_buffer, uReadThis, &s->pfile_in_zip_read->aes_ctx);
+                    fcrypt_decrypt((const unsigned char)pfile_in_zip_read_info->read_buffer, uReadThis, &s->pfile_in_zip_read->aes_ctx);
                 }
                 else
 #endif

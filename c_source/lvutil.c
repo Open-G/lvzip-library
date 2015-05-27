@@ -111,11 +111,14 @@ typedef HANDLE FileRefNum;
 #endif
 
 #if HAVE_BZIP2
+void bz_internal_error(int errcode);
 void bz_internal_error(int errcode)
 {
 	// if we have a debug build then print the error in the LabVIEW debug console
 #if DEBUG
-	DbgPrintf("BZIP2 internal error %ld occurred!!", errcode);
+	DbgPrintf((CStr)"BZIP2 internal error %ld occurred!!", errcode);
+#else
+    Unused(errcode);
 #endif
 }
 #endif
@@ -1820,7 +1823,7 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
 #endif
 	if (!err)
 	{
-		err = FNewRefNum(path, (File)ioRefNum, refnum);
+		err = FNewRefNum(path, (File)(ioRefNum), refnum);
 	}
 	if (err)
 	{

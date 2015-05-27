@@ -1446,7 +1446,7 @@ ZEXTERN int ZEXPORT zipOpenNewFileInZip4_64 (zipFile file, const char* filename,
             prng_rand(saltvalue, saltlength, zi->ci.aes_rng);
             prng_end(zi->ci.aes_rng);
 
-            fcrypt_init(AES_ENCRYPTIONMODE, password, (unsigned long)strlen(password), saltvalue, passverify, &zi->ci.aes_ctx);
+            fcrypt_init(AES_ENCRYPTIONMODE, (const unsigned char)password, (unsigned long)strlen(password), saltvalue, passverify, &zi->ci.aes_ctx);
 
             if (ZWRITE64(zi->z_filefunc, zi->filestream, saltvalue, saltlength) != saltlength)
                 err = ZIP_ERRNO;
@@ -1860,10 +1860,10 @@ ZEXTERN int ZEXPORT zipCloseFileInZipRaw64 (zipFile file, ZPOS64_T uncompressed_
             zi->ci.stream_initialised = 0;
         }
 #ifdef HAVE_BZIP2
-        else if((zi->ci.compression_method == Z_BZIP2ED))
+        else if (zi->ci.compression_method == Z_BZIP2ED)
         {
             int tmperr = BZ2_bzCompressEnd(&zi->ci.bstream);
-            if (err==ZIP_OK)
+            if (err == ZIP_OK)
                 err = tmperr;
             zi->ci.stream_initialised = 0;
         }

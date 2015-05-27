@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #endif
+#include "entropy.h"
 
 #if defined(__cplusplus)
 extern "C"

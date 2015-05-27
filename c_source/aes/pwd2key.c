@@ -35,6 +35,7 @@
 
 #include <memory.h>
 #include "hmac.h"
+#include "pwd2key.h"
 
 #if defined(__cplusplus)
 extern "C"
