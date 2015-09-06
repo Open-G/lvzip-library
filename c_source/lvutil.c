@@ -103,10 +103,13 @@
 #define usesWinPath Win32
 
 #if usesHFSPath
+#define kPathSeperator ':'
 typedef SInt16 FileRefNum;
 #elif usesPosixPath
+#define kPathSeperator '/'
 typedef FILE* FileRefNum;
 #elif usesWinPath
+#define kPathSeperator '\'
 typedef HANDLE FileRefNum;
 #endif
 
@@ -978,6 +981,10 @@ LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str)
 			if (!err)
 				err = ConvertToPosixPath(*str, str, false);
 #endif
+            if (LStrBuf(**str)[LStrLen(**str) - 1] == kPathSeperator)
+            {
+                LStrLen(**str)--;
+            }
 		}
 	}
 	return err;
@@ -1061,7 +1068,7 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
     return err;
 }
 
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 *fileType)
 {
     MgErr err = mgNoErr;
     LStrHandle src = NULL;
@@ -1074,7 +1081,7 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
     {
 #if MacOSX || Unix
         struct stat st;
-        char *buf = NULL;
+        char *buf = NULL, *ptr = NULL;
         int len = 0;
 
         if (lstat((const char*)LStrBuf(*src), &st))
@@ -1104,12 +1111,71 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target)
             }
             else if (retval < len)
             {
-				err = LVPath_FromText((CStr)buf, retval, target, LV_FALSE);
-                free(buf);
-                break;
+                /* Is the link target a relative path */
+                if (buf[0] != '/')
+                {
+                    ptr = realloc(buf, retval + LStrLen(*src) + 1);
+                    if (ptr)
+                    {
+                        buf = ptr;
+                        memmove(buf + LStrLen(*src) + 1, buf, retval);
+                        memmove(buf, LStrBuf(*src), LStrLen(*src));
+                        buf[LStrLen(*src)] = '/';
+                        retval += LStrLen(*src) + 1;
+                    }
+                    else
+                    {
+                        err = mFullErr;
+                    }
+                }
+                if (!err)
+                {
+                    err = LVPath_FromText((CStr)buf, retval, target, LV_FALSE);
+                    if (!err && fileType)
+                    {
+                        if (lstat(buf, &st))
+                        {
+                            err = UnixToLVFileErr();
+                        }
+                        else if (S_ISLNK(st.st_mode))
+                        {
+                            if (stat(buf, &st))
+                            {
+                                err = UnixToLVFileErr();
+                            }
+                            else
+                            {
+                                *fileType = S_ISDIR(st.st_mode) ? kIsLink : kIsLink | kIsFile;
+                            }
+                        }
+                        else
+                        {
+                            if (!S_ISDIR(st.st_mode))
+                            {
+                                *fileType = kIsFile;
+                            }
+                        }
+                    }
+                    break;
+                }
             }
-            len += len;
-            buf = realloc(buf, len);
+            else // retval >= len
+            {
+                len += len;
+                ptr = realloc(buf, len);
+                if (!ptr)
+                {
+                    err = mFullErr;
+                }
+                else
+                {
+                    buf = ptr;
+                }
+            }
+        }
+        if (buf)
+        {
+            free(buf);
         }
 #elif Win32
 		WIN32_FILE_ATTRIBUTE_DATA data;

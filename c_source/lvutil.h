@@ -404,7 +404,8 @@ typedef struct {
 typedef enum _FMFileType {
 	kInvalidType	=0,
 	kUnknownFileType=RTToL('?','?','?','?'),
-	kTextFileType	=RTToL('T','E','X','T'),
+    kTextFileType	=RTToL('T','E','X','T'),
+    kLinkFileType	=RTToL('s','l','n','k'),
 	/** Typical directory types */
 	kHardDiskDirType=RTToL('h','d','s','k'),
 	kFloppyDirType	=RTToL('f','l','p','y'),
@@ -629,7 +630,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path, uInt8 write, uInt8 *isDirectory, LV
 
 /* Create and read a link */
 LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target);
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target);
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 *fileType);
 
 /* Legacy functions not supported on Mac OSX and all non-Mac platforms */
 LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcFileName, Path dstFileName);
