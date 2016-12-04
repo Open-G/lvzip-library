@@ -174,6 +174,8 @@ typedef double				float64;
 
 typedef uInt8				LVBoolean;
 
+#include <wchar.h>
+
 #define LV_FALSE	0
 #define LV_TRUE		1
 
@@ -322,6 +324,7 @@ int32 PStrCpy(PStr d, ConstPStr s);
 int32 StrCpy(CStr t, const CStr s);
 int32 StrNCpy(CStr t, const CStr s, int32 l);
 int32 StrLen(ConstCStr str);
+int32 StrCmp(ConstCStr str1, ConstCStr str2);
 
 /** @brief Concatenated Pascal string types. */
 typedef struct {
@@ -402,22 +405,23 @@ typedef struct {
 } LVFileInfo;
 
 typedef enum _FMFileType {
+
 	kInvalidType	=0,
 	kUnknownFileType=RTToL('?','?','?','?'),
     kTextFileType	=RTToL('T','E','X','T'),
     kLinkFileType	=RTToL('s','l','n','k'),
 	/** Typical directory types */
-	kHardDiskDirType=RTToL('h','d','s','k'),
-	kFloppyDirType	=RTToL('f','l','p','y'),
-	kNetDriveDirType=RTToL('s','r','v','r')
-}FMFileType;
+	kHardDiskDirType= RTToL('h','d','s','k'),
+	kFloppyDirType	= RTToL('f','l','p','y'),
+	kNetDriveDirType= RTToL('s','r','v','r')
+} FMFileType;
 
 typedef enum  {
-	kInvalidCreator	=0,
-	kUnknownCreator =RTToL('?','?','?','?'),
+	kInvalidCreator	= 0,
+	kUnknownCreator = RTToL('?','?','?','?'),
 	/** LabVIEW creator type */
-	kLVCreatorType	=RTToL('L','B','V','W')
-}FMFileCreator;
+	kLVCreatorType	= RTToL('L','B','V','W')
+} FMFileCreator;
 
 /** Used for FGetInfo */
 typedef struct {			/**< file/directory information record */
@@ -567,6 +571,7 @@ MgErr FSetInfo64(ConstPath path, FInfo64Ptr infop);
 MgErr FMRead(File fd, int32 inCount, int32* outCount, UPtr buffer);
 MgErr FMWrite(File fd, int32 inCount, int32* outCount, UPtr buffer);
 MgErr FListDir(ConstPath path, FDirEntHandle list, FMListDetails **);
+int32 PStrHasRezExt(PStr str);
 
 int32 DbgPrintf(CStr fmt, ...);
 
@@ -605,9 +610,9 @@ typedef struct
 	FMListDetails elm[1];
 } FileInfoArrRec, *FileInfoArrPtr, **FileInfoArrHdl;
 
-#define kLinkNone 0
-#define kLinkHard 1
-#define kLinkDir  2
+#define kLinkNone       0x00
+#define kLinkHard       0x01
+#define kLinkDir		0x02
 
 /* Our exported functions */
 /**************************/
@@ -631,7 +636,6 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path, uInt8 write, uInt8 *isDirectory, LV
 /* Create and read a link */
 LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target);
 LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 *fileType);
-
 /* Legacy functions not supported on Mac OSX and all non-Mac platforms */
 LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcFileName, Path dstFileName);
 LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcFileName, Path dstFileName);
@@ -674,7 +678,11 @@ typedef struct
 {
 	int32 cnt;
 	uInt16 str[1];
-} UString, **UStrHandle;
+} UString, *UStrPtr, **UStrHandle;
+
+#define UStrLen(s)			LStrLen(s) * sizeof(uInt16) / sizeof(wchar_t)
+#define UStrLenSet(s, l)    LStrLen(s) = l * sizeof(wchar_t) / sizeof(uInt16)
+#define UStrBuf(s)			((wchar_t*)(LStrBuf(s)))
 
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
@@ -683,6 +691,7 @@ LibAPI(uInt32) determine_codepage(uLong *flags, LStrHandle string);
 LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
+LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
 
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
 LibAPI(MgErr) ConvertCPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir);

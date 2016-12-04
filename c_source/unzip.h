@@ -150,6 +150,7 @@ typedef struct unz_file_info_s
     uLong external_fa;          /* external file attributes        4 bytes */
 
     tm_unz tmu_date;
+    uLong disk_offset;
 } unz_file_info;
 
 ZEXTERN int ZEXPORT unzStringFileNameCompare OF ((const char* fileName1,

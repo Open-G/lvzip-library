@@ -26,7 +26,7 @@
 static
 void makeMaps_d ( DState* s )
 {
-   Int32 i;
+   UChar i;
    s->nInUse = 0;
    for (i = 0; i < 256; i++)
       if (s->inUse[i]) {

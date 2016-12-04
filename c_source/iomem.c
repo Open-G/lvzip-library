@@ -170,7 +170,7 @@ ZPOS64_T ZCALLBACK mem_tell_file_func (voidpf opaque, voidpf stream)
     {
         return ((MEMORY_IO*)stream)->pos;
     }
-    return -1;
+    return (ZPOS64_T)-1L;
 }
 
 long ZCALLBACK mem_seek_file_func (voidpf opaque, voidpf stream, ZPOS64_T offset, int origin)
@@ -195,8 +195,8 @@ long ZCALLBACK mem_seek_file_func (voidpf opaque, voidpf stream, ZPOS64_T offset
             default:
                 return -1;
         }
-
-        if (!(err = ResizeStringHandle((LStrHandle)opaque, start, NULL, &offset, mem->mode)))
+		err = ResizeStringHandle((LStrHandle)opaque, start, NULL, &offset, mem->mode);
+        if (!err)
         {
             mem->pos = start + offset;
             return 0;
@@ -260,7 +260,7 @@ void fill_mem_filefunc (zlib_filefunc64_def* pzlib_filefunc_def, LStrHandle *mem
     if (*memory)
     {
         pzlib_filefunc_def->opaque = *memory;
-        *memory = (LStrHandle)DSNewHClr(sizeof(int32));
+        *memory = NULL;
     }
     else
     {

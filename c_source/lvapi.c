@@ -1,3 +1,7 @@
+/* lvapi.c -- LabVIEW interface for LabVIEW ZIP library
+
+   Copyright (C) 2009-2015 Rolf Kalbermatter
+*/
 #define ZLIB_INTERNAL
 #include "zlib.h"
 #include "lvutil.h"
@@ -288,9 +292,10 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const LStrHandle globalComment, 
 				comment = globalComment;
 		}
 		retval = zipClose2(node, (const char*)LStrBufH(comment), stream);
+		if (comment)
+			DSDisposeHandle((UHandle)comment);
 		if (!err && retval)
 			err = LibToMgErr(retval);
-		DSDisposeHandle((UHandle)comment);
 	}
 	return err;
 }
@@ -537,7 +542,7 @@ LibAPI(MgErr) lvzlib_unzOpenCurrentFile(LVRefNum *refnum, int32* method, int32* 
 	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
 	if (!err)
 	{
-		err = LibToMgErr(unzOpenCurrentFile3(node, method, level, raw, password[0] ? password : NULL));
+		err = LibToMgErr(unzOpenCurrentFile3(node, method, level, raw, password && password[0] ? password : NULL));
 	}
 	return err;
 }

@@ -319,7 +319,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="labviewv64.lib"
+				AdditionalDependencies="labview64.lib"
 				OutputFile="$(IntDir)\\lvzlib.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
@@ -517,7 +517,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
-				AdditionalDependencies="labviewv64.lib"
+				AdditionalDependencies="labview64.lib"
 				OutputFile="$(OutDir)\lvzlib.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"

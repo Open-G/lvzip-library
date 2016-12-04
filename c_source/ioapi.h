@@ -192,8 +192,8 @@ typedef struct zlib_filefunc64_32_def_s
 #define ZCLOSE64(filefunc,stream,output)      ((*((filefunc).zfile_func64.zclose_file))  ((filefunc).zfile_func64.opaque,stream,output))
 #define ZERROR64(filefunc,stream)             ((*((filefunc).zfile_func64.zerror_file))  ((filefunc).zfile_func64.opaque,stream))
 
-voidpf call_zopen64 OF((const zlib_filefunc64_32_def* pfilefunc,const void*filename,int mode));
-voidpf call_zopendisk64 OF((const zlib_filefunc64_32_def* pfilefunc,voidpf filestream,int number_disk, int mode));
+voidpf call_zopen64 OF((const zlib_filefunc64_32_def* pfilefunc, const void*filename, int mode));
+voidpf call_zopendisk64 OF((const zlib_filefunc64_32_def* pfilefunc, voidpf filestream, int number_disk, int mode));
 long   call_zseek64 OF((const zlib_filefunc64_32_def* pfilefunc,voidpf filestream, ZPOS64_T offset, int origin));
 ZPOS64_T call_ztell64 OF((const zlib_filefunc64_32_def* pfilefunc,voidpf filestream));
 

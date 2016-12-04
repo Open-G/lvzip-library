@@ -1,3 +1,7 @@
+/* lvapi.c -- LabVIEW interface for LabVIEW ZIP library
+
+   Copyright (C) 2009-2015 Rolf Kalbermatter
+*/
 #include "lvutil.h"
 #include "zlib.h"
 #include "zip.h"
