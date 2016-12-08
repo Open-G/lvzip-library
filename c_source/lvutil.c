@@ -6,9 +6,9 @@
 */
 
 #define ZLIB_INTERNAL
+#include "lvutil.h"
 #include "zlib.h"
 #include "ioapi.h"
-#include "lvutil.h"
 #include "iomem.h"
 #include "utf.h"
 #if Unix
@@ -381,6 +381,7 @@ static MgErr Win32ToLVFileErr(void)
       case ERROR_SHARING_VIOLATION: return fNoPerm;
       case ERROR_ALREADY_EXISTS:
       case ERROR_FILE_EXISTS:       return fDupPath;
+	  case ERROR_NOT_SUPPORTED:     return mgNotSupported;
       case ERROR_NO_MORE_FILES:     return mgNoErr;
     }
     return fIOErr;   /* fIOErr generally signifies some unknown file error */
@@ -1595,6 +1596,48 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir)
 	return err;
 }
 
+#if Win32
+typedef BOOL (WINAPI *tCreateHardLinkW)(LPCWSTR lpFileName, LPCWSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+BOOL Win32CreateHardLinkW(LPCWSTR lpFileName, LPCWSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+{
+	static tCreateHardLinkW pCreateHardLinkW = NULL;
+	if (!pCreateHardLinkW)
+	{
+		HMODULE hLib = LoadLibrary("kernel32.dll");
+		if (hLib)
+		{
+			pCreateHardLinkW = (tCreateHardLinkW)GetProcAddress(hLib, "CreateHardLinkW");
+		}
+	}
+	if (pCreateHardLinkW)
+	{
+		return pCreateHardLinkW(lpFileName, lpExistingFileName, lpSecurityAttributes); 
+	}
+	SetLastError(ERROR_NOT_SUPPORTED);
+	return FALSE;
+}
+
+typedef BOOL (WINAPI *tCreateSymbolicLinkW)(LPCWSTR lpSymlinkFileName, LPCWSTR lpTargetFileName, DWORD dwFlags);
+BOOL Win32CreateSymbolicLinkW(LPCWSTR lpSymlinkFileName, LPCWSTR lpTargetFileName, DWORD dwFlags)
+{
+	static tCreateSymbolicLinkW pCreateSymbolicLinkW = NULL;
+	if (!pCreateSymbolicLinkW)
+	{
+		HMODULE hLib = LoadLibrary("kernel32.dll");
+		if (hLib)
+		{
+			pCreateSymbolicLinkW = (tCreateSymbolicLinkW)GetProcAddress(hLib, "CreateSymbolicLinkW");
+		}
+	}
+	if (pCreateSymbolicLinkW)
+	{
+		return pCreateSymbolicLinkW(lpSymlinkFileName, lpTargetFileName, dwFlags);
+	}
+	SetLastError(ERROR_NOT_SUPPORTED);
+	return FALSE;
+}
+#endif
+
 LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
 {
     MgErr err = mgNoErr;
@@ -1621,7 +1664,7 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
                 if (symlink((const char*)LStrBuf(src), (const char*)LStrBuf(tgt)))
                     err = UnixToLVFileErr();
             }
-#elif Win32
+#elif Win32 && !EMBEDDED
             if (FExists(target))
             {
                 FInfoRec finfo;
@@ -1636,13 +1679,15 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
                 if (flags & kLinkHard)
                 {
                     if (flags & kLinkDir)
+					{
                         err = mgNotSupported;
-                    else if (!CreateHardLinkW(UStrBuf(src), UStrBuf(tgt), NULL))
+					}
+					else if (!Win32CreateHardLinkW(UStrBuf(src), UStrBuf(tgt), NULL))
                     {
                         err = Win32ToLVFileErr();
                     }
                 }
-                else if (!CreateSymbolicLinkW(UStrBuf(src), UStrBuf(tgt), flags & kLinkDir ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0))
+				else if (!Win32CreateSymbolicLinkW(UStrBuf(src), UStrBuf(tgt), flags & kLinkDir ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0))
                 {
                     err = Win32ToLVFileErr();
                 }
@@ -1774,7 +1819,7 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 *fileType)
 		if (!err)
 		{
 			LStrHandle handle = NULL;
-			err = WideCStrToMultiByte((LPCWCHAR)wTgt, -1, &handle, CP_ACP, 0, NULL);
+			err = WideCStrToMultiByte((LPCWSTR)wTgt, -1, &handle, CP_ACP, 0, NULL);
 			if (!err)
 				err = FTextToPath(LStrBuf(*handle), LStrLen(*handle), target);
 			if (handle)
@@ -2566,7 +2611,7 @@ LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp)
 #endif
 }
 
-LibAPI(uInt32) determine_codepage(uLong *flags, LStrHandle string)
+LibAPI(uInt32) determine_codepage(uInt32 *flags, LStrHandle string)
 {
 	uInt32 cp = Hi16(*flags);
 	if (!cp)

@@ -65,6 +65,7 @@ extern "C" {
   #define DEBUG 1
  #endif
  #define BigEndian 0
+ #define _WIN32_WINNT 0x0501
 #elif defined(linux) || defined(__linux) || defined(__linux__)
  #if defined(i386)
   #define ProcessorType	kX86
@@ -618,7 +619,7 @@ typedef struct
 /**************************/
     
 /* Version string of the zlib library */
-LibAPI(void) DLLVersion OF((uChar*  Version));
+LibAPI(void) DLLVersion(uChar*  Version);
 
 /* Convert the path into a string representation for the current platform */
 LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str);
@@ -680,14 +681,14 @@ typedef struct
 	uInt16 str[1];
 } UString, *UStrPtr, **UStrHandle;
 
-#define UStrLen(s)			LStrLen(s) * sizeof(uInt16) / sizeof(wchar_t)
+#define UStrLen(s)			(int32)(LStrLen(s) * sizeof(uInt16) / sizeof(wchar_t))
 #define UStrLenSet(s, l)    LStrLen(s) = l * sizeof(wchar_t) / sizeof(uInt16)
 #define UStrBuf(s)			((wchar_t*)(LStrBuf(s)))
 
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
 LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp);
-LibAPI(uInt32) determine_codepage(uLong *flags, LStrHandle string);
+LibAPI(uInt32) determine_codepage(uInt32 *flags, LStrHandle string);
 LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
