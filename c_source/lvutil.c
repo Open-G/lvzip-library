@@ -450,7 +450,7 @@ LibAPI(void) DLLVersion(uChar* version)
     sprintf((char*)version, "lvzlib V 2.2, date: %s, time: %s",__DATE__,__TIME__);
 }
 
-#if usesPosixPath
+#if usesPosixPath || defined(EMBEDDED)
 #define LWStrPtr  LStrPtr
 
 static int32 MakePathDSString(Path path, LWStrPtr *lstr, int32 reserve)
@@ -895,7 +895,7 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInf
 {
 	MgErr err;
 	FInfoRec foldInfo;
-#if Win32
+#if Win32 && !defined(EMBEDDED)
 	UStrPtr pathName = NULL, wTgt = NULL;
 	HANDLE dirp = INVALID_HANDLE_VALUE;
 	LPWSTR fileName = NULL, wext;
@@ -917,7 +917,7 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInf
 	if (!foldInfo.folder)
 		return mgArgErr;
 
-#if Win32
+#if Win32 && !defined(EMBEDDED)
 	err = MakePathDSString(folderPath, &pathName, 260);
 	if (err)
 		return err;
@@ -1192,11 +1192,10 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 {
     MgErr err = mgNoErr;
 #if MacOSX
-    FInfoRec infoRec;
 #elif MacOS
 	FSRef ref;
-#elif Win32
-    UStrPtr lstr = NULL;
+#elif Win32 && !defined(EMBEDDED)
+    LWStrPtr lstr = NULL;
     HANDLE handle = NULL;
 	WIN32_FIND_DATAW fi = {0};
     uInt64 count = 0;
@@ -1205,46 +1204,15 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
     struct stat statbuf;
     struct utimbuf buf;
     uInt64 count = 0;
+#else
+    FInfoRec infoRec;
 #endif
 
     if (!path || !comment)
       return mgArgErr;
 
 #if MacOSX
-    if (write)
-    {
-        infoRec.creator = fileInfo->creator;
-        infoRec.type = fileInfo->type;
-        infoRec.permissions = 0;
-        infoRec.size = fileInfo->size;
-        infoRec.rfSize = fileInfo->rfSize;
-        infoRec.cdate = fileInfo->cDate;
-        infoRec.mdate = fileInfo->mDate;
-        infoRec.folder = *isDirectory;
-        infoRec.isInvisible = fileInfo->flags & kFIsInvisible;
-        infoRec.location.v = fileInfo->location.v;
-        infoRec.location.h = fileInfo->location.h;
-        infoRec.owner[0] = 0;
-        infoRec.group[0] = 0;
-        err = FSetInfo(path, &infoRec);
-    }
-    else
-    {
-        err = FGetInfo(path, &infoRec /*, kFGetInfoAll*/);
-        if (!err)
-        {
-            fileInfo->creator = infoRec.creator;
-            fileInfo->type = infoRec.type;
-            fileInfo->size = infoRec.size;
-            fileInfo->rfSize = infoRec.rfSize;
-            fileInfo->cDate = infoRec.cdate;
-            fileInfo->mDate = infoRec.mdate;
-            *isDirectory = infoRec.folder;
-            fileInfo->flags = infoRec.isInvisible ? kFIsInvisible : 0;
-            fileInfo->location.v = infoRec.location.v;
-            fileInfo->location.h = infoRec.location.h;
-        }
-    }
+
 #elif MacOS
 	err = FSMakePathRef(path, &ref);
     if (!err)
@@ -1378,7 +1346,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 	{
 		DEBUGPRINTF(("FSMakePathRef: err = %ld", err));
     }
-#elif Win32
+#elif Win32 && !defined(EMBEDDED)
     err = MakePathDSString(path, &lstr, 4);
     if (err)
 		return err;
@@ -1505,7 +1473,40 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 		}
     }
 #else
-    err = mgNotSupported;
+    if (write)
+    {
+        infoRec.creator = fileInfo->creator;
+        infoRec.type = fileInfo->type;
+        infoRec.permissions = 0;
+        infoRec.size = (int32)fileInfo->size;
+        infoRec.rfSize = (int32)fileInfo->rfSize;
+        infoRec.cdate = fileInfo->cDate;
+        infoRec.mdate = fileInfo->mDate;
+        infoRec.folder = *isDirectory;
+        infoRec.isInvisible = fileInfo->flags & kFIsInvisible;
+        infoRec.location.v = fileInfo->location.v;
+        infoRec.location.h = fileInfo->location.h;
+        infoRec.owner[0] = 0;
+        infoRec.group[0] = 0;
+        err = FSetInfo(path, &infoRec);
+    }
+    else
+    {
+        err = FGetInfo(path, &infoRec /*, kFGetInfoAll*/);
+        if (!err)
+        {
+            fileInfo->creator = infoRec.creator;
+            fileInfo->type = infoRec.type;
+            fileInfo->size = infoRec.size;
+            fileInfo->rfSize = infoRec.rfSize;
+            fileInfo->cDate = infoRec.cdate;
+            fileInfo->mDate = infoRec.mdate;
+            *isDirectory = infoRec.folder;
+            fileInfo->flags = infoRec.isInvisible ? kFIsInvisible : 0;
+            fileInfo->location.v = infoRec.location.v;
+            fileInfo->location.h = infoRec.location.h;
+        }
+    }
 #endif
     return err;
 }
@@ -1596,7 +1597,7 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir)
 	return err;
 }
 
-#if Win32
+#if Win32 && !defined(EMBEDDED)
 typedef BOOL (WINAPI *tCreateHardLinkW)(LPCWSTR lpFileName, LPCWSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 BOOL Win32CreateHardLinkW(LPCWSTR lpFileName, LPCWSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
@@ -1664,7 +1665,7 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target)
                 if (symlink((const char*)LStrBuf(src), (const char*)LStrBuf(tgt)))
                     err = UnixToLVFileErr();
             }
-#elif Win32 && !EMBEDDED
+#elif Win32 && !defined(EMBEDDED)
             if (FExists(target))
             {
                 FInfoRec finfo;
@@ -1812,7 +1813,7 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 *fileType)
         {
             free(buf);
         }
-#elif Win32
+#elif Win32 && !defined(EMBEDDED)
 		LWStrPtr wTgt = NULL;
 		DWORD dwAttr;
 		err = Win32ResolveLink(src, &wTgt, FALSE, &dwAttr);
@@ -1928,10 +1929,10 @@ static MgErr lvfile_GetSize(FileRefNum ioRefNum, FileOffset *size)
 static MgErr lvfile_SetSize(FileRefNum ioRefNum, FileOffset *size)
 {
 #if usesPosixPath || usesWinPath
-	FileOffset tell;
 #if usesWinPath
 	MgErr err = mgNoErr;
 #endif
+	FileOffset tell;
 #endif
 	if (0 == ioRefNum)
 		return mgArgErr;
@@ -2243,7 +2244,7 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
     struct stat statbuf;
     char theMode[4];
 #elif usesWinPath
-    UStrPtr lstr = NULL;
+    LWStrPtr lstr = NULL;
     DWORD shareAcc, openAcc;
     DWORD createMode = OPEN_EXISTING;
     int32 attempts;\
@@ -2306,7 +2307,11 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 op
 
     while (attempts)
 	{
+#if defined(EMBEDDED)
+		ioRefNum = CreateFileA(LStrBuf(lstr), openAcc, shareAcc, 0, createMode, FILE_ATTRIBUTE_NORMAL, 0);
+#else
 		ioRefNum = CreateFileW(UStrBuf(lstr), openAcc, shareAcc, 0, createMode, FILE_ATTRIBUTE_NORMAL, 0);
+#endif
 		if (ioRefNum == INVALID_HANDLE_VALUE && GetLastError() == ERROR_SHARING_VIOLATION)
 		{
 			if (--attempts > 0)
@@ -2562,7 +2567,7 @@ LibAPI(MgErr) InitializeFileFuncs(LStrHandle filefunc_def)
 	{
 		zlib_filefunc64_def* pzlib_filefunc_def = (zlib_filefunc64_def*)LStrBuf(*filefunc_def);
 		LStrLen(*filefunc_def) = sizeof(zlib_filefunc64_def);
-#if Win32
+#if Win32 && !defined(EMBEDDED)
 		fill_win32_filefunc64A(pzlib_filefunc_def);
 #else
 		fill_fopen64_filefunc(pzlib_filefunc_def);

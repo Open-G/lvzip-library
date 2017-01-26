@@ -163,7 +163,7 @@ typedef long     (ZCALLBACK *seek64_file_func)      OF((voidpf opaque, voidpf st
 typedef struct zlib_filefunc64_def_s
 {
     open64_file_func     zopen64_file;
-	opendisk64_file_func zopendisk64_file;
+    opendisk64_file_func zopendisk64_file;
     read_file_func       zread_file;
     write_file_func      zwrite_file;
     tell64_file_func     ztell64_file;

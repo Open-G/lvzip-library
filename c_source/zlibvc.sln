@@ -7,6 +7,8 @@ Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		DLL Debug|Win32 = DLL Debug|Win32
 		DLL Debug|x64 = DLL Debug|x64
+		DLL Embedded|Win32 = DLL Embedded|Win32
+		DLL Embedded|x64 = DLL Embedded|x64
 		DLL Release|Win32 = DLL Release|Win32
 		DLL Release|x64 = DLL Release|x64
 		static Release|Win32 = static Release|Win32
@@ -17,6 +19,10 @@ Global
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Debug|Win32.Build.0 = DLL Debug|Win32
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Debug|x64.ActiveCfg = DLL Debug|x64
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Debug|x64.Build.0 = DLL Debug|x64
+		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Embedded|Win32.ActiveCfg = DLL Embedded|Win32
+		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Embedded|Win32.Build.0 = DLL Embedded|Win32
+		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Embedded|x64.ActiveCfg = DLL Embedded|x64
+		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Embedded|x64.Build.0 = DLL Embedded|x64
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Release|Win32.ActiveCfg = DLL Release|Win32
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Release|Win32.Build.0 = DLL Release|Win32
 		{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}.DLL Release|x64.ActiveCfg = DLL Release|x64

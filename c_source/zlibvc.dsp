@@ -20,6 +20,7 @@ CFG=zlibvc - Win32 DLL Release
 !MESSAGE 
 !MESSAGE "zlibvc - Win32 DLL Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "zlibvc - Win32 DLL Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "zlibvc - Win32 DLL Embedded" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "zlibvc - Win32 DLL ASM Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "zlibvc - Win32 DLL ASM Debug" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "zlibvc - Win32 DLL ASM Obj Release" (based on "Win32 (x86) Dynamic-Link Library")
@@ -48,8 +49,8 @@ CFG=zlibvc - Win32 DLL Release
 # PROP Target_Dir ""
 LIB32=link.exe -lib
 CPP=cl.exe
-# ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "ZLIB_DLL" /FD /c
+# ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "ZLIB_DLL" /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -80,8 +81,8 @@ LINK32=link.exe
 # PROP Target_Dir ""
 LIB32=link.exe -lib
 CPP=cl.exe
-# ADD BASE CPP /nologo /MDd /W3 /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /FD /c
-# ADD CPP /nologo /MDd /W3 /ZI /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "ZLIB_DLL" /FR /FD /c
+# ADD BASE CPP /nologo /MDd /W3 /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /FD /c
+# ADD CPP /nologo /MDd /W3 /ZI /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "ZLIB_DLL" /FR /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -96,6 +97,38 @@ LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386
 # ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib:"msvcrt" /out:"Win32_DLL_Debug\lvzlib.dll"
 # SUBTRACT LINK32 /incremental:no
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Embedded"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "Win32_DLL_Embedded"
+# PROP BASE Intermediate_Dir "Win32_DLL_Embedded"
+# PROP BASE Ignore_Export_Lib 1
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "Win32_DLL_Embedded"
+# PROP Intermediate_Dir "Win32_DLL_Embedded"
+# PROP Ignore_Export_Lib 1
+# PROP Target_Dir ""
+LIB32=link.exe -lib
+CPP=cl.exe
+# ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /D "ZLIB_DLL" /FD /c
+# SUBTRACT CPP /YX /Yc /Yu
+MTL=midl.exe
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+RSC=rc.exe
+# ADD BASE RSC /l 0x40c /d "WIN32" /d "NDEBUG"
+# ADD RSC /l 0x409 /fo"Win32_DLL_Embedded\lvzlib.res" /d "WIN32" /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 /nologo /subsystem:windows /dll /pdb:none /machine:I386
+# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_Embedded\lvzlib.dll"
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
@@ -269,6 +302,7 @@ LIB32=link.exe -lib
 
 # Name "zlibvc - Win32 DLL Release"
 # Name "zlibvc - Win32 DLL Debug"
+# Name "zlibvc - Win32 DLL Embedded"
 # Name "zlibvc - Win32 DLL ASM Release"
 # Name "zlibvc - Win32 DLL ASM Debug"
 # Name "zlibvc - Win32 DLL ASM Obj Release"
@@ -332,25 +366,7 @@ SOURCE=.\lvutil.c
 # Begin Source File
 
 SOURCE=.\lvzlib.def
-
-!IF  "$(CFG)" == "zlibvc - Win32 DLL Release"
-
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Debug"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Obj Release"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 static ASM Release"
-
-!ELSEIF  "$(CFG)" == "zlibvc - Win32 static Release"
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 

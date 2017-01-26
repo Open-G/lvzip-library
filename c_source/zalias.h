@@ -20,8 +20,8 @@
 #define deflateBound                lvzip_deflateBound
 #define deflateCopy                 lvzip_deflateCopy
 #define deflateEnd                  lvzip_deflateEnd
-#define deflateInit_                lvzip_deflateInit_
-#define deflateInit2_               lvzip_deflateInit2_
+#define deflateInit                 lvzip_deflateInit
+#define deflateInit2                lvzip_deflateInit2
 #define deflateParams               lvzip_deflateParams
 #define deflatePrime                lvzip_deflatePrime
 #define deflateReset                lvzip_deflateReset
@@ -34,13 +34,13 @@
 #define inflate_table               lvzip_inflate_table
 #define inflateBack                 lvzip_inflateBack
 #define inflateBackEnd              lvzip_inflateBackEnd
-#define inflateBackInit_            lvzip_inflateBackInit_
+#define inflateBackInit             lvzip_inflateBackInit
 #define inflateCopy                 lvzip_inflateCopy
 #define inflateEnd                  lvzip_inflateEnd
 #define inflateGetHeader            lvzip_inflateGetHeader
 #define inflate_fast                lvzip_inflate_fast
-#define inflateInit_                lvzip_inflateInit_
-#define inflateInit2_               lvzip_inflateInit2_
+#define inflateInit                 lvzip_inflateInit
+#define inflateInit2                lvzip_inflateInit2
 #define inflateMark                 lvzip_inflateMark
 #define inflatePrime                lvzip_inflatePrime
 #define inflateReset                lvzip_inflateReset
