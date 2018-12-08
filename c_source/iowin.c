@@ -198,7 +198,8 @@ uLong ZCALLBACK win32_read_file_func (voidpf opaque, voidpf stream, void* buf, u
 	Unused(opaque);
 	if (w32fiow && w32fiow->hf)
 	{
-        if (!ReadFile(w32fiow->hf, buf, size, &ret, NULL))
+		BOOL success = ReadFile(w32fiow->hf, buf, size, &ret, NULL);
+        if (!success)
         {
             DWORD dwErr = GetLastError();
             if (dwErr == ERROR_HANDLE_EOF)
@@ -217,7 +218,8 @@ uLong ZCALLBACK win32_write_file_func (voidpf opaque, voidpf stream, const void*
     Unused(opaque);
 	if (w32fiow && w32fiow->hf)
     {
-        if (!WriteFile(w32fiow->hf, buf, size, &ret, NULL))
+        BOOL success = WriteFile(w32fiow->hf, buf, size, &ret, NULL);
+		if (!success)
         {
             DWORD dwErr = GetLastError();
             if (dwErr == ERROR_HANDLE_EOF)

@@ -485,7 +485,7 @@ typedef struct {
 
 /** Used with FListDir2 */
 typedef struct {
-	int32 flags;
+	uInt32 flags;
 	FMFileType type;
 } FMListDetails;
 
@@ -635,8 +635,9 @@ LibAPI(MgErr) LVPath_ListDirectory(Path dirname, LStrArrHdl *names, FileInfoArrH
 LibAPI(MgErr) LVPath_UtilFileInfo(Path path, uInt8 write, uInt8 *isDirectory, LVFileInfo *finderInfo, LStrHandle comment);
 
 /* Create and read a link */
-LibAPI(MgErr) LVPath_CreateLink(Path path, uInt32 flags, Path target);
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 *fileType);
+LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 recursive, uInt32 *fileType);
+
 /* Legacy functions not supported on Mac OSX and all non-Mac platforms */
 LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcFileName, Path dstFileName);
 LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcFileName, Path dstFileName);

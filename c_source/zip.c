@@ -1684,7 +1684,7 @@ ZEXTERN int ZEXPORT zipWriteInFileInZip(zipFile file,const void* buf,unsigned in
             else
             {
                 uLong uTotalOutBefore_lo = zi->ci.bstream.total_out_lo32;
-                uLong uTotalOutBefore_hi = zi->ci.bstream.total_out_hi32;
+//              uLong uTotalOutBefore_hi = zi->ci.bstream.total_out_hi32;
 
                 err = BZ2_bzCompress(&zi->ci.bstream, BZ_RUN);
 

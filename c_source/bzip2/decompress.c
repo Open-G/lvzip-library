@@ -28,7 +28,7 @@ void makeMaps_d ( DState* s )
 {
    UChar i;
    s->nInUse = 0;
-   for (i = 0; i < 256; i++)
+   for (i = 0; i <= 255; i++)
       if (s->inUse[i]) {
          s->seqToUnseq[s->nInUse] = i;
          s->nInUse++;

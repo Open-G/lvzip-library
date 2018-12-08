@@ -63,7 +63,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="zlib-1.2.11|bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -136,7 +136,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="zlib-1.2.11|bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -204,7 +204,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="zlib-1.2.11|bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -276,7 +276,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="zlib-1.2.11|bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -344,7 +344,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="zlib-1.2.11|bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -406,7 +406,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="zlib-1.2.11|bzip2/bzip2.c|bzip2/dlltest.c|iowin.h|iowin.c|minizip.c|miniunz.c|minigzip.c|gzwrite.c|gzread.c|gzlib.c|gzguts.h|gzclose.c|gvmat64.asm|gvmat32.asm|inffasx64.asm|inffas32.asm|MacBinaryIII.h|MacBinaryIII.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -440,7 +440,7 @@
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.debug.60937553;cdt.managedbuild.config.gnu.cross.so.debug.60937553.;cdt.managedbuild.tool.gnu.cross.c.compiler.1518929108;cdt.managedbuild.tool.gnu.c.compiler.input.1155799619">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
 				<buildOutputProvider>
 					<openAction enabled="true" filePath=""/>
@@ -451,6 +451,9 @@
 					<parser enabled="true"/>
 				</scannerInfoProvider>
 			</profile>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.debug.60937553.907892697;cdt.managedbuild.config.gnu.cross.so.debug.60937553.907892697.;cdt.managedbuild.tool.gnu.cross.c.compiler.1126175918;cdt.managedbuild.tool.gnu.c.compiler.input.1427234924">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.debug.60937553.914771918;cdt.managedbuild.config.gnu.cross.so.debug.60937553.914771918.;cdt.managedbuild.tool.gnu.cross.c.compiler.240850658;cdt.managedbuild.tool.gnu.c.compiler.input.835847473">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
@@ -472,7 +475,7 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.config.gnu.cross.so.release.892791857;cdt.managedbuild.config.gnu.cross.so.release.892791857.;cdt.managedbuild.tool.gnu.cross.c.compiler.329376218;cdt.managedbuild.tool.gnu.c.compiler.input.1263691704">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+			<autodiscovery enabled="false" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
 			<profile id="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC">
 				<buildOutputProvider>
 					<openAction enabled="true" filePath=""/>

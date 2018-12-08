@@ -289,7 +289,7 @@ local int unz64local_getLong (const zlib_filefunc64_32_def* pzlib_filefunc_def,
     uLong x, i = 0 ;
     int err;
 
-    err = unz64local_getByte(pzlib_filefunc_def, filestream,&i);
+    err = unz64local_getByte(pzlib_filefunc_def, filestream, &i);
     x = i;
 
     if (err == UNZ_OK)
@@ -893,7 +893,7 @@ local int unz64local_GetCurrentFileInfoInternal (unzFile file,
         return UNZ_PARAMERROR;
     s = (unz64_s*)file;
 
-    if (ZSEEK64(s->z_filefunc, s->filestream, s->pos_in_central_dir + s->byte_before_the_zipfile, ZLIB_FILEFUNC_SEEK_SET) != 0)
+    if (ZSEEK64(s->z_filefunc, s->filestream_with_CD, s->pos_in_central_dir + s->byte_before_the_zipfile, ZLIB_FILEFUNC_SEEK_SET) != 0)
         err = UNZ_ERRNO;
 
     /* we check the magic */
