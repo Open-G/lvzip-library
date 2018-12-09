@@ -58,6 +58,7 @@
 #define zlibVersion                 lvzip_zlibVersion
 
 #define unzClose                    lvzip_unzClose
+#define unzClose2                   lvzip_unzClose2
 #define unzCloseCurrentFile         lvzip_unzCloseCurrentFile
 #define unzGetCurrentFileInfo       lvzip_unzGetCurrentFileInfo
 #define unzGetCurrentFileInfo64     lvzip_unzGetCurrentFileInfo64

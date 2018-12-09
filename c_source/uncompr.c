@@ -68,7 +68,7 @@ int ZEXPORT uncompress2 (Bytef *dest, uLongf *destLen, const Bytef *source, uLon
 
     *sourceLen -= len + stream.avail_in;
     if (dest != buf)
-        *destLen = stream.total_out;
+        *destLen = (uLongf)stream.total_out;
     else if (stream.total_out && err == Z_BUF_ERROR)
         left = 1;
 

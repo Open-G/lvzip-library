@@ -31,6 +31,8 @@
 #ifndef ZLIB_H
 #define ZLIB_H
 
+#include <stdint.h>
+
 #include "zalias.h"
 #include "zconf.h"
 
@@ -44,6 +46,10 @@ extern "C" {
 #define ZLIB_VER_MINOR 2
 #define ZLIB_VER_REVISION 11
 #define ZLIB_VER_SUBREVISION 0
+
+#if defined(_MSC_VER)
+#pragma warning(disable: 4100 4101 4127)
+#endif
 
 /*
     The 'zlib' compression library provides in-memory compression and
@@ -87,11 +93,11 @@ struct internal_state;
 typedef struct z_stream_s {
     z_const Bytef *next_in;     /* next input byte */
     uInt     avail_in;  /* number of bytes available at next_in */
-    uLong    total_in;  /* total number of input bytes read so far */
+    uint64_t total_in;  /* total number of input bytes read so far */
 
     Bytef    *next_out; /* next output byte will go here */
     uInt     avail_out; /* remaining free space at next_out */
-    uLong    total_out; /* total number of bytes output so far */
+    uint64_t total_out; /* total number of bytes output so far */
 
     z_const char *msg;  /* last error message, NULL if no error */
     struct internal_state FAR *state; /* not visible by applications */

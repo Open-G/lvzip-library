@@ -198,8 +198,7 @@ local const config configuration_table[10] = {
  * bit values at the expense of memory usage). We slide even when level == 0 to
  * keep the hash table consistent if we switch back to level > 0 later.
  */
-local void slide_hash(s)
-    deflate_state *s;
+local void slide_hash(deflate_state *s)
 {
     unsigned n, m;
     Posf *p;
@@ -338,8 +337,7 @@ int ZEXPORT deflateInit2_(z_streamp strm, int  level, int  method, int  windowBi
 /* =========================================================================
  * Check for a valid deflate stream state. Return 0 if ok, 1 if not.
  */
-local int deflateStateCheck (strm)
-    z_streamp strm;
+local int deflateStateCheck(z_streamp strm)
 {
     deflate_state *s;
     if (strm == Z_NULL ||

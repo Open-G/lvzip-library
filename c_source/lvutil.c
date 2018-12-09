@@ -1706,7 +1706,7 @@ MgErr Win32CreateSymbolicLinkW(LPCWSTR lpSymlinkFileName, LPCWSTR lpTargetFileNa
 	    }
 		if (hFile != INVALID_HANDLE_VALUE)
 		{
-			int32 length = wcslen(lpTargetFileName) + 1, offset = 0;
+			int32 length = (int32)wcslen(lpTargetFileName) + 1, offset = 0;
 			WCHAR namebuf[MAX_PATH + 6];
 			DWORD bytes = (DWORD)(REPARSE_DATA_BUFFER_HEADER_SIZE + length * sizeof(WCHAR) * 2 + 20);
 			PREPARSE_DATA_BUFFER buffer = (PREPARSE_DATA_BUFFER)DSNewPClr(bytes);

@@ -294,6 +294,7 @@
 				Optimization="0"
 				AdditionalIncludeDirectories="bzip2"
 				PreprocessorDefinitions="WIN32;_DEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
+				GeneratePreprocessedFile="0"
 				RuntimeLibrary="3"
 				PrecompiledHeaderFile="$(IntDir)\zlibvc.pch"
 				AssemblerListingLocation="$(IntDir)\"
@@ -1658,10 +1659,6 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\minishared.c"
-				>
-			</File>
-			<File
 				RelativePath="mztools.c"
 				>
 				<FileConfiguration
@@ -1938,7 +1935,6 @@
 				>
 				<FileConfiguration
 					Name="DLL Release|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1946,7 +1942,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="DLL Release|x64"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1954,7 +1949,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="DLL Embedded|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1962,7 +1956,6 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="DLL Embedded|x64"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -2228,10 +2221,6 @@
 			</File>
 			<File
 				RelativePath="MacBinaryIII.h"
-				>
-			</File>
-			<File
-				RelativePath=".\minishared.h"
 				>
 			</File>
 			<File

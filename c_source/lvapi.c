@@ -2,12 +2,13 @@
 
    Copyright (C) 2009-2015 Rolf Kalbermatter
 */
+#include <string.h>
+#include <mbstring.h>
 #define ZLIB_INTERNAL
 #include "zlib.h"
 #include "lvutil.h"
 #include "zip.h"
 #include "unzip.h"
-#include <string.h>
 #include "lvapi.h"
 
 #ifndef VERSIONMADEBY
@@ -180,7 +181,7 @@ LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len)
 LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment,
                              zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
-	zipcharpc comment;
+	const char *comment;
 	zipFile node = zipOpen3_64(pathname, append, 0, &comment, filefuncs);
 
 	*refnum = kNotARefNum;
@@ -229,10 +230,10 @@ LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, 
 			if (!err)
 			{
 				err = LibToMgErr(zipOpenNewFileInZip4_64(node, (const char*)LStrBufH(filename), zipfi,
-						         LStrBufH(extrafield_local), LStrLenH(extrafield_local),
-								 LStrBufH(extrafield_global), LStrLenH(extrafield_global),
-								 (const char*)LStrBufH(comment), method, level, raw, windowBits, memLevel,
-								 strategy, password[0] ? password : NULL, crcForCrypting, version, flags, zip64));
+						         LStrBufH(extrafield_local), (uint16_t)LStrLenH(extrafield_local),
+								 LStrBufH(extrafield_global), (uint16_t)LStrLenH(extrafield_global),
+								 (const char*)LStrBufH(comment), (uint16_t)method, level, raw, windowBits, memLevel,
+								 strategy, password[0] ? password : NULL, crcForCrypting, (uint16_t)version, (uint16_t)flags, zip64));
 			}
 		}
 	}
@@ -291,7 +292,7 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const LStrHandle globalComment, 
 			if (err)
 				comment = globalComment;
 		}
-		retval = zipClose2(node, (const char*)LStrBufH(comment), stream);
+		retval = zipClose2(node, (const char*)LStrBufH(comment), VERSIONMADEBY, (voidpf*)stream);
 		if (comment)
 			DSDisposeHandle((UHandle)comment);
 		if (!err && retval)
@@ -334,14 +335,14 @@ LibAPI(MgErr) lvzlib_unzOpen(const void *pathname, zlib_filefunc64_def* filefunc
  *  refnum: An archive extraction file reference
  *
  ****************************************************************************************************/
-LibAPI(MgErr) lvzlib_unzClose(LVRefNum *refnum)
+LibAPI(MgErr) lvzlib_unzClose(LVRefNum *refnum, LStrHandle *stream)
 {
 	unzFile node;
 	MgErr err = lvzlibDisposeRefnum(refnum, &node, UnzMagic);
 	if (!err)
 	{
 		*refnum = kNotARefNum;
-		err = LibToMgErr(unzClose(node));
+		err = LibToMgErr(unzClose2(node, (voidpf*)stream));
 	}
 	return err;
 }
@@ -423,6 +424,11 @@ LibAPI(MgErr) lvzlib_unzGetGlobalInfo64(LVRefNum *refnum, LStrHandle *comment, u
  *                 characters or multibyte characters.
  *
  ****************************************************************************************************/
+static int caseInsensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)
+{
+	return _mbsicmp((const unsigned char*)filename1, (const unsigned char*)filename2);
+}
+
 LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iCaseSensitivity)
 {
 	unzFile node;
@@ -432,7 +438,7 @@ LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iC
 		err = ZeroTerminateLString(&fileName);
 		if (!err)
 		{
-			err = LibToMgErr(unzLocateFile(node, (const char*)LStrBufH(fileName), iCaseSensitivity));
+			err = LibToMgErr(unzLocateFile(node, (const char*)LStrBufH(fileName), iCaseSensitivity ? caseInsensitiveNameComparer : NULL));
 		}
 	}
 	return err;

@@ -53,7 +53,7 @@ int ZEXPORT compress2 (Bytef *dest, uLongf *destLen, const Bytef *source, uLong 
         err = deflate(&stream, sourceLen ? Z_NO_FLUSH : Z_FINISH);
     } while (err == Z_OK);
 
-    *destLen = stream.total_out;
+    *destLen = (uLongf)stream.total_out;
     deflateEnd(&stream);
     return err == Z_STREAM_END ? Z_OK : err;
 }
