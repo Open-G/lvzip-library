@@ -32,7 +32,9 @@
 
 #include "bzlib.h"
 
-
+#if defined(_MSC_VER)
+#pragma warning(disable: 4100 4101 4127)
+#endif
 
 /*-- General stuff. --*/
 
