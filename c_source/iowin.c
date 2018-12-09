@@ -35,11 +35,11 @@
 
 voidpf  ZCALLBACK win32_open_file_func  OF((voidpf opaque, const char* filename, int mode));
 voidpf  ZCALLBACK win32_opendisk_file_func OF((voidpf opaque, voidpf stream, int disk_num, int mode));
-uLong   ZCALLBACK win32_read_file_func  OF((voidpf opaque, voidpf stream, void* buf, uLong size));
-uLong   ZCALLBACK win32_write_file_func OF((voidpf opaque, voidpf stream, const void* buf, uLong size));
-ZPOS64_T ZCALLBACK win32_tell64_file_func  OF((voidpf opaque, voidpf stream));
-long    ZCALLBACK win32_seek64_file_func  OF((voidpf opaque, voidpf stream, ZPOS64_T offset, int origin));
-int     ZCALLBACK win32_close_file_func OF((voidpf opaque, voidpf stream,voidpf output));
+uint32_t ZCALLBACK win32_read_file_func  OF((voidpf opaque, voidpf stream, void* buf, uint32_t size));
+uint32_t ZCALLBACK win32_write_file_func OF((voidpf opaque, voidpf stream, const void* buf, uint32_t size));
+uint64_t ZCALLBACK win32_tell64_file_func  OF((voidpf opaque, voidpf stream));
+long    ZCALLBACK win32_seek64_file_func  OF((voidpf opaque, voidpf stream, uint64_t offset, int origin));
+int     ZCALLBACK win32_close_file_func OF((voidpf opaque, voidpf stream));
 int     ZCALLBACK win32_error_file_func OF((voidpf opaque, voidpf stream));
 
 typedef struct
@@ -137,7 +137,7 @@ voidpf ZCALLBACK win32_open_file_funcA (voidpf opaque, LPCSTR filename, int mode
 #define win32_open_file_func win32_open_file_funcA
 #endif
 
-voidpf ZCALLBACK win32_opendisk_file_funcW (voidpf opaque, voidpf stream, int number_disk, int mode)
+voidpf ZCALLBACK win32_opendisk_file_funcW (voidpf opaque, voidpf stream, uint32_t number_disk, int mode)
 {
     WIN32FILE_IOWIN *w32fiow = (WIN32FILE_IOWIN *)stream;
     LPWSTR diskFilename = NULL;
@@ -166,7 +166,7 @@ voidpf ZCALLBACK win32_opendisk_file_funcW (voidpf opaque, voidpf stream, int nu
     return ret;
 }
 
-voidpf ZCALLBACK win32_opendisk_file_funcA (voidpf opaque, LPCSTR filename, int number_disk, int mode)
+voidpf ZCALLBACK win32_opendisk_file_funcA (voidpf opaque, LPCSTR filename, uint32_t number_disk, int mode)
 {
 	voidpf ret = NULL;
 	int len = MultiByteToWideChar(CP_ACP, 0, filename, -1, NULL, 0) + 1;
@@ -190,15 +190,15 @@ voidpf ZCALLBACK win32_opendisk_file_funcA (voidpf opaque, LPCSTR filename, int 
 #define win32_opendisk_file_func win32_opendisk_file_funcA
 #endif
 
-uLong ZCALLBACK win32_read_file_func (voidpf opaque, voidpf stream, void* buf, uLong size)
+uint32_t ZCALLBACK win32_read_file_func (voidpf opaque, voidpf stream, void* buf, uint32_t size)
 {
     WIN32FILE_IOWIN *w32fiow = (WIN32FILE_IOWIN *)stream;
-    uLong ret = 0;
+    uint32_t ret = 0;
 
 	Unused(opaque);
 	if (w32fiow && w32fiow->hf)
 	{
-		BOOL success = ReadFile(w32fiow->hf, buf, size, &ret, NULL);
+		BOOL success = ReadFile(w32fiow->hf, buf, size, (LPDWORD)&ret, NULL);
         if (!success)
         {
             DWORD dwErr = GetLastError();
@@ -210,15 +210,15 @@ uLong ZCALLBACK win32_read_file_func (voidpf opaque, voidpf stream, void* buf, u
     return ret;
 }
 
-uLong ZCALLBACK win32_write_file_func (voidpf opaque, voidpf stream, const void* buf, uLong size)
+uint32_t ZCALLBACK win32_write_file_func (voidpf opaque, voidpf stream, const void* buf, uint32_t size)
 {
     WIN32FILE_IOWIN *w32fiow = (WIN32FILE_IOWIN *)stream;
-    uLong ret = 0;
+    uint32_t ret = 0;
 
     Unused(opaque);
 	if (w32fiow && w32fiow->hf)
     {
-        BOOL success = WriteFile(w32fiow->hf, buf, size, &ret, NULL);
+        BOOL success = WriteFile(w32fiow->hf, buf, size, (LPDWORD)&ret, NULL);
 		if (!success)
         {
             DWORD dwErr = GetLastError();
@@ -250,10 +250,10 @@ long ZCALLBACK win32_tell_file_func (voidpf opaque, voidpf stream)
     return ret;
 }
 
-ZPOS64_T ZCALLBACK win32_tell64_file_func (voidpf opaque, voidpf stream)
+uint64_t ZCALLBACK win32_tell64_file_func (voidpf opaque, voidpf stream)
 {
     WIN32FILE_IOWIN *w32fiow = (WIN32FILE_IOWIN *)stream;
-    ZPOS64_T ret = (ZPOS64_T)-1;
+    uint64_t ret = (uint64_t)-1;
 
 	Unused(opaque);
 	if (w32fiow && w32fiow->hf)
@@ -273,7 +273,7 @@ ZPOS64_T ZCALLBACK win32_tell64_file_func (voidpf opaque, voidpf stream)
 }
 
 
-long ZCALLBACK win32_seek_file_func (voidpf opaque,voidpf stream,uLong offset,int origin)
+long ZCALLBACK win32_seek_file_func (voidpf opaque,voidpf stream, uint32_t offset, int origin)
 {
     WIN32FILE_IOWIN *w32fiow = (WIN32FILE_IOWIN *)stream;
     long ret = -1;
@@ -309,7 +309,7 @@ long ZCALLBACK win32_seek_file_func (voidpf opaque,voidpf stream,uLong offset,in
     return ret;
 }
 
-long ZCALLBACK win32_seek64_file_func (voidpf opaque, voidpf stream,ZPOS64_T offset,int origin)
+long ZCALLBACK win32_seek64_file_func (voidpf opaque, voidpf stream, uint64_t offset,int origin)
 {
     WIN32FILE_IOWIN *w32fiow = (WIN32FILE_IOWIN *)stream;
     long ret = -1;
@@ -347,13 +347,12 @@ long ZCALLBACK win32_seek64_file_func (voidpf opaque, voidpf stream,ZPOS64_T off
     return ret;
 }
 
-int ZCALLBACK win32_close_file_func (voidpf opaque, voidpf stream, voidpf output)
+int ZCALLBACK win32_close_file_func (voidpf opaque, voidpf stream)
 {
     WIN32FILE_IOWIN *w32fiow = (WIN32FILE_IOWIN *)stream;
     int ret = -1;
 
 	Unused(opaque);
-	Unused(output);
 	if (w32fiow && w32fiow->hf)
 	{
         CloseHandle(w32fiow->hf);

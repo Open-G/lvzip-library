@@ -962,6 +962,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\crypt.c"
+				>
+			</File>
+			<File
 				RelativePath="deflate.c"
 				>
 				<FileConfiguration
@@ -1654,6 +1658,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\minishared.c"
+				>
+			</File>
+			<File
 				RelativePath="mztools.c"
 				>
 				<FileConfiguration
@@ -2220,6 +2228,10 @@
 			</File>
 			<File
 				RelativePath="MacBinaryIII.h"
+				>
+			</File>
+			<File
+				RelativePath=".\minishared.h"
 				>
 			</File>
 			<File
