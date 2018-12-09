@@ -444,6 +444,30 @@ LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iC
 	return err;
 }
 
+static MgErr RetrieveFileInfo(unzFile node, LStrHandle *fileName, uint16_t sizeFileName, LStrHandle *extraField, uint16_t sizeExtraField, LStrHandle *comment, uint16_t sizeComment)
+{
+	MgErr err = NumericArrayResize(uB, 1, (UHandle*)extraField, sizeExtraField);
+	if (!err)
+	{
+		err = NumericArrayResize(uB, 1, (UHandle*)fileName, sizeFileName);
+		if (!err)
+		{
+			err = NumericArrayResize(uB, 1, (UHandle*)comment, sizeComment);
+			if (!err)
+			{
+				err = LibToMgErr(unzGetCurrentFileInfo64(node, NULL, (char*)LStrBuf(**fileName), sizeFileName, LStrBuf(**extraField), sizeExtraField, (char*)LStrBuf(**comment), sizeComment));
+				if (!err)
+				{
+					LStrLen(**extraField) = sizeExtraField;
+					LStrLen(**fileName) = sizeFileName;
+					LStrLen(**comment) = sizeComment;
+				}
+			}	
+		}
+	}
+	return err;
+}
+
 /****************************************************************************************************
  *
  * Retrieve the file information for the currently selected file entry
@@ -468,26 +492,7 @@ LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo32(LVRefNum *refnum, unz_file_info *pf
 		err = LibToMgErr(unzGetCurrentFileInfo(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
 		if (!err)
 		{
-			err = NumericArrayResize(uB, 1, (UHandle*)extraField, pfile_info->size_file_extra);
-			if (!err)
-			{
-				err = NumericArrayResize(uB, 1, (UHandle*)fileName, pfile_info->size_filename);
-				if (!err)
-				{
-					err = NumericArrayResize(uB, 1, (UHandle*)comment, pfile_info->size_file_comment);
-					if (!err)
-					{
-						err = LibToMgErr(unzGetCurrentFileInfo(node, pfile_info, (char*)LStrBuf(**fileName), pfile_info->size_filename,
-								LStrBuf(**extraField), pfile_info->size_file_extra, (char*)LStrBuf(**comment), pfile_info->size_file_comment));
-						if (!err)
-						{
-							LStrLen(**extraField) = pfile_info->size_file_extra;
-							LStrLen(**fileName) = pfile_info->size_filename;
-							LStrLen(**comment) = pfile_info->size_file_comment;
-						}
-					}
-				}
-			}
+			err = RetrieveFileInfo(node, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
 		}
 	}
 	return err;
@@ -503,26 +508,7 @@ LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo64(LVRefNum *refnum, unz_file_info64 *
 		err = LibToMgErr(unzGetCurrentFileInfo64(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
 		if (!err)
 		{
-			err = NumericArrayResize(uB, 1, (UHandle*)extraField, pfile_info->size_file_extra);
-			if (!err)
-			{
-				err = NumericArrayResize(uB, 1, (UHandle*)fileName, pfile_info->size_filename);
-				if (!err)
-				{
-					err = NumericArrayResize(uB, 1, (UHandle*)comment, pfile_info->size_file_comment);
-					if (!err)
-					{
-						err = LibToMgErr(unzGetCurrentFileInfo64(node, pfile_info, (char*)LStrBuf(**fileName), pfile_info->size_filename,
-                                 LStrBuf(**extraField), pfile_info->size_file_extra, (char*)LStrBuf(**comment), pfile_info->size_file_comment));
-						if (!err)
-						{
-							LStrLen(**extraField) = pfile_info->size_file_extra;
-							LStrLen(**fileName) = pfile_info->size_filename;
-							LStrLen(**comment) = pfile_info->size_file_comment;
-						}
-					}
-				}
-			}
+			err = RetrieveFileInfo(node, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
 		}
 	}
 	return err;
@@ -647,6 +633,21 @@ LibAPI(MgErr) lvzlib_unzGoToFirstFile(LVRefNum *refnum)
 	return err;
 }
 
+LibAPI(MgErr) lvzlib_unzGoToFirstFile2(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		err = LibToMgErr(unzGoToFirstFile2(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
+		if (!err)
+		{
+			err = RetrieveFileInfo(node, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
+		}
+	}
+	return err;
+}
+
 /****************************************************************************************************
  *
  * Positions the pointer to the next file entre in the archive
@@ -662,6 +663,21 @@ LibAPI(MgErr) lvzlib_unzGoToNextFile(LVRefNum *refnum)
 	if (!err)
 	{
 		err = LibToMgErr(unzGoToNextFile(node));
+	}
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_unzGoToNextFile2(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		err = LibToMgErr(unzGoToNextFile2(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
+		if (!err)
+		{
+			err = RetrieveFileInfo(node, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
+		}
 	}
 	return err;
 }

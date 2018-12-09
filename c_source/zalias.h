@@ -74,7 +74,9 @@
 #define unzGoToFilePos              lvzip_unzGoToFilePos
 #define unzGoToFilePos64            lvzip_unzGoToFilePos64
 #define unzGoToFirstFile            lvzip_unzGoToFirstFile
+#define unzGoToFirstFile2           lvzip_unzGoToFirstFile2
 #define unzGoToNextFile             lvzip_unzGoToNextFile
+#define unzGoToNextFile2            lvzip_unzGoToNextFile2
 #define unzLocateFile               lvzip_unzLocateFile
 #define unzOpen                     lvzip_unzOpen
 #define unzOpen64                   lvzip_unzOpen64
