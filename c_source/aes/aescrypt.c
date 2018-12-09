@@ -227,8 +227,9 @@ AES_RETURN aes_xi(encrypt)(const unsigned char *in, unsigned char *out, const ae
 #endif
 
 AES_RETURN aes_xi(decrypt)(const unsigned char *in, unsigned char *out, const aes_decrypt_ctx cx[1])
-{   uint32_t        locals(b0, b1);
-#if defined( dec_imvars )
+{
+	uint32_t        locals(b0, b1);
+#if defined (dec_imvars)
     dec_imvars; /* declare variables for inv_mcol() if needed */
 #endif
     const uint32_t *kp;

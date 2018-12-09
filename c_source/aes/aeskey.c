@@ -67,9 +67,7 @@ extern "C"
 #    undef DEC_KS_UNROLL
 #  endif
 #endif
-
 #if (FUNCS_IN_C & ENC_KEYING_IN_C)
-
 #if defined(AES_128) || defined( AES_VAR )
 
 #define ke4(k,i) \
