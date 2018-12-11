@@ -1,9 +1,29 @@
-/* lvutil.c -- support functions for LabVIEW ZIP library
+/* 
+   lvutil.c -- support functions for LabVIEW ZIP library
 
-   Version 1.13, March 15, 2013
    Version 1.25, Dec 07, 2018
 
    Copyright (C) 2002-2018 Rolf Kalbermatter
+
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+   following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+	   following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+       following disclaimer in the documentation and/or other materials provided with the distribution.
+    * Neither the name of SciWare, James Kring, Inc., nor the names of its contributors may be used to endorse
+	   or promote products derived from this software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #define ZLIB_INTERNAL
@@ -106,9 +126,9 @@
  #endif
 #endif
 
-#define usesHFSPath MacOS && ProcessorType!=kX64
-#define usesPosixPath Unix || (MacOSX && ProcessorType==kX64)
-#define usesWinPath Win32
+#define usesHFSPath      MacOS && ProcessorType != kX64
+#define usesPosixPath    Unix || (MacOSX && ProcessorType == kX64)
+#define usesWinPath      Win32
 
 #if usesHFSPath
 #define kPathSeperator ':'
@@ -1246,7 +1266,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
     FInfoRec infoRec;
 #endif
 
-    if (!path || !comment)
+    if (!FIsAbsPath(path) || !comment)
       return mgArgErr;
 
 #if Win32 && !defined(EMBEDDED)
@@ -1254,7 +1274,8 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
     if (err)
 		return err;
 
-    if (FDepth(path) == 1)
+	/* Find First file fails with empty path (desktop) or volume letter alone */
+    if (FDepth(path) <= 1)
     {
 		*isDirectory = TRUE;
 		fi.ftCreationTime.dwLowDateTime = fi.ftCreationTime.dwHighDateTime = 0;
@@ -1278,18 +1299,29 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
     {
 		if (write)
 		{
-				Win32ConvertFromLVTime(fileInfo->cDate, &fi.ftCreationTime);
+			Win32ConvertFromLVTime(fileInfo->cDate, &fi.ftCreationTime);
 			Win32ConvertFromLVTime(fileInfo->mDate, &fi.ftLastWriteTime);
-			if (!SetFileTime(handle, &fi.ftCreationTime, &fi.ftLastAccessTime, &fi.ftLastWriteTime))
-				err = Win32GetLVFileErr();
-			fi.dwFileAttributes = GetFileAttributesA((LPCSTR)lstr->str);
-			if (fi.dwFileAttributes != INVALID_FILE_ATTRIBUTES)
+			handle = CreateFileW(UStrBuf(lstr), GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+			if (handle != INVALID_HANDLE_VALUE)
 			{
-				if (fileInfo->flags & 0x4000)
-					fi.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
-				else
-					fi.dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
-				SetFileAttributesW(UStrBuf(lstr), fi.dwFileAttributes);
+			    if (!SetFileTime(handle, &fi.ftCreationTime, &fi.ftLastAccessTime, &fi.ftLastWriteTime))
+				    err = Win32GetLVFileErr();
+				CloseHandle(handle);
+			}
+			else
+				err = Win32GetLVFileErr();
+
+			if (!err)
+			{
+			    fi.dwFileAttributes = GetFileAttributesW(UStrBuf(lstr));
+			    if (fi.dwFileAttributes != INVALID_FILE_ATTRIBUTES)
+			    {
+				    if (fileInfo->flags & 0x4000)
+					    fi.dwFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+				    else
+					    fi.dwFileAttributes &= ~FILE_ATTRIBUTE_HIDDEN;
+				    SetFileAttributesW(UStrBuf(lstr), fi.dwFileAttributes);
+			    }
 			}
 		}
 		else
@@ -1302,27 +1334,55 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 			fileInfo->flags = (fi.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? 0x4000 : 0;
 			if (*isDirectory)
 			{
-				count = 1;
-
-				wcscpy(UStrBuf(lstr) + UStrLen(lstr), L"\\*.*");
-				if (!err)
+				if (!FDepth(path))
 				{
-					handle = FindFirstFileW(UStrBuf(lstr), &fi);
-					if (handle == INVALID_HANDLE_VALUE)
-						count = 0;
-					else
-						while (FindNextFileW(handle, &fi))
-							count++;
-					FindClose(handle);
+					DWORD drives = GetLogicalDrives();
+					int drive;
 
-					if (FDepth(path) == 1)
-						fileInfo->size = count;
-					else
-						fileInfo->size = count - 2;
+	                count = 0;
+	                for (drive = 1; drive <= 26; drive++)
+					{
+                        if (drives & 01)
+		                {
+                            count++;
+			            }
+	                    drives /= 2;
+		            }
 				}
+				else
+				{
+				    count = 1;
+
+				    wcscpy(UStrBuf(lstr) + UStrLen(lstr), L"\\*.*");
+				    if (!err)
+				    {
+					    handle = FindFirstFileW(UStrBuf(lstr), &fi);
+					    if (handle == INVALID_HANDLE_VALUE)
+						    count = 0;
+					    else
+						    while (FindNextFileW(handle, &fi))
+							    count++;
+					    FindClose(handle);
+					}
+				}
+				if (FDepth(path) <= 1)
+				    fileInfo->size = count;
+				else
+				    fileInfo->size = count - 2;
 			}
 			else
 			{
+				uInt32 type = HasRezExt(path);
+				if (type)
+				{
+					fileInfo->type = type;
+			        fileInfo->creator = kLVCreatorType;
+				}
+				else
+				{
+					fileInfo->type = kUnknownFileType;
+					fileInfo->creator = kUnknownCreator;
+				}
 				fileInfo->size = Quad(fi.nFileSizeHigh, fi.nFileSizeLow);
 			}
 		}
@@ -1484,8 +1544,17 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 		}
 		else
 		{
-			fileInfo->type = kUnknownFileType;
-			fileInfo->creator = kUnknownCreator;
+			int32 type = HasRezExt(path);
+			if (type)
+			{
+				fileInfo->type = type;
+			    fileInfo->creator = kLVCreatorType;
+			}
+			else
+			{
+				fileInfo->type = kUnknownFileType;
+				fileInfo->creator = kUnknownCreator;
+			}
 			UnixConvertToLVTime(statbuf.st_ctime, &fileInfo->cDate);
 			UnixConvertToLVTime(statbuf.st_mtime, &fileInfo->mDate);
 			fileInfo->rfSize = 0;
@@ -1493,17 +1562,22 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 			{
 				DIR *dirp;
 				struct dirent *dp;
+		        struct direntpath dppath;
+		        struct dirent *dpp = (struct dirent *)&dppath;
 
 				if (!(dirp = opendir((const char*)lstr->str)))
 					return UnixToLVFileErr();
 
-				for (dp = readdir(dirp); dp; dp = readdir(dirp))
+				for (dp = readdir_r(dirp, dpp); dp; dp = readdir_r(dirp, dpp))
 					count++;
 				closedir(dirp);
 				fileInfo->size = count - 2;
 			}
 			else
 			{
+				/* Try to determine LabVIEW file types based on file ending? */
+			    // fileInfo->type = kUnknownFileType;
+			    // fileInfo->creator = kLVCreatorType;
 				fileInfo->size = statbuf.st_size;
 			}
 		}

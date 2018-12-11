@@ -1,6 +1,27 @@
-/* lvapi.c -- LabVIEW interface for LabVIEW ZIP library
+/* 
+   lvapi.c -- LabVIEW interface for LabVIEW ZIP library
 
-   Copyright (C) 2009-2015 Rolf Kalbermatter
+   Copyright (C) 2009-2018 Rolf Kalbermatter
+
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+   following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+	   following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+       following disclaimer in the documentation and/or other materials provided with the distribution.
+    * Neither the name of SciWare, James Kring, Inc., nor the names of its contributors may be used to endorse
+	   or promote products derived from this software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <string.h>
 #include <mbstring.h>
@@ -153,11 +174,16 @@ static MgErr lvzlibDisposeRefnum(LVRefNum *refnum, voidp *node, uInt32 magic)
 	return err;
 }
 
-static char version[250];
+static char version[250] = {0};
 
 LibAPI(const char *) lvzlib_zlibVersion(void)
 {
-    snprintf(version, sizeof(version), "LabVIEW ZIP library, version: 4.1\nzlib version: %s", zlibVersion());
+	if (!version[0])
+		snprintf(version, sizeof(version), "LabVIEW ZIP library, version: 4.2, Dec 2018\n"
+		                                   "zlib version: %s, build flags: 0x%lX\n"
+										   "minizip version: 1.2.0, September 16th, 2017"
+										   "aes version: 2013\n"
+										   "bzip2 version: %s", lvzip_zlibVersion(), lvzip_zlibCompileFlags(), BZ2_bzlibVersion());
     return version;
 }
 
@@ -633,7 +659,7 @@ LibAPI(MgErr) lvzlib_unzGoToFirstFile(LVRefNum *refnum)
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_unzGoToFirstFile2(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
+LibAPI(MgErr) lvzlib_unzGoToFirstFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
 {
 	unzFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
@@ -667,7 +693,7 @@ LibAPI(MgErr) lvzlib_unzGoToNextFile(LVRefNum *refnum)
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_unzGoToNextFile2(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
+LibAPI(MgErr) lvzlib_unzGoToNextFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
 {
 	unzFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);

@@ -1,8 +1,29 @@
-/* lvutil.h -- support functions for macbinary
+/*
+   lvutil.h -- support functions for LabVIEW integration
 
-   Version 1.9, Sept 17th, 2007
+   Version 1.17, Dec 8th, 2018
 
-   Copyright (C) 2002-2007 Rolf Kalbermatter
+   Copyright (C) 2002-2018 Rolf Kalbermatter
+
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+   following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+	   following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+       following disclaimer in the documentation and/or other materials provided with the distribution.
+    * Neither the name of SciWare, James Kring, Inc., nor the names of its contributors may be used to endorse
+	   or promote products derived from this software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #define test
 #ifndef _lvUtil_H
@@ -394,8 +415,8 @@ int32 RTSetCleanupProc(CleanupProcPtr, UPtr, int32);
 typedef struct {
 	uInt32 type;    /* handled by LabVIEW Type & Creator */
 	uInt32 creator; /* handled by LabVIEW Type & Creator */
-	uInt64 size;    /* not modified, use EOF */
-	uInt64 rfSize;  /* Mac only, not modified, use EOF */
+	uInt64 size;
+	uInt64 rfSize;
 	uInt32 cDate;
 	uInt32 mDate;
 	uInt16 flags;   
@@ -407,10 +428,10 @@ typedef struct {
 
 typedef enum _FMFileType {
 
-	kInvalidType	=0,
-	kUnknownFileType=RTToL('?','?','?','?'),
-    kTextFileType	=RTToL('T','E','X','T'),
-    kLinkFileType	=RTToL('s','l','n','k'),
+	kInvalidType	= 0,
+	kUnknownFileType= RTToL('?','?','?','?'),
+    kTextFileType	= RTToL('T','E','X','T'),
+    kLinkFileType	= RTToL('s','l','n','k'),
 	/** Typical directory types */
 	kHardDiskDirType= RTToL('h','d','s','k'),
 	kFloppyDirType	= RTToL('f','l','p','y'),
@@ -549,6 +570,7 @@ Path FEmptyPath(Path);
 Path FNotAPath(Path);
 Bool32 FIsAPath(Path path);
 Bool32 FIsAbsPath(Path path);
+Bool32 FIsEmptyPath(Path path);
 MgErr FTextToPath(UPtr str, int32 len, Path* path);
 MgErr FPathToText(Path path, LStrPtr lstr);
 MgErr FPathToPath(Path *p);
@@ -572,7 +594,8 @@ MgErr FSetInfo64(ConstPath path, FInfo64Ptr infop);
 MgErr FMRead(File fd, int32 inCount, int32* outCount, UPtr buffer);
 MgErr FMWrite(File fd, int32 inCount, int32* outCount, UPtr buffer);
 MgErr FListDir(ConstPath path, FDirEntHandle list, FMListDetails **);
-int32 PStrHasRezExt(PStr str);
+uInt32 PStrHasRezExt(PStr str);
+uInt32 HasRezExt(Path path);
 
 int32 DbgPrintf(CStr fmt, ...);
 

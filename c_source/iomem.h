@@ -1,5 +1,7 @@
 /* iomem.h -- IO base function header for compress/uncompress .zip
    files using zlib + zip or unzip API
+
+   Copyright (C) 2009-2018 Rolf Kalbermatter
 */
 
 #include <stdlib.h>

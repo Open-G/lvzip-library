@@ -1,3 +1,33 @@
+/*
+   zalias.h -- name aliasing for all the zlib and minizip library functions to avoid name clashes in the VxWorks
+   implementation. VxWorks seems to only use a single gloabal symbol table where all the exported functions of the
+   process and any loaded shared library are placed into. Since the LabVIEW runtime contains a subset of the zlib
+   and minizip library for its own ZIP functionality, loading of this shared library silently fails if it uses the
+   same exported symbols. This was found and reported by some NI developer after I asked about why the cRIO shared
+   library would not work at all, so the solution is to rename all the symbols here to avoid any name clashes.
+
+   Copyright (C) 2007-2018 Rolf Kalbermatter
+
+   All rights reserved.
+
+   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+   following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the
+	   following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+       following disclaimer in the documentation and/or other materials provided with the distribution.
+    * Neither the name of SciWare, James Kring, Inc., nor the names of its contributors may be used to endorse
+	   or promote products derived from this software without specific prior written permission.
+
+   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, 
+   INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+   DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+   WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 #define Z_PREFIX_SET
 #define _dist_code                  lvzip__dist_code
 #define _length_code                lvzip__length_code
@@ -60,6 +90,7 @@
 #define unzClose                    lvzip_unzClose
 #define unzClose2                   lvzip_unzClose2
 #define unzCloseCurrentFile         lvzip_unzCloseCurrentFile
+#define unzEndOfFile                lvzip_unzEndOfFile
 #define unzGetCurrentFileInfo       lvzip_unzGetCurrentFileInfo
 #define unzGetCurrentFileInfo64     lvzip_unzGetCurrentFileInfo64
 #define unzGetCurrentFileZStreamPos64   lvzip_unzGetCurrentFileZStreamPos64
@@ -91,9 +122,10 @@
 #define unzSetOffset                lvzip_unzSetOffset
 #define unzSetOffset64              lvzip_unzSetOffset64
 #define unzStringFileNameCompare    lvzip_unzStringFileNameCompare
-#define unztell				        lvzip_unztell
-#define unztell64				    lvzip_unztell64
-#define unzeof				        lvzip_unzeof
+#define unzSeek			            lvzip_unzSeek
+#define unzSeek64				    lvzip_unzSeek64
+#define unzTell				        lvzip_unzTell
+#define unzTell64				    lvzip_unzTell64
 #define zipClose                    lvzip_zipClose
 #define zipClose2                   lvzip_zipClose2
 #define zipCloseFileInZip           lvzip_zipCloseFileInZip
@@ -104,6 +136,7 @@
 #define zipOpen2                    lvzip_zipOpen2
 #define zipOpen2_64                 lvzip_zipOpen2_64
 #define zipOpen3                    lvzip_zipOpen3
+#define zipOpen3_64                 lvzip_zipOpen3_64
 #define zipOpenNewFileInZip         lvzip_zipOpenNewFileInZip
 #define zipOpenNewFileInZip64       lvzip_zipOpenNewFileInZip64
 #define zipOpenNewFileInZip2        lvzip_zipOpenNewFileInZip2
@@ -112,6 +145,7 @@
 #define zipOpenNewFileInZip3_64     lvzip_zipOpenNewFileInZip3_64
 #define zipOpenNewFileInZip4        lvzip_zipOpenNewFileInZip4
 #define zipOpenNewFileInZip4_64     lvzip_zipOpenNewFileInZip4_64
+#define zipOpenNewFileInZip5        lvzip_zipOpenNewFileInZip5
 #define zipRemoveExtraInfoBlock     lvzip_zipRemoveExtraInfoBlock
 #define zipWriteInFileInZip         lvzip_zipWriteInFileInZip
 #define gzopen						lvzip_gzopen
@@ -142,5 +176,5 @@
 #define gztell64					lvzip_gztell64
 #define gzoffset					lvzip_gzoffset
 #define gzoffset64					lvzip_gzoffset64
-#define gcrc32_combine				lvzip_crc32_combine
-#define gcrc32_combine64			lvzip_crc32_combine64
+#define gcrc32_combine				lvzip_gcrc32_combine
+#define gcrc32_combine64			lvzip_gcrc32_combine64
