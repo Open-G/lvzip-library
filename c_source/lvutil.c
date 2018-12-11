@@ -132,7 +132,7 @@
 
 #if usesHFSPath
 #define kPathSeperator ':'
-typedef SInt16 FileRefNum;
+typedef FSIORefNum FileRefNum;
 #elif usesPosixPath
 #define kPathSeperator '/'
 typedef FILE* FileRefNum;
@@ -770,7 +770,7 @@ LibAPI(MgErr) Win32ResolveShortCut(UStrPtr wStr, UStrPtr *wTgt, Bool32 recursive
 	return HRESULTToLVErr(err);
 }
 
-static BOOL ModifyBackupPrivilege(BOOL fEnable)
+static BOOL Win32ModifyBackupPrivilege(BOOL fEnable)
 {
 	HANDLE handle;
 	BOOL success = OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &handle);
@@ -806,7 +806,7 @@ LibAPI(MgErr) Win32ResolveLink(UStrPtr wSrc, UStrPtr *wTgt, Bool32 recursive, Bo
 	}
 
 	// Need to acquire backup privileges in order to be able to retrieve a handle to a directory below or call symlink kernel entry points
-	ModifyBackupPrivilege(TRUE);
+	Win32ModifyBackupPrivilege(TRUE);
 	while (!err && *dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT)
 	{
 		// Open the link file or directory
@@ -913,7 +913,7 @@ LibAPI(MgErr) Win32ResolveLink(UStrPtr wSrc, UStrPtr *wTgt, Bool32 recursive, Bo
 			}
 		}
 	}
-	ModifyBackupPrivilege(FALSE);
+	Win32ModifyBackupPrivilege(FALSE);
 	if (buffer)
 		DSDisposePtr((UPtr)buffer);
 	if (tempPath)
@@ -1187,10 +1187,12 @@ FListDirOut:
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh)
 {
     MgErr  err = mgNoErr;
+#if Mac
 #if usesHFSPath
     FSRef ref;
-#elif MacOSX
+#else
     LStrHandle lstr = NULL;
+#endif
 #else
     Unused(path);
 #endif
@@ -1201,7 +1203,8 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
 	if (sizeHigh)
 		*sizeHigh = 0;
 
-#if usesHFSPath
+#if Mac
+#if usesHFSPath // 32-Bit MacOSX
     err = FSMakePathRef(path, &ref);
     if (!err)
     {
@@ -1222,7 +1225,7 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
 				*sizeHigh = Hi32(catalogInfo.rsrcLogicalSize);
 		}
     }
-#elif MacOSX
+#else  // 64-Bit MacOSX
     err = LVPath_ToText(path, &lstr);
     if (!err)
     {
@@ -1240,6 +1243,7 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
         DSDisposeHandle((UHandle)lstr);
     }
 #endif
+#endif
     return err;
 }
 
@@ -1250,19 +1254,19 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
                                   LStrHandle comment)
 {
     MgErr err = mgNoErr;
-#if Win32 && !defined(EMBEDDED)
+#if Win32 && !defined(EMBEDDED) // Windows
     LWStrPtr lstr = NULL;
     HANDLE handle = NULL;
 	WIN32_FIND_DATAW fi = {0};
     uInt64 count = 0;
-#elif usesHFSPath
+#elif usesHFSPath // MacOS and MacOSX 32-Bit
     FSRef ref;
-#elif usesPosixPath
+#elif usesPosixPath // Unix, VxWorks, and MacOSX 64-Bit
     LWStrPtr lstr = NULL;
     struct stat statbuf;
     struct utimbuf buf;
     uInt64 count = 0;
-#else
+#else // Pharlap ETS
     FInfoRec infoRec;
 #endif
 
@@ -1624,14 +1628,14 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
 {
 #if MacOS && !MacOSX
-    MacSpec srcFSSpec;
-    MacSpec dstFSSpec;
+    FSSpec srcFSSpec;
+    FScSpec dstFSSpec;
     MgErr  err;
 
-    err = MakeMacSpec(srcPath, &srcFSSpec);
+    err = MakeFSSpec(srcPath, &srcFSSpec);
     if (!err)
     {
-		err = MakeMacSpec(dstPath, &dstFSSpec);
+		err = MakeFSSpec(dstPath, &dstFSSpec);
 		if (!err)
 			err = OSErrToLVErr(EncodeMacbinaryFiles(&srcFSSpec, &dstFSSpec));
     }
@@ -1646,14 +1650,14 @@ LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcPath, Path dstPath)
 LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcPath, Path dstPath)
 {
 #if MacOS && !MacOSX
-    MacSpec srcFSSpec;
-    MacSpec dstFSSpec;
+    FSSpec srcFSSpec;
+    FSSpec dstFSSpec;
     MgErr  err;
 
-    err = MakeMacSpec(srcPath, &srcFSSpec);
+    err = MakeFSSpec(srcPath, &srcFSSpec);
     if (!err)
     {
-		err = MakeMacSpec(dstPath, &dstFSSpec);
+		err = MakeFSSpec(dstPath, &dstFSSpec);
 		if (!err)
 			err = OSErrToLVErr(DecodeMacBinaryFiles(&srcFSSpec, &dstFSSpec));
     }
@@ -1664,7 +1668,10 @@ LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcPath, Path dstPath)
     return mgNotSupported;
 #endif
 }
-
+/* 
+   These two APIs will use the platform specific path syntax except for the
+   MacOSX 32-bit plaform where it will use posix format
+*/
 LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str)
 {
 	int32 pathLen = -1;
@@ -1907,7 +1914,7 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags)
             if (!err)
             {
 				// Need to acquire backup privileges in order to be able to call symlink kernel entry points
-				ModifyBackupPrivilege(TRUE);
+				Win32ModifyBackupPrivilege(TRUE);
                 if (flags & kLinkHard)
                 {
 					err = Win32CreateHardLinkW(UStrBuf(src), UStrBuf(tgt), NULL);
@@ -1916,7 +1923,7 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags)
 				{
 					err = Win32CreateSymbolicLinkW(UStrBuf(src), UStrBuf(tgt), flags & kLinkDir ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0);
                 }
- 				ModifyBackupPrivilege(FALSE);
+ 				Win32ModifyBackupPrivilege(FALSE);
            }
 #else
             err = mgNotSupported;
@@ -2076,7 +2083,13 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 recursive, uInt32 
     return err;
 }
 
-
+/*
+   The lvfile internal functions work on the same file object as the LabVIEW internal functions.
+   This is the file handle or file descriptor that a LabVIEW File Refnum wraps.
+   MacOS and MacOSX 32-Bit: FSIORefNum (int)
+   Windows: HANDLE
+   Unix: FILE*
+*/
 static MgErr lvfile_CloseFile(FileRefNum ioRefNum)
 {
 	MgErr err = mgNoErr;
