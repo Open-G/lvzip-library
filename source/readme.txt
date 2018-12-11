@@ -1,7 +1,7 @@
-LabVIEW ZIP library, version 4.1.0
+LabVIEW ZIP library, version 4.2.0
 ----------------------------------
 
-Copyright 2002-2015 Rolf Kalbermatter
+Copyright 2002-2018 Rolf Kalbermatter
 
 
 Please read this document before you upgrade from a version of LVZIP
@@ -10,6 +10,27 @@ older than 2.2 to this version.
 Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
+
+
+
+Release 4.2.0, Released: Dec. 08, 2018
+======================================
+
+New features:
+-------------
+1) Removed limit of 2GB for individual files in an archive
+2) Support for AES encryption in ZIP archives, when compressing with encryption, AES is always used.
+   Decoding supports both the old style crypt as well as AES depending on how the archive was encrypted.
+3) Added functions that support symbolic link handling, but these are not yet used in the ZIP archive.
+
+Bug Fixes:
+----------
+1) Several fixes to 64 bit operations
+
+Upgrades:
+----------
+1) Upgraded to zlib 1.2.1 and minizip 1.2.0 from Nathan Moinvaziri
+
 
 Release 4.1.0, Released: Mar. 05, 2015
 ======================================
@@ -24,7 +45,7 @@ New features:
 3) Added support for Windows and Linux 64 bit platforms
 4) Added support for all NI-Linux RT platforrms
 
-Bug fixes:
+Upgrades:
 ----------
 1) Upgraded to zlib 1.2.8 and included minizip
 
