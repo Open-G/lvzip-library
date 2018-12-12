@@ -1780,21 +1780,6 @@ ZEXTERN int ZEXPORT inflateBackInit_ OF((z_streamp strm, int windowBits,
                                          unsigned char FAR *window,
                                          const char *version,
                                          int stream_size));
-//#ifdef Z_PREFIX_SET
-//#  define lvzip_deflateInit(strm, level) \
-//          deflateInit_((strm), (level), ZLIB_VERSION, (int)sizeof(z_stream))
-//#  define lvzip_inflateInit(strm) \
-//          inflateInit_((strm), ZLIB_VERSION, (int)sizeof(z_stream))
-//#  define lvzip_deflateInit2(strm, level, method, windowBits, memLevel, strategy) \
-//          deflateInit2_((strm),(level),(method),(windowBits),(memLevel),\
-//                        (strategy), ZLIB_VERSION, (int)sizeof(z_stream))
-//#  define lvzip_inflateInit2(strm, windowBits) \
-//          inflateInit2_((strm), (windowBits), ZLIB_VERSION, \
-//                        (int)sizeof(z_stream))
-//#  define lvzip_inflateBackInit(strm, windowBits, window) \
-//          inflateBackInit_((strm), (windowBits), (window), \
-//                           ZLIB_VERSION, (int)sizeof(z_stream))
-//#else
 #  define deflateInit(strm, level) \
           deflateInit_((strm), (level), ZLIB_VERSION, (int)sizeof(z_stream))
 #  define inflateInit(strm) \
@@ -1808,7 +1793,6 @@ ZEXTERN int ZEXPORT inflateBackInit_ OF((z_streamp strm, int windowBits,
 #  define inflateBackInit(strm, windowBits, window) \
           inflateBackInit_((strm), (windowBits), (window), \
                            ZLIB_VERSION, (int)sizeof(z_stream))
-//#endif
 
 #ifndef Z_SOLO
 

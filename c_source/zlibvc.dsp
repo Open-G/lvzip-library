@@ -50,7 +50,7 @@ CFG=zlibvc - Win32 DLL Release
 LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "bzip2" /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "ZLIB_DLL" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "bzip2" /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -63,7 +63,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /pdb:none /machine:I386
-# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_Release\lvzlib.dll"
+# ADD LINK32 advapi32.lib user32.lib kernel32.lib ole32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_Release\lvzlib.dll"
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
 
@@ -82,7 +82,7 @@ LINK32=link.exe
 LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MDd /W3 /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /FD /c
-# ADD CPP /nologo /MDd /W3 /ZI /Od /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "ZLIB_DLL" /FR /FD /c
+# ADD CPP /nologo /MDd /W3 /ZI /Od /I "bzip2" /D "WIN32" /D "_DEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /FR /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -95,7 +95,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /debug /machine:I386
-# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib:"msvcrt" /out:"Win32_DLL_Debug\lvzlib.dll"
+# ADD LINK32 advapi32.lib user32.lib kernel32.lib ole32.lib /nologo /subsystem:windows /dll /debug /machine:I386 /nodefaultlib:"msvcrt" /out:"Win32_DLL_Debug\lvzlib.dll"
 # SUBTRACT LINK32 /incremental:no
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Embedded"
@@ -115,7 +115,7 @@ LINK32=link.exe
 LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "bzip2" /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_BZIP2" /D "HAVE_AES" /D "EMBEDDED" /D "ZLIB_DLL" /FR /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "bzip2" /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /FR /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
