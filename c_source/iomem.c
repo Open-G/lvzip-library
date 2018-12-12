@@ -134,9 +134,9 @@ static MgErr ResizeStringHandle(LStrHandle handle, uint32_t offset, const void *
 	  return mFullErr;
 
 	if (offset + *size > 0x7FFFFFFF)
-	  *size = (uLong)(0x7FFFFFFF - offset);
+	  *size = 0x7FFFFFFF - offset;
 
-    if ((uint32_t)DSGetHandleSize((UHandle)handle) < (offset + *size + sizeof(int32)))
+    if ((uInt32)DSGetHandleSize((UHandle)handle) < (offset + *size + sizeof(int32)))
     {
         MgErr err = fEOF;
 

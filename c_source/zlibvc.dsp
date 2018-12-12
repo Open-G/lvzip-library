@@ -50,7 +50,7 @@ CFG=zlibvc - Win32 DLL Release
 LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "ZLIB_DLL" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "bzip2" /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "ZLIB_DLL" /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -115,7 +115,7 @@ LINK32=link.exe
 LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /D "ZLIB_DLL" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "bzip2" /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_BZIP2" /D "HAVE_AES" /D "EMBEDDED" /D "ZLIB_DLL" /FR /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -128,7 +128,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /pdb:none /machine:I386
-# ADD LINK32 user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_Embedded\lvzlib.dll"
+# ADD LINK32 advapi32.lib user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_Embedded\lvzlib.dll"
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
@@ -325,6 +325,10 @@ SOURCE=.\crc32.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\crypt.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\deflate.c
 # End Source File
 # Begin Source File
@@ -388,6 +392,10 @@ SOURCE=.\uncompr.c
 # Begin Source File
 
 SOURCE=.\unzip.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\utf.c
 # End Source File
 # Begin Source File
 
@@ -463,6 +471,10 @@ SOURCE=.\unzip.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\utf.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\zalias.h
 # End Source File
 # Begin Source File
@@ -508,6 +520,8 @@ SOURCE=.\gvmat32.asm
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
 
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Embedded"
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
@@ -574,6 +588,8 @@ SOURCE=.\gvmat32c.c
 
 # PROP Exclude_From_Build 1
 
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Embedded"
+
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
 # PROP BASE Exclude_From_Build 1
@@ -607,6 +623,8 @@ SOURCE=.\inffas32.asm
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Debug"
 
 # PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL Embedded"
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
@@ -660,6 +678,142 @@ InputName=inffas32
 
 !ENDIF 
 
+# End Source File
+# End Group
+# Begin Group "bzip2"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\bzip2\blocksort.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\bzip2\bzcompress.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\bzip2\bzlib.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\bzip2\bzlib.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\bzip2\bzlib_private.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\bzip2\crctable.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\bzip2\decompress.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\bzip2\huffman.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\bzip2\randtable.c
+# End Source File
+# End Group
+# Begin Group "AES"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\aes\aes.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\aes_ni.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\aes_ni.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\aes_via_ace.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\aescrypt.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\aeskey.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\aesopt.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\aestab.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\aestab.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\brg_endian.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\brg_types.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\entropy.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\entropy.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\fileenc.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\fileenc.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\hmac.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\hmac.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\prng.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\prng.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\pwd2key.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\pwd2key.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\sha1.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\aes\sha1.h
 # End Source File
 # End Group
 # Begin Source File

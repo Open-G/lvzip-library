@@ -31,14 +31,14 @@
 #ifndef lvzip_lvapi_h
 #define lvzip_lvapi_h
 LibAPI(const char *) lvzlib_zlibVersion(void);
-LibAPI(int) lvzlib_compress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen, int level);
-LibAPI(int) lvzlib_uncompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen);
+LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen, int level);
+LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen);
 LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len);
 LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
 						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
 						   LStrHandle comment, int method, int level, int raw, int windowBits,
-						   int memLevel, int strategy, const char* password, uLong crcForCrypting, uLong version, uLong flags, int zip64);
+						   int memLevel, int strategy, const char* password, uInt32 crcForCrypting, uInt32 version, uInt32 flags, int zip64);
 LibAPI(MgErr) lvzlib_zipWriteInFileInZip(LVRefNum *refnum, const LStrHandle buffer);
 LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw32(LVRefNum *refnum, uInt32 uncompressedSize, uInt32 crc32);
 LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw64(LVRefNum *refnum, uInt64 uncompressedSize, uInt32 crc32);

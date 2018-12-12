@@ -50,8 +50,8 @@
 #define deflateBound                lvzip_deflateBound
 #define deflateCopy                 lvzip_deflateCopy
 #define deflateEnd                  lvzip_deflateEnd
-#define deflateInit                 lvzip_deflateInit
-#define deflateInit2                lvzip_deflateInit2
+#define deflateInit_                lvzip_deflateInit
+#define deflateInit2_               lvzip_deflateInit2
 #define deflateParams               lvzip_deflateParams
 #define deflatePrime                lvzip_deflatePrime
 #define deflateReset                lvzip_deflateReset
@@ -64,13 +64,13 @@
 #define inflate_table               lvzip_inflate_table
 #define inflateBack                 lvzip_inflateBack
 #define inflateBackEnd              lvzip_inflateBackEnd
-#define inflateBackInit             lvzip_inflateBackInit
+#define inflateBackInit_            lvzip_inflateBackInit
 #define inflateCopy                 lvzip_inflateCopy
 #define inflateEnd                  lvzip_inflateEnd
 #define inflateGetHeader            lvzip_inflateGetHeader
 #define inflate_fast                lvzip_inflate_fast
-#define inflateInit                 lvzip_inflateInit
-#define inflateInit2                lvzip_inflateInit2
+#define inflateInit_                lvzip_inflateInit
+#define inflateInit2_               lvzip_inflateInit2
 #define inflateMark                 lvzip_inflateMark
 #define inflatePrime                lvzip_inflatePrime
 #define inflateReset                lvzip_inflateReset
@@ -178,3 +178,19 @@
 #define gzoffset64					lvzip_gzoffset64
 #define gcrc32_combine				lvzip_gcrc32_combine
 #define gcrc32_combine64			lvzip_gcrc32_combine64
+
+/* Do some standard C type finicking for compilers that do not support the _t standard types */
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+typedef char int8_t;
+typedef unsigned char uint8_t;
+typedef short int16_t;
+typedef unsigned short uint16_t;
+typedef int int32_t;
+typedef unsigned int uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+typedef int ssize_t;
+typedef unsigned int size_t;
+#else
+#include <stdint.h>
+#endif

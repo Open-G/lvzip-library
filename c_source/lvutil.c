@@ -687,6 +687,7 @@ static MgErr NormalizePath(UStrPtr wstr)
 	return noErr;
 }
 
+#if !EMBEDDED
 LibAPI(MgErr) Win32ResolveShortCut(UStrPtr wStr, UStrPtr *wTgt, Bool32 recursive, DWORD *dwAttrs)
 {
 	HRESULT err = noErr;
@@ -939,6 +940,7 @@ LibAPI(MgErr) Win32ResolveLink(UStrPtr wSrc, UStrPtr *wTgt, Bool32 recursive, Bo
 	}
 	return err;
 }
+#endif
 #endif
 
 LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr)

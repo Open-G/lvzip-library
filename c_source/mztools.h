@@ -22,7 +22,7 @@ extern "C" {
    fileOut: output file after recovery
    fileOutTmp: temporary file name used for recovery
 */
-ZEXTERN int ZEXPORT unzRepair OF((const char* file, const char* fileOut, const char* fileOutTmp, uLong* nRecovered, uLong* bytesRecovered));
+extern int ZEXPORT unzRepair OF((const char* file, const char* fileOut, const char* fileOutTmp, uLong* nRecovered, uLong* bytesRecovered));
 
 
 #ifdef __cplusplus

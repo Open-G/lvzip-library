@@ -157,7 +157,7 @@ voidpf ZCALLBACK win32_opendisk_file_funcW (voidpf opaque, voidpf stream, uint32
 			{
 				if (diskFilename[i] != '.') 
 					continue;
-				swprintf(&diskFilename[i], w32fiow->filenameLength - i, L".z%02d", number_disk + 1);
+				swnprintf(&diskFilename[i], w32fiow->filenameLength - i, L".z%02d", number_disk + 1);
 				break;
 			}
 			if (i >= 0)

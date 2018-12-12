@@ -514,6 +514,13 @@ typedef uLong FAR uLongf;
 #  endif
 #endif
 
+/* Microsoft used a non standard function signature for old MSC compilers */ 
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+#define swnprintf _snwprintf
+#else
+#define swnprintf swprintf
+#endif
+
 /* MVS linker does not support external names larger than 8 bytes */
 #if defined(__MVS__)
   #pragma map(deflateInit_,"DEIN")

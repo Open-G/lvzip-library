@@ -180,14 +180,14 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
     return version;
 }
 
-LibAPI(int) lvzlib_compress(Bytef *dest, uLongf *destLen,
-                             const Bytef *source, uLong sourceLen, int level)
+LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen,
+                             const Bytef *source, uInt32 sourceLen, int level)
 {
 	return compress2(dest, destLen, source, sourceLen, level);
 }
 
-LibAPI(int) lvzlib_uncompress(Bytef *dest, uLongf *destLen,
-                             const Bytef *source, uLong sourceLen)
+LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen,
+                             const Bytef *source, uInt32 sourceLen)
 {
 	return uncompress(dest, destLen, source, sourceLen);
 }
@@ -236,7 +236,7 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
 						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
 						   LStrHandle comment, int method, int level, int raw, int windowBits,
-						   int memLevel, int strategy, const char* password, uLong crcForCrypting, uLong version, uLong flags, int zip64)
+						   int memLevel, int strategy, const char* password, uInt32 crcForCrypting, uInt32 version, uInt32 flags, int zip64)
 {
 	zipFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, ZipMagic);
