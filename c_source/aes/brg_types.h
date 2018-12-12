@@ -35,11 +35,24 @@ extern "C" {
 #endif
 
 #include <limits.h>
-#include <stdint.h>
 
-#if defined( _MSC_VER ) && ( _MSC_VER >= 1300 )
+#if defined( _MSC_VER )
 #  include <stddef.h>
 #  define ptrint_t intptr_t
+# if ( _MSC_VER >= 1300 )
+#  include <stdint.h>
+# else
+typedef char int8_t;
+typedef unsigned char uint8_t;
+typedef short int16_t;
+typedef unsigned short uint16_t;
+typedef int int32_t;
+typedef unsigned int uint32_t;
+typedef __int64 int64_t;
+typedef unsigned __int64 uint64_t;
+typedef int ssize_t;
+typedef unsigned int size_t;
+# endif
 #elif defined( __ECOS__ )
 #  define intptr_t unsigned int
 #  define ptrint_t intptr_t
