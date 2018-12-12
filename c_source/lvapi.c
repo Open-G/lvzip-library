@@ -24,7 +24,6 @@
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <string.h>
-#include <mbstring.h>
 #define ZLIB_INTERNAL
 #include "zlib.h"
 #include "lvutil.h"
@@ -78,12 +77,6 @@ typedef struct
 
 static MagicCookieJar gCookieJar = NULL;
 
-#if 0
-LibAPI(const char *) lvzlib_disposeRefnum(uptr_t *refnum)
-{
-
-}
-#endif
 static int32 lvzlipCleanup(UPtr ptr)
 {
 	FileNode *pNode = (FileNode*)ptr;
@@ -448,11 +441,22 @@ LibAPI(MgErr) lvzlib_unzGetGlobalInfo64(LVRefNum *refnum, LStrHandle *comment, u
  *                 always work as intended for case insensitive comparison since only the normal
  *                 ASCII 7Bit alpha characters will be compared case insensitive, not any extended
  *                 characters or multibyte characters.
+ *                 0 - platform specific
+ *                 1 - case sensitive
+ *                 2 - case insensitive
  *
  ****************************************************************************************************/
+#if Win32
+#define strcasecmp _stricmp
+#endif
 static int caseInsensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)
 {
-	return _mbsicmp((const unsigned char*)filename1, (const unsigned char*)filename2);
+	return strcasecmp(filename1, filename2);
+}
+
+static int caseSensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)
+{
+	return strcmp(filename1, filename2);
 }
 
 LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iCaseSensitivity)
@@ -464,13 +468,26 @@ LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iC
 		err = ZeroTerminateLString(&fileName);
 		if (!err)
 		{
-			err = LibToMgErr(unzLocateFile(node, (const char*)LStrBufH(fileName), iCaseSensitivity ? caseInsensitiveNameComparer : NULL));
+			unzFileNameComparer filename_compare_func = NULL;
+			if (
+#if Mac || MSWin || VxWorks
+			    !iCaseSensitivity || 
+#endif
+				                     iCaseSensitivity == 2)
+			{
+				filename_compare_func = caseInsensitiveNameComparer;
+			}
+			else
+			{
+				filename_compare_func = caseSensitiveNameComparer;
+			}
+			err = LibToMgErr(unzLocateFile(node, (const char*)LStrBufH(fileName), filename_compare_func));
 		}
 	}
 	return err;
 }
 
-static MgErr RetrieveFileInfo(unzFile node, LStrHandle *fileName, uint16_t sizeFileName, LStrHandle *extraField, uint16_t sizeExtraField, LStrHandle *comment, uint16_t sizeComment)
+static MgErr RetrieveFileInfo(unzFile node, unz_file_info *pfile_info, LStrHandle *fileName, uint16_t sizeFileName, LStrHandle *extraField, uint16_t sizeExtraField, LStrHandle *comment, uint16_t sizeComment)
 {
 	MgErr err = NumericArrayResize(uB, 1, (UHandle*)extraField, sizeExtraField);
 	if (!err)
@@ -481,7 +498,7 @@ static MgErr RetrieveFileInfo(unzFile node, LStrHandle *fileName, uint16_t sizeF
 			err = NumericArrayResize(uB, 1, (UHandle*)comment, sizeComment);
 			if (!err)
 			{
-				err = LibToMgErr(unzGetCurrentFileInfo64(node, NULL, (char*)LStrBuf(**fileName), sizeFileName, LStrBuf(**extraField), sizeExtraField, (char*)LStrBuf(**comment), sizeComment));
+				err = LibToMgErr(unzGetCurrentFileInfo(node, pfile_info, (char*)LStrBuf(**fileName), sizeFileName, LStrBuf(**extraField), sizeExtraField, (char*)LStrBuf(**comment), sizeComment));
 				if (!err)
 				{
 					LStrLen(**extraField) = sizeExtraField;
@@ -518,7 +535,7 @@ LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo32(LVRefNum *refnum, unz_file_info *pf
 		err = LibToMgErr(unzGetCurrentFileInfo(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
 		if (!err)
 		{
-			err = RetrieveFileInfo(node, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
+			err = RetrieveFileInfo(node, NULL, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
 		}
 	}
 	return err;
@@ -534,7 +551,7 @@ LibAPI(MgErr) lvzlib_unzGetCurrentFileInfo64(LVRefNum *refnum, unz_file_info64 *
 		err = LibToMgErr(unzGetCurrentFileInfo64(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
 		if (!err)
 		{
-			err = RetrieveFileInfo(node, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
+			err = RetrieveFileInfo(node, NULL, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
 		}
 	}
 	return err;
@@ -659,6 +676,22 @@ LibAPI(MgErr) lvzlib_unzGoToFirstFile(LVRefNum *refnum)
 	return err;
 }
 
+LibAPI(MgErr) lvzlib_unzGoToFirstFile2_32(LVRefNum *refnum, unz_file_info *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		unz_file_info64 file_info64;
+		err = LibToMgErr(unzGoToFirstFile2(node, &file_info64, NULL, 0, NULL, 0, NULL, 0));
+		if (!err)
+		{
+			err = RetrieveFileInfo(node, pfile_info, fileName, file_info64.size_filename, extraField, file_info64.size_file_extra, comment, file_info64.size_file_comment);
+		}
+	}
+	return err;
+}
+
 LibAPI(MgErr) lvzlib_unzGoToFirstFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
 {
 	unzFile node;
@@ -668,7 +701,7 @@ LibAPI(MgErr) lvzlib_unzGoToFirstFile2_64(LVRefNum *refnum, unz_file_info64 *pfi
 		err = LibToMgErr(unzGoToFirstFile2(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
 		if (!err)
 		{
-			err = RetrieveFileInfo(node, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
+			err = RetrieveFileInfo(node, NULL, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
 		}
 	}
 	return err;
@@ -693,6 +726,22 @@ LibAPI(MgErr) lvzlib_unzGoToNextFile(LVRefNum *refnum)
 	return err;
 }
 
+LibAPI(MgErr) lvzlib_unzGoToNextFile2_32(LVRefNum *refnum, unz_file_info *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
+{
+	unzFile node;
+	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);
+	if (!err)
+	{
+		unz_file_info64 file_info64;
+		err = LibToMgErr(unzGoToNextFile2(node, &file_info64, NULL, 0, NULL, 0, NULL, 0));
+		if (!err)
+		{
+			err = RetrieveFileInfo(node, pfile_info, fileName, file_info64.size_filename, extraField, file_info64.size_file_extra, comment, file_info64.size_file_comment);
+		}
+	}
+	return err;
+}
+
 LibAPI(MgErr) lvzlib_unzGoToNextFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment)
 {
 	unzFile node;
@@ -702,7 +751,7 @@ LibAPI(MgErr) lvzlib_unzGoToNextFile2_64(LVRefNum *refnum, unz_file_info64 *pfil
 		err = LibToMgErr(unzGoToNextFile2(node, pfile_info, NULL, 0, NULL, 0, NULL, 0));
 		if (!err)
 		{
-			err = RetrieveFileInfo(node, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
+			err = RetrieveFileInfo(node, NULL, fileName, pfile_info->size_filename, extraField, pfile_info->size_file_extra, comment, pfile_info->size_file_comment);
 		}
 	}
 	return err;

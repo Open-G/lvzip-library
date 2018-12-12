@@ -906,7 +906,7 @@ extern int ZEXPORT unzGetCurrentFileInfo(unzFile file, unz_file_info *pfile_info
     unz_file_info64 file_info64;
     int err = UNZ_OK;
 
-    err = unzGetCurrentFileInfoInternal(file, &file_info64, NULL, filename, filename_size,
+	err = unzGetCurrentFileInfoInternal(file, pfile_info ? &file_info64 : NULL, NULL, filename, filename_size,
                 extrafield, extrafield_size, comment, comment_size);
 
     if ((err == UNZ_OK) && (pfile_info != NULL))

@@ -455,10 +455,10 @@ typedef struct {			/**< file/directory information record */
 	uInt32	cdate;			/**< creation date */
 	uInt32	mdate;			/**< last modification date */
 	Bool32	folder;			/**< indicates whether path refers to a folder */
-	Bool32	isInvisible; /**< indicates whether the file is visible in File Dialog */
+	Bool32	isInvisible;    /**< indicates whether the file is visible in File Dialog */
 	struct {
 		int16 v, h;
-	} location;			/**< system specific geographical location */
+	} location;			    /**< system specific geographical location */
 	Str255	owner;			/**< owner (in pascal string form) of file or folder */
 	Str255	group;			/**< group (in pascal string form) of file or folder */
 } FInfoRec, *FInfoPtr;

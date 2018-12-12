@@ -393,7 +393,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				InlineFunctionExpansion="1"
+				InlineFunctionExpansion="0"
 				AdditionalIncludeDirectories="bzip2"
 				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
@@ -491,7 +491,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				InlineFunctionExpansion="1"
+				InlineFunctionExpansion="0"
 				AdditionalIncludeDirectories="bzip2"
 				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
@@ -1933,34 +1933,6 @@
 			<File
 				RelativePath=".\utf.c"
 				>
-				<FileConfiguration
-					Name="DLL Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Release|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|x64"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="zip.c"

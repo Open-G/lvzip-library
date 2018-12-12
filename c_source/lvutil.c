@@ -487,7 +487,7 @@ LibAPI(void) DLLVersion(uChar* version)
 
 #if Unix || MacOSX || defined(EMBEDDED)
 #define LWStrPtr  LStrPtr
-
+/* wstr is filled with an 8 bit local encoded string from the path, which could be UTF8 on Linux and MacOSX systems */
 static int32 MakePathDSString(Path path, LWStrPtr *lstr, int32 reserve)
 {
     int32 pathLen = -1;
@@ -507,7 +507,7 @@ static int32 MakePathDSString(Path path, LWStrPtr *lstr, int32 reserve)
 }
 #elif usesWinPath
 #define LWStrPtr  UStrPtr
-
+/* wstr is filled with a Windows UTF16LE string from the path */
 static int32 MakePathDSString(Path path, LWStrPtr *wstr, int32 reserve)
 {
     int32 pathLen = -1;
@@ -540,7 +540,7 @@ static int32 MakePathDSString(Path path, LWStrPtr *wstr, int32 reserve)
 					len = 6;
 					off = 1;
 				}
-				*wstr = (UStrPtr)DSNewPClr(sizeof(int32) + sizeof(wchar_t) * (len + pathLen + reserve + 1));
+				*wstr = (LWStrPtr)DSNewPClr(sizeof(int32) + sizeof(wchar_t) * (len + pathLen + reserve + 1));
 				if (*wstr)
 				{
 					if (buf[0] && buf[1] == ':')
@@ -1566,13 +1566,11 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 			{
 				DIR *dirp;
 				struct dirent *dp;
-		        struct direntpath dppath;
-		        struct dirent *dpp = (struct dirent *)&dppath;
 
 				if (!(dirp = opendir((const char*)lstr->str)))
 					return UnixToLVFileErr();
 
-				for (dp = readdir_r(dirp, dpp); dp; dp = readdir_r(dirp, dpp))
+				for (dp = readdir(dirp); dp; dp = readdir(dirp))
 					count++;
 				closedir(dirp);
 				fileInfo->size = count - 2;
