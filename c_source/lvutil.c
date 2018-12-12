@@ -2810,7 +2810,7 @@ LibAPI(MgErr) InitializeFileFuncs(LStrHandle filefunc_def)
 	{
 		zlib_filefunc64_def* pzlib_filefunc_def = (zlib_filefunc64_def*)LStrBuf(*filefunc_def);
 		LStrLen(*filefunc_def) = sizeof(zlib_filefunc64_def);
-#if Win32 && !defined(EMBEDDED)
+#if Win32
 		fill_win32_filefunc64A(pzlib_filefunc_def);
 #else
 		fill_fopen64_filefunc(pzlib_filefunc_def);

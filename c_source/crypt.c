@@ -30,7 +30,8 @@
 
 #ifdef _WIN32
 #  include <windows.h>
-#  include <wincrypt.h>
+#  define RtlGenRandom SystemFunction036
+BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
 #else
 #  include <sys/stat.h>
 #  include <fcntl.h>
@@ -87,32 +88,26 @@ void init_keys(const char *passwd, uint32_t *pkeys, const z_crc_t *pcrc_32_tab)
 int cryptrand(unsigned char *buf, unsigned int len)
 {
 #ifdef _WIN32
-    HCRYPTPROV provider;
-    unsigned __int64 pentium_tsc[1];
-    int rlen = 0;
-    int result = 0;
+#if !EMBEDDED
+	BOOL result = RtlGenRandom(buf, len);
+    if (!result)
+#endif
+	{
+		unsigned __int64 pentium_tsc[1];
+        int rlen;
 
-
-    if (CryptAcquireContext(&provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
-    {
-        result = CryptGenRandom(provider, len, buf);
-        CryptReleaseContext(provider, 0);
-        if (result)
-            return len;
-    }
-
-    for (rlen = 0; rlen < (int)len; ++rlen)
-    {
-        if (rlen % 8 == 0)
-            QueryPerformanceCounter((LARGE_INTEGER *)pentium_tsc);
-        buf[rlen] = ((unsigned char*)pentium_tsc)[rlen % 8];
-    }
-
-    return rlen;
+		for (rlen = 0; rlen < (int)len; ++rlen)
+		{
+			if (rlen % 8 == 0)
+				QueryPerformanceCounter((LARGE_INTEGER *)pentium_tsc);
+			buf[rlen] = ((unsigned char*)pentium_tsc)[rlen % 8];
+		}
+        return rlen;
+	}
 #else
     arc4random_buf(buf, len);
-    return len;
 #endif
+    return len;
 }
 
 int crypthead(const char *passwd, uint8_t *buf, int buf_size, uint32_t *pkeys,

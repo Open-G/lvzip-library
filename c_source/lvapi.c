@@ -183,13 +183,13 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen,
                              const Bytef *source, uInt32 sourceLen, int level)
 {
-	return compress2(dest, destLen, source, sourceLen, level);
+	return compress2(dest, (uLong*)destLen, source, (uLong)sourceLen, level);
 }
 
 LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen,
                              const Bytef *source, uInt32 sourceLen)
 {
-	return uncompress(dest, destLen, source, sourceLen);
+	return uncompress(dest, (uLong*)destLen, source, (uLong)sourceLen);
 }
 
 LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len)

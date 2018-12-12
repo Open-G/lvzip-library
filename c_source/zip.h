@@ -27,6 +27,9 @@ extern "C" {
 
 #ifndef _ZLIBIOAPI_H
 #  include "ioapi.h"
+#  if WIN32
+#    include "iowin.h"
+#  endif
 #endif
 
 #ifdef HAVE_BZIP2

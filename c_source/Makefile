@@ -18,14 +18,14 @@
 
 CC=gcc
 
-CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN
+CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
 #CFLAGS=-g -DDEBUG
 #CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
 #           -Wstrict-prototypes -Wmissing-prototypes
 
 CINDIR=/usr/local/lv70/cintools
-SFLAGS=-O3 -fPIC $(CC_ARCH_SPEC) -fvisibility=hidden -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -L$(CINDIR)
+SFLAGS=-O3 -fPIC $(CC_ARCH_SPEC) -fvisibility=hidden -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2 -DBZ_NO_STDIO -Ibzip2 -L$(CINDIR)
 LDFLAGS=-Wl,-soname=$(SHAREDLIBM)
 TEST_LDFLAGS=-L. libz.a
 LDSHARED=gcc
@@ -55,19 +55,19 @@ mandir =${prefix}/share/man
 man3dir = ${mandir}/man3
 pkgconfigdir = ${libdir}/pkgconfig
 
-OBJZ = adler32.o crc32.o deflate.o infback.o inffast.o inflate.o inftrees.o trees.o zutil.o
+OBJZ = adler32.o crc32.o crypt.o deflate.o infback.o inffast.o inflate.o inftrees.o trees.o zutil.o
 OBJG = compress.o uncompr.o gzclose.o gzlib.o gzread.o gzwrite.o
 OBJL = lvutil.o ioapi.o iomem.o mztools.o unzip.o zip.o utf.o
-OBJE = aes/aescrypt.o aes/aeskey.o aes/aestab.o aes/entropy.o aes/fileenc.o aes/hmac.o aes/prng.o aes/pwd2key.o aes/sha1.o
-OBJ2 = bzip2/blocksort.o bzip2/huffman.o bzip2/crctable.o bzip2/randtable.o bzip2/compress.o bzip2/decompress.o bzip2/bzlib.o
+OBJE = aes/aescrypt.o aes/aeskey.o aes/aestab.o aes/fileenc.o aes/hmac.o aes/prng.o aes/pwd2key.o aes/sha1.o
+OBJ2 = bzip2/blocksort.o bzip2/huffman.o bzip2/crctable.o bzip2/randtable.o bzip2/bzcompress.o bzip2/decompress.o bzip2/bzlib.o
 
 OBJC = $(OBJZ) $(OBJL) $(OBJG) $(OBJ2) $(OBJE)
 
-PIC_OBJZ = adler32.lo crc32.lo deflate.lo infback.lo inffast.lo inflate.lo inftrees.lo trees.lo zutil.lo
+PIC_OBJZ = adler32.lo crc32.lo crypt.lo deflate.lo infback.lo inffast.lo inflate.lo inftrees.lo trees.lo zutil.lo
 PIC_OBJG = compress.lo uncompr.lo gzclose.lo gzlib.lo gzread.lo gzwrite.lo
 PIC_OBJL = lvapi.lo lvutil.lo ioapi.lo iomem.lo mztools.lo unzip.lo zip.lo utf.lo
-PIC_OBJE = aes/aescrypt.lo aes/aeskey.lo aes/aestab.lo aes/entropy.lo aes/fileenc.lo aes/hmac.lo aes/prng.lo aes/pwd2key.lo aes/sha1.lo
-PIC_OBJ2 = bzip2/blocksort.lo bzip2/huffman.lo bzip2/crctable.lo bzip2/randtable.lo bzip2/compress.lo bzip2/decompress.lo bzip2/bzlib.lo
+PIC_OBJE = aes/aescrypt.lo aes/aeskey.lo aes/aestab.lo aes/fileenc.lo aes/hmac.lo aes/prng.lo aes/pwd2key.lo aes/sha1.lo
+PIC_OBJ2 = bzip2/blocksort.lo bzip2/huffman.lo bzip2/crctable.lo bzip2/randtable.lo bzip2/bzcompress.lo bzip2/decompress.lo bzip2/bzlib.lo
 PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJL) $(PIC_OBJG) $(PIC_OBJ2) $(PIC_OBJE)
 
 # to use the asm code: make OBJA=match.o, PIC_OBJA=match.lo
@@ -282,6 +282,7 @@ adler32.o zutil.o: zutil.h zlib.h zconf.h
 gzclose.o gzlib.o gzread.o gzwrite.o: zlib.h zconf.h gzguts.h
 compress.o example.o minigzip.o uncompr.o: zlib.h zconf.h
 crc32.o: zutil.h zlib.h zconf.h crc32.h
+crypt.o: zutil.h zlib.h zconf.h crypt.h
 deflate.o: deflate.h zutil.h zlib.h zconf.h
 infback.o inflate.o: zutil.h zlib.h zconf.h inftrees.h inflate.h inffast.h inffixed.h
 inffast.o: zutil.h zlib.h zconf.h inftrees.h inflate.h inffast.h
@@ -292,6 +293,7 @@ adler32.lo zutil.lo: zutil.h zlib.h zconf.h
 gzclose.lo gzlib.lo gzread.lo gzwrite.lo: zlib.h zconf.h gzguts.h
 compress.lo example.lo minigzip.lo uncompr.lo: zlib.h zconf.h
 crc32.lo: zutil.h zlib.h zconf.h crc32.h
+crypt.lo: zutil.h zlib.h zconf.h crypt.h
 deflate.lo: deflate.h zutil.h zlib.h zconf.h
 infback.lo inflate.lo: zutil.h zlib.h zconf.h inftrees.h inflate.h inffast.h inffixed.h
 inffast.lo: zutil.h zlib.h zconf.h inftrees.h inflate.h inffast.h

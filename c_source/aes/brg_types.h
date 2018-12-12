@@ -57,6 +57,7 @@ typedef unsigned int size_t;
 #  define intptr_t unsigned int
 #  define ptrint_t intptr_t
 #elif defined( __GNUC__ ) && ( __GNUC__ >= 3 )
+#  include <stdint.h>
 #  define ptrint_t intptr_t
 #else
 #  define ptrint_t int

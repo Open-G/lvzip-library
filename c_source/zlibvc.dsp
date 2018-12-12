@@ -115,7 +115,7 @@ LINK32=link.exe
 LIB32=link.exe -lib
 CPP=cl.exe
 # ADD BASE CPP /nologo /MD /W3 /O2 /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "bzip2" /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /FR /FD /c
+# ADD CPP /nologo /MT /W3 /O2 /I "bzip2" /D "WIN32" /D "NDEBUG" /D "NO_vsnprintf" /D "HAVE_AES" /D "HAVE_BZIP2" /D "BZ_NO_STDIO" /D "EMBEDDED" /FR /FD /c
 # SUBTRACT CPP /YX /Yc /Yu
 MTL=midl.exe
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -128,7 +128,8 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 /nologo /subsystem:windows /dll /pdb:none /machine:I386
-# ADD LINK32 advapi32.lib user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_Embedded\lvzlib.dll"
+# ADD LINK32 advapi32.lib msvcrt.lib user32.lib kernel32.lib /nologo /subsystem:windows /dll /pdb:none /machine:I386 /out:"Win32_DLL_Embedded\lvzlib.dll"
+# SUBTRACT LINK32 /nodefaultlib
 
 !ELSEIF  "$(CFG)" == "zlibvc - Win32 DLL ASM Release"
 
@@ -423,6 +424,10 @@ SOURCE=.\deflate.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\gzguts.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\inffast.h
 # End Source File
 # Begin Source File
@@ -448,6 +453,10 @@ SOURCE=.\iomem.h
 # Begin Source File
 
 SOURCE=.\iowin.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\lvapi.h
 # End Source File
 # Begin Source File
 
@@ -729,18 +738,6 @@ SOURCE=.\aes\aes.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\aes\aes_ni.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\aes\aes_ni.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\aes\aes_via_ace.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\aes\aescrypt.c
 # End Source File
 # Begin Source File
@@ -766,14 +763,6 @@ SOURCE=.\aes\brg_endian.h
 # Begin Source File
 
 SOURCE=.\aes\brg_types.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\aes\entropy.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\aes\entropy.h
 # End Source File
 # Begin Source File
 

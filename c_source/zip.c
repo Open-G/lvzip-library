@@ -622,8 +622,12 @@ extern zipFile ZEXPORT zipOpen4(const void *path, int append, uint64_t disk_size
     ziinit.z_filefunc.ztell32_file = NULL;
 
     if (pzlib_filefunc64_32_def == NULL)
+#if WIN32
+		fill_win32_filefunc64A(&ziinit.z_filefunc.zfile_func64);
+#else
         fill_fopen64_filefunc(&ziinit.z_filefunc.zfile_func64);
-    else
+#endif
+	else
         ziinit.z_filefunc = *pzlib_filefunc64_32_def;
 
     if (append == APPEND_STATUS_CREATE)
@@ -847,6 +851,33 @@ extern zipFile ZEXPORT zipOpen4(const void *path, int append, uint64_t disk_size
     return(zipFile)zi;
 }
 
+extern zipFile ZEXPORT zipOpen3_64(const void *path, int append, uint64_t disk_size, const char **globalcomment,
+    zlib_filefunc64_def *pzlib_filefunc_def)
+{
+    if (pzlib_filefunc_def != NULL)
+    {
+        zlib_filefunc64_32_def zlib_filefunc64_32_def_fill;
+        zlib_filefunc64_32_def_fill.zfile_func64 = *pzlib_filefunc_def;
+        zlib_filefunc64_32_def_fill.ztell32_file = NULL;
+        zlib_filefunc64_32_def_fill.zseek32_file = NULL;
+        return zipOpen4(path, append, disk_size, globalcomment, &zlib_filefunc64_32_def_fill);
+    }
+    return zipOpen4(path, append, disk_size, globalcomment, NULL);
+}
+
+#if 0
+extern zipFile ZEXPORT zipOpen3(const char *path, int append, uint64_t disk_size, const char **globalcomment,
+    zlib_filefunc_def *pzlib_filefunc32_def)
+{
+    if (pzlib_filefunc32_def != NULL)
+    {
+        zlib_filefunc64_32_def zlib_filefunc64_32_def_fill;
+        fill_zlib_filefunc64_32_def_from_filefunc32(&zlib_filefunc64_32_def_fill,pzlib_filefunc32_def);
+        return zipOpen4(path, append, disk_size, globalcomment, &zlib_filefunc64_32_def_fill);
+    }
+    return zipOpen4(path, append, disk_size, globalcomment, NULL);
+}
+
 extern zipFile ZEXPORT zipOpen2(const char *path, int append, const char **globalcomment,
     zlib_filefunc_def *pzlib_filefunc32_def)
 {
@@ -873,32 +904,6 @@ extern zipFile ZEXPORT zipOpen2_64(const void *path, int append, const char **gl
     return zipOpen4(path, append, 0, globalcomment, NULL);
 }
 
-extern zipFile ZEXPORT zipOpen3(const char *path, int append, uint64_t disk_size, const char **globalcomment,
-    zlib_filefunc_def *pzlib_filefunc32_def)
-{
-    if (pzlib_filefunc32_def != NULL)
-    {
-        zlib_filefunc64_32_def zlib_filefunc64_32_def_fill;
-        fill_zlib_filefunc64_32_def_from_filefunc32(&zlib_filefunc64_32_def_fill,pzlib_filefunc32_def);
-        return zipOpen4(path, append, disk_size, globalcomment, &zlib_filefunc64_32_def_fill);
-    }
-    return zipOpen4(path, append, disk_size, globalcomment, NULL);
-}
-
-extern zipFile ZEXPORT zipOpen3_64(const void *path, int append, uint64_t disk_size, const char **globalcomment,
-    zlib_filefunc64_def *pzlib_filefunc_def)
-{
-    if (pzlib_filefunc_def != NULL)
-    {
-        zlib_filefunc64_32_def zlib_filefunc64_32_def_fill;
-        zlib_filefunc64_32_def_fill.zfile_func64 = *pzlib_filefunc_def;
-        zlib_filefunc64_32_def_fill.ztell32_file = NULL;
-        zlib_filefunc64_32_def_fill.zseek32_file = NULL;
-        return zipOpen4(path, append, disk_size, globalcomment, &zlib_filefunc64_32_def_fill);
-    }
-    return zipOpen4(path, append, disk_size, globalcomment, NULL);
-}
-
 extern zipFile ZEXPORT zipOpen(const char *path, int append)
 {
     return zipOpen3((const void*)path, append, 0, NULL, NULL);
@@ -908,6 +913,7 @@ extern zipFile ZEXPORT zipOpen64(const void *path, int append)
 {
     return zipOpen3(path, append, 0, NULL, NULL);
 }
+#endif
 
 extern int ZEXPORT zipOpenNewFileInZip_internal(zipFile file,
                                                 const char *filename,

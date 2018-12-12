@@ -63,6 +63,7 @@ uint64_t call_ztell64(const zlib_filefunc64_32_def *pfilefunc, voidpf filestream
     return position;
 }
 
+#ifndef WIN32
 void fill_zlib_filefunc64_32_def_from_filefunc32(zlib_filefunc64_32_def *p_filefunc64_32, const zlib_filefunc_def *p_filefunc32)
 {
     p_filefunc64_32->zfile_func64.zopen64_file = NULL;
@@ -352,3 +353,4 @@ void fill_fopen64_filefunc(zlib_filefunc64_def *pzlib_filefunc_def)
     pzlib_filefunc_def->zerror_file = ferror_file_func;
     pzlib_filefunc_def->opaque = NULL;
 }
+#endif

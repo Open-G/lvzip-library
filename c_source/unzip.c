@@ -356,7 +356,11 @@ static unzFile unzOpenInternal(const void *path, zlib_filefunc64_32_def *pzlib_f
     us.z_filefunc.ztell32_file = NULL;
 
     if (pzlib_filefunc64_32_def == NULL)
-        fill_fopen64_filefunc(&us.z_filefunc.zfile_func64);
+#if WIN32
+		fill_win32_filefunc64A(&us.z_filefunc.zfile_func64);
+#else
+		fill_fopen64_filefunc(&us.z_filefunc.zfile_func64);
+#endif
     else
         us.z_filefunc = *pzlib_filefunc64_32_def;
 
@@ -495,6 +499,7 @@ static unzFile unzOpenInternal(const void *path, zlib_filefunc64_32_def *pzlib_f
     return (unzFile)s;
 }
 
+#if 0
 extern unzFile ZEXPORT unzOpen2(const char *path, zlib_filefunc_def *pzlib_filefunc32_def)
 {
     if (pzlib_filefunc32_def != NULL)
@@ -505,6 +510,7 @@ extern unzFile ZEXPORT unzOpen2(const char *path, zlib_filefunc_def *pzlib_filef
     }
     return unzOpenInternal(path, NULL);
 }
+#endif
 
 extern unzFile ZEXPORT unzOpen2_64(const void *path, zlib_filefunc64_def *pzlib_filefunc_def)
 {
@@ -905,7 +911,7 @@ extern int ZEXPORT unzGetCurrentFileInfo(unzFile file, unz_file_info *pfile_info
     unz_file_info64 file_info64;
     int err = UNZ_OK;
 
-	err = unzGetCurrentFileInfoInternal(file, pfile_info ? &file_info64 : NULL, NULL, filename, filename_size,
+	err = unzGetCurrentFileInfoInternal(file, &file_info64, NULL, filename, filename_size,
                 extrafield, extrafield_size, comment, comment_size);
 
     if ((err == UNZ_OK) && (pfile_info != NULL))

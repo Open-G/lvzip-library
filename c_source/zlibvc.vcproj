@@ -2625,14 +2625,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\aes\entropy.c"
-				>
-			</File>
-			<File
-				RelativePath=".\aes\entropy.h"
-				>
-			</File>
-			<File
 				RelativePath=".\aes\fileenc.c"
 				>
 			</File>
