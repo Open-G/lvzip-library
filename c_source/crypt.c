@@ -32,6 +32,8 @@
 #  include <windows.h>
 #  define RtlGenRandom SystemFunction036
 BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
+#elif VxWorks
+#include <random.h>
 #else
 #  include <sys/stat.h>
 #  include <fcntl.h>
@@ -85,7 +87,7 @@ void init_keys(const char *passwd, uint32_t *pkeys, const z_crc_t *pcrc_32_tab)
 /***************************************************************************/
 
 #ifndef NOCRYPT
-int cryptrand(unsigned char *buf, unsigned int len)
+unsigned int cryptrand(unsigned char *buf, unsigned int len)
 {
 #ifdef _WIN32
 #if !EMBEDDED
@@ -94,7 +96,7 @@ int cryptrand(unsigned char *buf, unsigned int len)
 #endif
 	{
 		unsigned __int64 pentium_tsc[1];
-        int rlen;
+        unsigned int rlen;
 
 		for (rlen = 0; rlen < (int)len; ++rlen)
 		{
@@ -104,6 +106,8 @@ int cryptrand(unsigned char *buf, unsigned int len)
 		}
         return rlen;
 	}
+#elif VxWorks
+	return read_random(buf, len);
 #else
     arc4random_buf(buf, len);
 #endif

@@ -26,6 +26,7 @@
 #include <string.h>
 #define ZLIB_INTERNAL
 #include "zlib.h"
+#include "crypt.h"
 #include "lvutil.h"
 #include "zip.h"
 #include "unzip.h"
@@ -195,6 +196,11 @@ LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen,
 LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len)
 {
 	return crc32(crc, buf, len);
+}
+
+LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size)
+{
+	return cryptrand(buf, size);
 }
 
 LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment,

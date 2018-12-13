@@ -57,7 +57,7 @@ extern "C"
 /* return less than 'len' bytes but will be repeatedly called for more  */
 /* data in this case.                                                   */
 
-typedef int (*prng_entropy_fn)(unsigned char buf[], unsigned int len);
+typedef unsigned int (*prng_entropy_fn)(unsigned char buf[], unsigned int len);
 
 typedef struct
 {   unsigned char   rbuf[PRNG_POOL_SIZE];   /* the random pool          */

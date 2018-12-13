@@ -50,7 +50,7 @@ void init_keys(const char *passwd, uint32_t *pkeys, const z_crc_t *pcrc_32_tab);
 
 #ifndef NOCRYPT
 /* Generate cryptographically secure random numbers */
-int cryptrand(unsigned char *buf, unsigned int len);
+unsigned int cryptrand(unsigned char *buf, unsigned int len);
 
 /* Create encryption header */
 int crypthead(const char *passwd, uint8_t *buf, int buf_size, uint32_t *pkeys,

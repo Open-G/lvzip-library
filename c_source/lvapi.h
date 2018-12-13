@@ -34,6 +34,7 @@ LibAPI(const char *) lvzlib_zlibVersion(void);
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen, int level);
 LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen);
 LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len);
+LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size);
 LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
 						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,

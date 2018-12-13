@@ -148,6 +148,7 @@
 #define zipOpenNewFileInZip5        lvzip_zipOpenNewFileInZip5
 #define zipRemoveExtraInfoBlock     lvzip_zipRemoveExtraInfoBlock
 #define zipWriteInFileInZip         lvzip_zipWriteInFileInZip
+#define cryptrand                   lvzip_cryptrand
 #define gzopen						lvzip_gzopen
 #define gzopen64					lvzip_gzopen64
 #define gzdopen						lvzip_gzdopen
