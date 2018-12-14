@@ -38,6 +38,7 @@ BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
 #  include <sys/stat.h>
 #  include <fcntl.h>
 #  include <unistd.h>
+#  include <dlfcn.h>
 #endif
 
 #include "zlib.h"
@@ -85,8 +86,13 @@ void init_keys(const char *passwd, uint32_t *pkeys, const z_crc_t *pcrc_32_tab)
 }
 
 /***************************************************************************/
-
 #ifndef NOCRYPT
+#if Unix
+#ifndef ZCR_SEED2
+#  define ZCR_SEED2 3141592654UL     /* use PI as default pattern */
+#endif
+typedef void (*arc4random_func)(void *, unsigned int);
+#endif
 unsigned int cryptrand(unsigned char *buf, unsigned int len)
 {
 #ifdef _WIN32
@@ -108,8 +114,46 @@ unsigned int cryptrand(unsigned char *buf, unsigned int len)
 	}
 #elif VxWorks
 	return read_random(buf, len);
-#else
-    arc4random_buf(buf, len);
+#else // Unix
+	int frand;
+    unsigned int rlen;
+	static calls = 0;
+	static void *lib = NULL;
+	if (!lib)
+	    lib = dlopen("libbsd.so", RTLD_LOCAL);
+	if (lib)
+	{
+		static arc4random_func func = NULL;
+		if (!func)
+		{
+            dlerror();    /* Clear any existing error */
+		    *(void**)(&func) = dlsym(lib, "arc4random");
+            if (!func || dlerror())
+			{
+				func = NULL;
+			}
+		}
+		if (func)
+		{
+			(*func)(buf, len);
+			return len;
+		}
+	}
+	/* arc4random could not be found */
+    frand = open("/dev/urandom", O_RDONLY);
+    if (frand != -1)
+    {
+        rlen = (unsigned int)read(frand, buf, len);
+        close(frand);
+    }
+    if (rlen < len)
+    {
+        /* Ensure different random header each time */
+        if (++calls == 1)
+            srand((unsigned int)(time(NULL) ^ ZCR_SEED2));
+        while (rlen < len)
+            buf[rlen++] = (unsigned char)(rand() >> 7) & 0xff;
+    }
 #endif
     return len;
 }
