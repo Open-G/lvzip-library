@@ -37,7 +37,7 @@
 #  define ZIP_UNUSED
 #endif
 
-#if defined(USE_FILE32API)
+#if defined(USE_FILE32API) || defined(__VXWORKS__)
 #  define fopen64 fopen
 #  define ftello64 ftell
 #  define fseeko64 fseek

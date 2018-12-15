@@ -456,10 +456,22 @@ LibAPI(MgErr) lvzlib_unzGetGlobalInfo64(LVRefNum *refnum, LStrHandle *comment, u
 #if Win32
 #define strcasecmp _stricmp
 #endif
+
 static int caseInsensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)
 {
 	Unused(file);
+#if VxWorks
+	int32 c1, c2;
+
+	while (((c1 = *filename1++) == (c2 = *filename2++)) || (tolower(c1) == tolower(c2)))
+		if(c1 == '\0')
+			return 0;
+	c1 = tolower(c1);
+	c2 = tolower(c2);
+	return c1 - c2;
+#else
 	return strcasecmp(filename1, filename2);
+#endif
 }
 
 static int caseSensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)

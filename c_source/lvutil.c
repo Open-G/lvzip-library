@@ -95,8 +95,6 @@
  #include <dirent.h>
  #include <fcntl.h>
  #include <unistd.h>
- #define ftello64 ftello
- #define fseeko64 fseeko
  #define ftruncate64 ftruncate
  #ifdef HAVE_ICONV
   #include <iconv.h>
@@ -109,11 +107,8 @@
  #endif
 #elif MacOSX
  #include <CoreFoundation/CoreFoundation.h>
- #include "MacBinaryIII.h"
  #include <sys/stat.h>
  #include <sys/xattr.h>
- #define ftello64 ftello
- #define fseeko64 fseeko
  #define ftruncate64 ftruncate
  #if ProcessorType!=kX64
   #define MacSpec	FSRef
@@ -1890,14 +1885,19 @@ MgErr Win32CreateSymbolicLinkW(LPCWSTR lpSymlinkFileName, LPCWSTR lpTargetFileNa
 
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags)
 {
+#if !VxWorks
     MgErr err = mgNoErr;
     LWStrPtr src = NULL;
     LWStrPtr tgt = NULL;
+#endif
 
     if (!FIsAbsPath(path))
         return mgArgErr;
 
-    err =  MakePathDSString(path, &src, 0);
+#if VxWorks
+	return mgNotSupported;
+#else
+	err =  MakePathDSString(path, &src, 0);
     if (!err)
     {
         err = MakePathDSString(target, &tgt, 0);
@@ -1937,16 +1937,22 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags)
         DSDisposePtr((UPtr)src);
     }
     return err;
+#endif
 }
 
 LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 recursive, uInt32 *fileType)
 {
+#if !VxWorks
     MgErr err = mgNoErr;
     LWStrPtr src = NULL;
+#endif
 
     if (!FIsAbsPath(path))
         return mgArgErr;
 
+#if VxWorks
+	return mgNotSupported;
+#else
     err = MakePathDSString(path, &src, 0);
     if (!err)
     {
@@ -2085,6 +2091,7 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 recursive, uInt32 
         DSDisposePtr((UPtr)src);
     }
     return err;
+#endif
 }
 
 /*
@@ -3272,12 +3279,14 @@ static MgErr unix_convert_mbtow(const char *src, int32 len, UStrHandle *dest, uI
 
 static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
-	size_t dummy, length, size = 2 * srclength;
+	size_t dummy, length, size = 2 * srclen;
 	wchar_t wdefChar;
 	MgErr err = noErr;
 
 	if (codePage == CP_UTF8)
+	{
 		err = wchartoutf8(src, srclen, NULL, &size, 0);
+	}
 	else
 	{
 		if (defaultChar)
@@ -3290,7 +3299,7 @@ static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *de
 		if (!err)
 		{
 			uChar *dbuf = LStrBuf(**dest), *dend = LStrBuf(**dest) + size;
-			wchar_t *sbuf = src, *send = sbuf + length;
+			const wchar_t *sbuf = src, *send = sbuf + srclen;
 #ifdef HAVE_WCRTOMB
 			mbstate_t mbs;
 

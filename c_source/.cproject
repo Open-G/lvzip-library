@@ -40,6 +40,7 @@
 									<listOptionValue builtIn="false" value="_LARGEFILE64_SOURCE=1"/>
 									<listOptionValue builtIn="false" value="HAVE_AES"/>
 									<listOptionValue builtIn="false" value="HAVE_BZIP2"/>
+									<listOptionValue builtIn="false" value="BZ_NO_STDIO"/>
 								</option>
 								<option id="gnu.c.compiler.option.dialect.std.1246614591" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.338287776" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
@@ -110,6 +111,7 @@
 									<listOptionValue builtIn="false" value="_LARGEFILE64_SOURCE=1"/>
 									<listOptionValue builtIn="false" value="HAVE_AES"/>
 									<listOptionValue builtIn="false" value="HAVE_BZIP2"/>
+									<listOptionValue builtIn="false" value="BZ_NO_STDIO"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.other.362441626" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -march=armv7-a -mfpu=vfpv3 -mfloat-abi=softfp -fvisibility=hidden" valueType="string"/>
 								<option id="gnu.c.compiler.option.misc.pic.717189032" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
@@ -184,6 +186,7 @@
 									<listOptionValue builtIn="false" value="_LARGEFILE64_SOURCE=1"/>
 									<listOptionValue builtIn="false" value="HAVE_AES"/>
 									<listOptionValue builtIn="false" value="HAVE_BZIP2"/>
+									<listOptionValue builtIn="false" value="BZ_NO_STDIO"/>
 								</option>
 								<option id="gnu.c.compiler.option.misc.other.978532756" name="Other flags" superClass="gnu.c.compiler.option.misc.other" useByScannerDiscovery="false" value="-c -fmessage-length=0 -fvisibility=hidden" valueType="string"/>
 								<option id="gnu.c.compiler.option.misc.pic.804388978" name="Position Independent Code (-fPIC)" superClass="gnu.c.compiler.option.misc.pic" useByScannerDiscovery="false" value="true" valueType="boolean"/>
@@ -257,6 +260,7 @@
 									<listOptionValue builtIn="false" value="_LARGEFILE64_SOURCE=1"/>
 									<listOptionValue builtIn="false" value="HAVE_AES"/>
 									<listOptionValue builtIn="false" value="HAVE_BZIP2"/>
+									<listOptionValue builtIn="false" value="BZ_NO_STDIO"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1427234924" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>

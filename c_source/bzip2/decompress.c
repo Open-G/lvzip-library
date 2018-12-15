@@ -26,11 +26,11 @@
 static
 void makeMaps_d ( DState* s )
 {
-   UChar i;
+   int i;
    s->nInUse = 0;
    for (i = 0; i <= 255; i++)
       if (s->inUse[i]) {
-         s->seqToUnseq[s->nInUse] = i;
+         s->seqToUnseq[s->nInUse] = (UChar)i;
          s->nInUse++;
       }
 }

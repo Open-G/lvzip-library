@@ -428,10 +428,10 @@ local int updatewindow(z_streamp strm, const Bytef *end, unsigned copy)
 
 /* check function to use adler32() for zlib or crc32() for gzip */
 #ifdef GUNZIP
-#  define UPDATE(check, buf, len) \
+#  define UPDATE_CRC32(check, buf, len) \
     (state->flags ? crc32(check, buf, len) : adler32(check, buf, len))
 #else
-#  define UPDATE(check, buf, len) adler32(check, buf, len)
+#  define UPDATE_CRC32(check, buf, len) adler32(check, buf, len)
 #endif
 
 /* check macros for header crc */
@@ -1201,7 +1201,7 @@ int ZEXPORT inflate(z_streamp strm, int flush)
                 state->total += out;
                 if ((state->wrap & 4) && out)
                     strm->adler = state->check =
-                        UPDATE(state->check, put - out, out);
+                        UPDATE_CRC32(state->check, put - out, out);
                 out = left;
                 if ((state->wrap & 4) && (
 #ifdef GUNZIP
@@ -1265,8 +1265,7 @@ int ZEXPORT inflate(z_streamp strm, int flush)
     strm->total_out += out;
     state->total += out;
     if ((state->wrap & 4) && out)
-        strm->adler = state->check =
-            UPDATE(state->check, strm->next_out - out, out);
+        strm->adler = state->check = UPDATE_CRC32(state->check, strm->next_out - out, out);
     strm->data_type = (int)state->bits + (state->last ? 64 : 0) +
                       (state->mode == TYPE ? 128 : 0) +
                       (state->mode == LEN_ || state->mode == COPY_ ? 256 : 0);

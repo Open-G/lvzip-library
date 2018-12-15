@@ -40,8 +40,8 @@
 #  include <compression.h>
 #endif
 
+#define Z_BZIP2ED 12
 #ifdef HAVE_BZIP2
-#  define Z_BZIP2ED 12
 #  include "bzip2/bzlib.h"
 #endif
 

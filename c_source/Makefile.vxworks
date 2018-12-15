@@ -19,12 +19,11 @@ LIBPATH =
 # directory. Make will automatically locate the source file and
 # compile it.
 #           $(OBJ_DIR)/gzclose.o $(OBJ_DIR)/gzlib.o $(OBJ_DIR)/gzread.o $(OBJ_DIR)/gzwrite.o
-OBJECTS := $(OBJ_DIR)/aes/aescrypt.o $(OBJ_DIR)/aes/aeskey.o $(OBJ_DIR)/aes/aestab.o \
-           $(OBJ_DIR)/aes/entropy.o $(OBJ_DIR)/aes/filenc.o $(OBJ_DIR)/aes/hmac.o \
-           $(OBJ_DIR)/aes/prng.o $(OBJ_DIR)/aes/pwd2key.o $(OBJ_DIR)/aes/sha1.o \
+OBJECTS := $(OBJ_DIR)/aes/aescrypt.o $(OBJ_DIR)/aes/aeskey.o $(OBJ_DIR)/aes/aestab.o $(OBJ_DIR)/aes/fileenc.o \
+           $(OBJ_DIR)/aes/hmac.o $(OBJ_DIR)/aes/prng.o $(OBJ_DIR)/aes/pwd2key.o $(OBJ_DIR)/aes/sha1.o \
            $(OBJ_DIR)/bzip2/bzlib.o $(OBJ_DIR)/bzip2/blocksort.o $(OBJ_DIR)/bzip2/huffman.o $(OBJ_DIR)/bzip2/crctable.o \
-           $(OBJ_DIR)/bzip2/randtable.o $(OBJ_DIR)/bzip2/compress.o $(OBJ_DIR)/bzip2/decompress.o \
-           $(OBJ_DIR)/adler32.o $(OBJ_DIR)/compress.o $(OBJ_DIR)/crc32.o $(OBJ_DIR)/deflate.o \
+           $(OBJ_DIR)/bzip2/randtable.o $(OBJ_DIR)/bzip2/bzcompress.o $(OBJ_DIR)/bzip2/decompress.o \
+           $(OBJ_DIR)/adler32.o $(OBJ_DIR)/compress.o $(OBJ_DIR)/crc32.o $(OBJ_DIR)/crypt.o $(OBJ_DIR)/deflate.o \
            $(OBJ_DIR)/inffast.o $(OBJ_DIR)/infback.o $(OBJ_DIR)/inflate.o $(OBJ_DIR)/inftrees.o \
            $(OBJ_DIR)/ioapi.o $(OBJ_DIR)/iomem.o $(OBJ_DIR)/lvutil.o $(OBJ_DIR)/lvapi.o \
            $(OBJ_DIR)/mztools.o $(OBJ_DIR)/trees.o $(OBJ_DIR)/uncompr.o $(OBJ_DIR)/utf.o \
@@ -74,6 +73,12 @@ $(PROJECT_TARGETS) : $(OBJECTS)
 check_objectdir :
 	@if [ ! -d "$(OBJ_DIR)" ]; then\
 		mkdir -p $(OBJ_DIR);\
+	fi
+	@if [ ! -d "$(OBJ_DIR)/aes" ]; then\
+		mkdir -p $(OBJ_DIR)/aes;\
+	fi
+	@if [ ! -d "$(OBJ_DIR)/bzip2" ]; then\
+		mkdir -p $(OBJ_DIR)/bzip2;\
 	fi
 
 clean :

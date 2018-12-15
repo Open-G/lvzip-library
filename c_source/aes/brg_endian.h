@@ -34,7 +34,7 @@ Issue Date: 20/12/2007
       defined(__pnacl__)
 #  include <machine/endian.h>
 #elif defined( __linux__ ) || defined( __GNUC__ ) || defined( __GNU_LIBRARY__ )
-#  if !defined( __MINGW32__ ) && !defined( _AIX )
+#  if !defined( __MINGW32__ ) && !defined( _AIX ) && !defined(__VXWORKS__)
 #    include <endian.h>
 #    if !defined( __BEOS__ )
 #      include <byteswap.h>

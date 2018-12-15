@@ -32,7 +32,7 @@
 #  include <windows.h>
 #  define RtlGenRandom SystemFunction036
 BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
-#elif VxWorks
+#elif defined(__VXWORKS__)
 #include <random.h>
 #else
 #  include <sys/stat.h>
@@ -40,10 +40,9 @@ BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
 #  include <unistd.h>
 #  include <dlfcn.h>
 #endif
-
 #include "zlib.h"
 #include "crypt.h"
-#include "lvutil.h"
+
 /***************************************************************************/
 
 #define CRC32(c, b) ((*(pcrc_32_tab+(((uint32_t)(c) ^ (b)) & 0xff))) ^ ((c) >> 8))
@@ -86,7 +85,7 @@ void init_keys(const char *passwd, uint32_t *pkeys, const z_crc_t *pcrc_32_tab)
 
 /***************************************************************************/
 #ifndef NOCRYPT
-#if Unix
+#if unix
 #ifndef ZCR_SEED2
 #  define ZCR_SEED2 3141592654UL     /* use PI as default pattern */
 #endif
@@ -111,11 +110,11 @@ unsigned int cryptrand(unsigned char *buf, unsigned int len)
 		}
         return rlen;
 	}
-#elif VxWorks
+#elif defined(__VXWORKS__)
 	return read_random(buf, len);
 #else // Unix
 	int frand;
-    unsigned int rlen;
+    unsigned int rlen = 0;
 	static int calls = 0;
 	static void *lib = NULL;
 	if (!lib)
