@@ -42,9 +42,8 @@ BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
 #endif
 
 #include "zlib.h"
-
 #include "crypt.h"
-
+#include "lvutil.h"
 /***************************************************************************/
 
 #define CRC32(c, b) ((*(pcrc_32_tab+(((uint32_t)(c) ^ (b)) & 0xff))) ^ ((c) >> 8))
@@ -117,7 +116,7 @@ unsigned int cryptrand(unsigned char *buf, unsigned int len)
 #else // Unix
 	int frand;
     unsigned int rlen;
-	static calls = 0;
+	static int calls = 0;
 	static void *lib = NULL;
 	if (!lib)
 	    lib = dlopen("libbsd.so", RTLD_LOCAL);
@@ -135,7 +134,7 @@ unsigned int cryptrand(unsigned char *buf, unsigned int len)
 		}
 		if (func)
 		{
-			(*func)(buf, len);
+			func(buf, len);
 			return len;
 		}
 	}

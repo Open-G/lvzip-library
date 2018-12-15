@@ -32,12 +32,6 @@ extern "C" {
 #  endif
 #endif
 
-#ifdef HAVE_BZIP2
-#  include "bzlib.h"
-#endif
-
-#define Z_BZIP2ED 12
-
 #if defined(STRICTZIP) || defined(STRICTZIPUNZIP)
 /* like the STRICT of WIN32, we define a pointer that cannot be converted
     from (void*) without cast */

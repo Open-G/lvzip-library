@@ -208,8 +208,8 @@ long ZCALLBACK mem_seek64_file_func (voidpf opaque, voidpf stream, uint64_t offs
             case ZLIB_FILEFUNC_SEEK_END :
                 if (opaque)
                     start = LStrLen(*(LStrHandle)opaque);
-                /* fall through */
-            case ZLIB_FILEFUNC_SEEK_SET :
+                /* no break */
+             case ZLIB_FILEFUNC_SEEK_SET :
                 break;
             default:
                 return -1;

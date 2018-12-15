@@ -95,6 +95,9 @@
  #include <dirent.h>
  #include <fcntl.h>
  #include <unistd.h>
+ #define ftello64 ftello
+ #define fseeko64 fseeko
+ #define ftruncate64 ftruncate
  #ifdef HAVE_ICONV
   #include <iconv.h>
  #endif
@@ -141,7 +144,7 @@ typedef FILE* FileRefNum;
 typedef HANDLE FileRefNum;
 #endif
 
-#if HAVE_BZIP2
+#ifdef HAVE_BZIP2
 void bz_internal_error(int errcode);
 void bz_internal_error(int errcode)
 {
@@ -586,11 +589,12 @@ static MgErr NormalizePath(UStrPtr wstr)
 	if (!*s || !len)
 		return noErr;
   
-
-	// \\?\UNC\server\share
-	// \\?\C:\
-	// \\server\share
-	// C:\
+/*
+	\\?\UNC\server\share
+	\\?\C:\
+	\\server\share
+	C:\
+*/
 
 	if (*s == '\\')
 	{

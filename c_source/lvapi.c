@@ -31,6 +31,7 @@
 #include "zip.h"
 #include "unzip.h"
 #include "lvapi.h"
+#include "bzip2/bzlib.h"
 
 #ifndef VERSIONMADEBY
 # define VERSIONMADEBY   (0x0) /* platform depedent */
@@ -457,11 +458,13 @@ LibAPI(MgErr) lvzlib_unzGetGlobalInfo64(LVRefNum *refnum, LStrHandle *comment, u
 #endif
 static int caseInsensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)
 {
+	Unused(file);
 	return strcasecmp(filename1, filename2);
 }
 
 static int caseSensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)
 {
+	Unused(file);
 	return strcmp(filename1, filename2);
 }
 

@@ -40,6 +40,11 @@
 #  include <compression.h>
 #endif
 
+#ifdef HAVE_BZIP2
+#  define Z_BZIP2ED 12
+#  include "bzip2/bzlib.h"
+#endif
+
 #ifndef NOUNCRYPT
 #  include "crypt.h"
 #endif

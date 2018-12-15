@@ -699,7 +699,7 @@ __inline__ Int32 BZ2_indexIntoF ( Int32 indx, Int32 *cftab )
 
 
 /*---------------------------------------------------*/
-/* Return  True iff data corruption is discovered.
+/* Return  True if data corruption is discovered.
    Returns False if there is no problem.
 */
 static
@@ -801,6 +801,7 @@ Bool unRLE_obuf_to_output_SMALL ( DState* s )
       }
 
    }
+   return False;
 }
 
 

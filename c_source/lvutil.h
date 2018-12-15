@@ -113,12 +113,14 @@ extern "C" {
   #error "Unknown Linux platform"
  #endif
  #define Unix 1
+ #define Win32 0
  #define HAVE_FCNTL
  #define HAVE_ICONV
  #define HAVE_WCRTOMB
 #elif defined(__VXWORKS__)
  #define Unix 1
  #define VxWorks 1
+ #define Win32 0
  #if defined (__ppc)
   #define ProcessorType	kPPC
   #define BigEndian 1
