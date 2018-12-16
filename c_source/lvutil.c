@@ -107,6 +107,7 @@
  #endif
 #elif MacOSX
  #include <CoreFoundation/CoreFoundation.h>
+ #include <CoreServices/CoreServices.h>
  #include <sys/stat.h>
  #include <sys/xattr.h>
  #define ftruncate64 ftruncate

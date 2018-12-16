@@ -85,7 +85,7 @@ void init_keys(const char *passwd, uint32_t *pkeys, const z_crc_t *pcrc_32_tab)
 
 /***************************************************************************/
 #ifndef NOCRYPT
-#if unix
+#if defined(unix) || defined(__APPLE_CC__)
 #ifndef ZCR_SEED2
 #  define ZCR_SEED2 3141592654UL     /* use PI as default pattern */
 #endif

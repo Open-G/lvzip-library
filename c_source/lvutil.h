@@ -29,8 +29,6 @@
 #ifndef _lvUtil_H
 #define _lvUtil_H
 
-//#include "zlib.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

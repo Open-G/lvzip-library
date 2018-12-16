@@ -31,7 +31,10 @@
 #include "zip.h"
 #include "unzip.h"
 #include "lvapi.h"
+
+#ifdef HAVE_BZIP2
 #include "bzip2/bzlib.h"
+#endif
 
 #ifndef VERSIONMADEBY
 # define VERSIONMADEBY   (0x0) /* platform depedent */
@@ -178,7 +181,14 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 		                                   "zlib version: %s, build flags: 0x%lX\n"
 										   "minizip version: 1.2.0, September 16th, 2017"
 										   "aes version: 2013\n"
-										   "bzip2 version: %s", lvzip_zlibVersion(), lvzip_zlibCompileFlags(), BZ2_bzlibVersion());
+#ifdef HAVE_BZIP2
+										   "bzip2 version: %s"
+#endif
+                                           , lvzip_zlibVersion(), lvzip_zlibCompileFlags()
+#ifdef HAVE_BZIP2
+                                           , BZ2_bzlibVersion())
+#endif
+                                           ;
     return version;
 }
 
