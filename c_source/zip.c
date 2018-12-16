@@ -601,7 +601,7 @@ static uint64_t zipSearchCentralDir64(const zlib_filefunc64_32_def *pzlib_filefu
     return offset;
 }
 
-extern zipFile ZEXPORT zipOpen4(const void *path, int append, uint64_t disk_size, const char **globalcomment,
+static zipFile ZEXPORT zipOpen4(const void *path, int append, uint64_t disk_size, const char **globalcomment,
     zlib_filefunc64_32_def *pzlib_filefunc64_32_def)
 {
     zip64_internal ziinit;
@@ -920,7 +920,7 @@ extern zipFile ZEXPORT zipOpen64(const void *path, int append)
 }
 #endif
 
-extern int ZEXPORT zipOpenNewFileInZip_internal(zipFile file,
+static int ZEXPORT zipOpenNewFileInZip_internal(zipFile file,
                                                 const char *filename,
                                                 const zip_fileinfo *zipfi,
                                                 const void *extrafield_local,

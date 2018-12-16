@@ -429,7 +429,7 @@ static MgErr Win32GetLVFileErr(void)
 #include <string.h>
 #include <utime.h>
 
-#if Unix || MacOSX
+#if usesPosixPath
 /* seconds between Jan 1 1904 GMT and Jan 1 1970 GMT */
 #define dt1970re1904    2082844800L
 
@@ -445,7 +445,8 @@ static void UnixConvertToLVTime(time_t sTime, uInt32 *time)
 {
 		*time = sTime + dt1970re1904;
 }
-
+#endif
+#if Unix || MacOSX
 static MgErr UnixToLVFileErr(void)
 {
     switch (errno)
@@ -1520,12 +1521,12 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 		}
 		else
 		{
-			DEBUGPRINTF(("FSGetCatalogInfo: err = %ld", err));
+			DEBUGPRINTF(((CStr)"FSGetCatalogInfo: err = %ld", err));
 		}
     }
 	else
 	{
-		DEBUGPRINTF(("FSMakePathRef: err = %ld", err));
+		DEBUGPRINTF(((CStr)"FSMakePathRef: err = %ld", err));
     }
 #elif usesPosixPath
     err = MakePathDSString(path, &lstr, 0);

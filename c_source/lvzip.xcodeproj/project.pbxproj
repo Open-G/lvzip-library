@@ -51,9 +51,6 @@
 		883262811B163FAF003BB2F4 /* aestab.h in Headers */ = {isa = PBXBuildFile; fileRef = 8832626C1B163FAF003BB2F4 /* aestab.h */; };
 		883262821B163FAF003BB2F4 /* brg_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 8832626D1B163FAF003BB2F4 /* brg_endian.h */; };
 		883262831B163FAF003BB2F4 /* brg_types.h in Headers */ = {isa = PBXBuildFile; fileRef = 8832626E1B163FAF003BB2F4 /* brg_types.h */; };
-		883262841B163FAF003BB2F4 /* entropy.c in Sources */ = {isa = PBXBuildFile; fileRef = 8832626F1B163FAF003BB2F4 /* entropy.c */; };
-		883262851B163FAF003BB2F4 /* entropy.h in Headers */ = {isa = PBXBuildFile; fileRef = 883262701B163FAF003BB2F4 /* entropy.h */; };
-		883262861B163FAF003BB2F4 /* fileenc.c in Sources */ = {isa = PBXBuildFile; fileRef = 883262711B163FAF003BB2F4 /* fileenc.c */; };
 		883262871B163FAF003BB2F4 /* fileenc.h in Headers */ = {isa = PBXBuildFile; fileRef = 883262721B163FAF003BB2F4 /* fileenc.h */; };
 		883262881B163FAF003BB2F4 /* hmac.c in Sources */ = {isa = PBXBuildFile; fileRef = 883262731B163FAF003BB2F4 /* hmac.c */; };
 		883262891B163FAF003BB2F4 /* hmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 883262741B163FAF003BB2F4 /* hmac.h */; };
@@ -67,7 +64,6 @@
 		8832629A1B163FD6003BB2F4 /* bzlib_private.h in Headers */ = {isa = PBXBuildFile; fileRef = 883262911B163FD6003BB2F4 /* bzlib_private.h */; };
 		8832629B1B163FD6003BB2F4 /* bzlib.c in Sources */ = {isa = PBXBuildFile; fileRef = 883262921B163FD6003BB2F4 /* bzlib.c */; };
 		8832629C1B163FD6003BB2F4 /* bzlib.h in Headers */ = {isa = PBXBuildFile; fileRef = 883262931B163FD6003BB2F4 /* bzlib.h */; };
-		8832629D1B163FD6003BB2F4 /* compress.c in Sources */ = {isa = PBXBuildFile; fileRef = 883262941B163FD6003BB2F4 /* compress.c */; };
 		8832629E1B163FD6003BB2F4 /* crctable.c in Sources */ = {isa = PBXBuildFile; fileRef = 883262951B163FD6003BB2F4 /* crctable.c */; };
 		8832629F1B163FD6003BB2F4 /* decompress.c in Sources */ = {isa = PBXBuildFile; fileRef = 883262961B163FD6003BB2F4 /* decompress.c */; };
 		883262A01B163FD6003BB2F4 /* huffman.c in Sources */ = {isa = PBXBuildFile; fileRef = 883262971B163FD6003BB2F4 /* huffman.c */; };
@@ -75,6 +71,9 @@
 		888E743A1ADD96A900C5AEFE /* utf.c in Sources */ = {isa = PBXBuildFile; fileRef = 888E74391ADD96A900C5AEFE /* utf.c */; };
 		888E743C1ADD96C200C5AEFE /* utf.h in Headers */ = {isa = PBXBuildFile; fileRef = 888E743B1ADD96C200C5AEFE /* utf.h */; };
 		888E743E1ADD96D700C5AEFE /* lvapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 888E743D1ADD96D700C5AEFE /* lvapi.c */; };
+		88FB252521C6954800DCE0D2 /* bzcompress.c in Sources */ = {isa = PBXBuildFile; fileRef = 88FB252421C6954800DCE0D2 /* bzcompress.c */; };
+		88FB252721C6A1CA00DCE0D2 /* crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 88FB252621C6A1CA00DCE0D2 /* crypt.c */; };
+		88FB252921C6A2A700DCE0D2 /* fileenc.c in Sources */ = {isa = PBXBuildFile; fileRef = 88FB252821C6A2A700DCE0D2 /* fileenc.c */; };
 		C79368AC0C9ED687006083BF /* iomem.c in Sources */ = {isa = PBXBuildFile; fileRef = C79368AA0C9ED687006083BF /* iomem.c */; };
 		C79368AD0C9ED687006083BF /* iomem.h in Headers */ = {isa = PBXBuildFile; fileRef = C79368AB0C9ED687006083BF /* iomem.h */; };
 /* End PBXBuildFile section */
@@ -125,9 +124,6 @@
 		8832626C1B163FAF003BB2F4 /* aestab.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aestab.h; path = aes/aestab.h; sourceTree = "<group>"; };
 		8832626D1B163FAF003BB2F4 /* brg_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = brg_endian.h; path = aes/brg_endian.h; sourceTree = "<group>"; };
 		8832626E1B163FAF003BB2F4 /* brg_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = brg_types.h; path = aes/brg_types.h; sourceTree = "<group>"; };
-		8832626F1B163FAF003BB2F4 /* entropy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = entropy.c; path = aes/entropy.c; sourceTree = "<group>"; };
-		883262701B163FAF003BB2F4 /* entropy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = entropy.h; path = aes/entropy.h; sourceTree = "<group>"; };
-		883262711B163FAF003BB2F4 /* fileenc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fileenc.c; path = aes/fileenc.c; sourceTree = "<group>"; };
 		883262721B163FAF003BB2F4 /* fileenc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fileenc.h; path = aes/fileenc.h; sourceTree = "<group>"; };
 		883262731B163FAF003BB2F4 /* hmac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hmac.c; path = aes/hmac.c; sourceTree = "<group>"; };
 		883262741B163FAF003BB2F4 /* hmac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hmac.h; path = aes/hmac.h; sourceTree = "<group>"; };
@@ -141,7 +137,6 @@
 		883262911B163FD6003BB2F4 /* bzlib_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bzlib_private.h; path = bzip2/bzlib_private.h; sourceTree = "<group>"; };
 		883262921B163FD6003BB2F4 /* bzlib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bzlib.c; path = bzip2/bzlib.c; sourceTree = "<group>"; };
 		883262931B163FD6003BB2F4 /* bzlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bzlib.h; path = bzip2/bzlib.h; sourceTree = "<group>"; };
-		883262941B163FD6003BB2F4 /* compress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = compress.c; path = bzip2/compress.c; sourceTree = "<group>"; };
 		883262951B163FD6003BB2F4 /* crctable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = crctable.c; path = bzip2/crctable.c; sourceTree = "<group>"; };
 		883262961B163FD6003BB2F4 /* decompress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = decompress.c; path = bzip2/decompress.c; sourceTree = "<group>"; };
 		883262971B163FD6003BB2F4 /* huffman.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = huffman.c; path = bzip2/huffman.c; sourceTree = "<group>"; };
@@ -150,6 +145,9 @@
 		888E74391ADD96A900C5AEFE /* utf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = utf.c; sourceTree = "<group>"; };
 		888E743B1ADD96C200C5AEFE /* utf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = utf.h; sourceTree = "<group>"; };
 		888E743D1ADD96D700C5AEFE /* lvapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lvapi.c; sourceTree = "<group>"; };
+		88FB252421C6954800DCE0D2 /* bzcompress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bzcompress.c; path = bzip2/bzcompress.c; sourceTree = "<group>"; };
+		88FB252621C6A1CA00DCE0D2 /* crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crypt.c; sourceTree = "<group>"; };
+		88FB252821C6A2A700DCE0D2 /* fileenc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = fileenc.c; path = aes/fileenc.c; sourceTree = "<group>"; };
 		C79368AA0C9ED687006083BF /* iomem.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; path = iomem.c; sourceTree = "<group>"; };
 		C79368AB0C9ED687006083BF /* iomem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = iomem.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -189,6 +187,7 @@
 		83D3E1B5080D116E00DE332C /* zlib Sources */ = {
 			isa = PBXGroup;
 			children = (
+				88FB252621C6A1CA00DCE0D2 /* crypt.c */,
 				C79368AB0C9ED687006083BF /* iomem.h */,
 				C79368AA0C9ED687006083BF /* iomem.c */,
 				88521A381AF4145000A9CDF7 /* lvapi.h */,
@@ -244,6 +243,7 @@
 		883262641B163F5C003BB2F4 /* aes */ = {
 			isa = PBXGroup;
 			children = (
+				88FB252821C6A2A700DCE0D2 /* fileenc.c */,
 				883262661B163FAF003BB2F4 /* aes_via_ace.h */,
 				883262671B163FAF003BB2F4 /* aes.h */,
 				883262681B163FAF003BB2F4 /* aescrypt.c */,
@@ -253,9 +253,6 @@
 				8832626C1B163FAF003BB2F4 /* aestab.h */,
 				8832626D1B163FAF003BB2F4 /* brg_endian.h */,
 				8832626E1B163FAF003BB2F4 /* brg_types.h */,
-				8832626F1B163FAF003BB2F4 /* entropy.c */,
-				883262701B163FAF003BB2F4 /* entropy.h */,
-				883262711B163FAF003BB2F4 /* fileenc.c */,
 				883262721B163FAF003BB2F4 /* fileenc.h */,
 				883262731B163FAF003BB2F4 /* hmac.c */,
 				883262741B163FAF003BB2F4 /* hmac.h */,
@@ -273,10 +270,10 @@
 			isa = PBXGroup;
 			children = (
 				883262901B163FD6003BB2F4 /* blocksort.c */,
+				88FB252421C6954800DCE0D2 /* bzcompress.c */,
 				883262911B163FD6003BB2F4 /* bzlib_private.h */,
 				883262921B163FD6003BB2F4 /* bzlib.c */,
 				883262931B163FD6003BB2F4 /* bzlib.h */,
-				883262941B163FD6003BB2F4 /* compress.c */,
 				883262951B163FD6003BB2F4 /* crctable.c */,
 				883262961B163FD6003BB2F4 /* decompress.c */,
 				883262971B163FD6003BB2F4 /* huffman.c */,
@@ -391,22 +388,22 @@
 				883262881B163FAF003BB2F4 /* hmac.c in Sources */,
 				839542C10894F2490020C3E2 /* lvutil.c in Sources */,
 				839542C30894F2490020C3E2 /* mztools.c in Sources */,
+				88FB252721C6A1CA00DCE0D2 /* crypt.c in Sources */,
 				8832629F1B163FD6003BB2F4 /* decompress.c in Sources */,
+				88FB252521C6954800DCE0D2 /* bzcompress.c in Sources */,
 				839542C70894F2490020C3E2 /* inffast.c in Sources */,
 				839542C80894F2490020C3E2 /* crc32.c in Sources */,
 				839542CA0894F2490020C3E2 /* deflate.c in Sources */,
-				8832629D1B163FD6003BB2F4 /* compress.c in Sources */,
 				839542CC0894F2490020C3E2 /* inftrees.c in Sources */,
 				8832628E1B163FAF003BB2F4 /* sha1.c in Sources */,
+				88FB252921C6A2A700DCE0D2 /* fileenc.c in Sources */,
 				839542D00894F2490020C3E2 /* zutil.c in Sources */,
 				839542D60894F2490020C3E2 /* compress.c in Sources */,
-				883262861B163FAF003BB2F4 /* fileenc.c in Sources */,
 				888E743E1ADD96D700C5AEFE /* lvapi.c in Sources */,
 				883262A01B163FD6003BB2F4 /* huffman.c in Sources */,
 				8832628C1B163FAF003BB2F4 /* pwd2key.c in Sources */,
 				839542DA0894F2490020C3E2 /* ioapi.c in Sources */,
 				839542E00894F2490020C3E2 /* zip.c in Sources */,
-				883262841B163FAF003BB2F4 /* entropy.c in Sources */,
 				839542E40894F2490020C3E2 /* unzip.c in Sources */,
 				839542E50894F2490020C3E2 /* uncompr.c in Sources */,
 				8832627E1B163FAF003BB2F4 /* aeskey.c in Sources */,
@@ -445,6 +442,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					HAVE_AES,
 					HAVE_BZIP2,
+					NO_BZ_STDIO,
 					DEBUG,
 				);
 				GCC_REUSE_STRINGS = NO;
@@ -494,6 +492,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					HAVE_AES,
 					HAVE_BZIP2,
+					NO_BZ_STDIO,
 				);
 				GCC_REUSE_STRINGS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
@@ -540,6 +539,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					HAVE_AES,
 					HAVE_BZIP2,
+					NO_BZ_STDIO,
 				);
 				GCC_REUSE_STRINGS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
