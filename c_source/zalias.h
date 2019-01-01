@@ -179,19 +179,3 @@
 #define gzoffset64					lvzip_gzoffset64
 #define gcrc32_combine				lvzip_gcrc32_combine
 #define gcrc32_combine64			lvzip_gcrc32_combine64
-
-/* Do some standard C type finicking for compilers that do not support the _t standard types */
-#if defined(_MSC_VER) && (_MSC_VER < 1300)
-typedef char int8_t;
-typedef unsigned char uint8_t;
-typedef short int16_t;
-typedef unsigned short uint16_t;
-typedef int int32_t;
-typedef unsigned int uint32_t;
-typedef __int64 int64_t;
-typedef unsigned __int64 uint64_t;
-typedef int ssize_t;
-typedef unsigned int size_t;
-#else
-#include <stdint.h>
-#endif

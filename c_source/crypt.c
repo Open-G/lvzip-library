@@ -24,17 +24,17 @@
    NOCRYPT and NOUNCRYPT.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <time.h>
-
 #ifdef _WIN32
 #  include <windows.h>
 #  define RtlGenRandom SystemFunction036
 BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
 #elif defined(__VXWORKS__)
-#include <random.h>
+#  include <stdlib.h>
+#  include <time.h>
+#  include <random.h>
 #else
+#  include <stdio.h>
+#  include <stdlib.h>
 #  include <sys/stat.h>
 #  include <fcntl.h>
 #  include <unistd.h>
@@ -65,7 +65,7 @@ uint8_t update_keys(uint32_t *pkeys, const z_crc_t *pcrc_32_tab, uint8_t c)
     (*(pkeys+1)) += (*(pkeys+0)) & 0xff;
     (*(pkeys+1)) = (*(pkeys+1)) * 134775813L + 1;
     {
-        register int32_t keyshift = (int32_t)((*(pkeys + 1)) >> 24);
+        register uint32_t keyshift = (uint32_t)((*(pkeys + 1)) >> 24);
         (*(pkeys+2)) = (uint32_t)CRC32((*(pkeys+2)), keyshift);
     }
     return c;
@@ -85,37 +85,37 @@ void init_keys(const char *passwd, uint32_t *pkeys, const z_crc_t *pcrc_32_tab)
 
 /***************************************************************************/
 #ifndef NOCRYPT
-#if defined(unix) || defined(__APPLE_CC__)
 #ifndef ZCR_SEED2
 #  define ZCR_SEED2 3141592654UL     /* use PI as default pattern */
 #endif
+#if defined(unix) || defined(__APPLE_CC__)
 typedef void (*arc4random_func)(void *, unsigned int);
 #endif
 unsigned int cryptrand(unsigned char *buf, unsigned int len)
 {
-#ifdef _WIN32
+    unsigned int rlen = len;
+#if defined(_WIN32)
 #if !EMBEDDED
 	BOOL result = RtlGenRandom(buf, len);
     if (!result)
 #endif
 	{
 		unsigned __int64 pentium_tsc[1];
-        unsigned int rlen;
-
+ 
 		for (rlen = 0; rlen < (int)len; ++rlen)
 		{
 			if (rlen % 8 == 0)
 				QueryPerformanceCounter((LARGE_INTEGER *)pentium_tsc);
 			buf[rlen] = ((unsigned char*)pentium_tsc)[rlen % 8];
 		}
-        return rlen;
 	}
-#elif defined(__VXWORKS__)
-	return read_random(buf, len);
-#else // Unix
-	int frand;
-    unsigned int rlen = 0;
+#else
 	static int calls = 0;
+#if defined(__VXWORKS__)
+	/* read_random() can return less bytes than requested */
+    rlen = read_random_unlimited(buf, len);
+#else // Unix and MacOSX
+	int frand;
 	static void *lib = NULL;
 	if (!lib)
 	    lib = dlopen("libbsd.so", RTLD_LOCAL);
@@ -144,6 +144,7 @@ unsigned int cryptrand(unsigned char *buf, unsigned int len)
         rlen = (unsigned int)read(frand, buf, len);
         close(frand);
     }
+#endif
     if (rlen < len)
     {
         /* Ensure different random header each time */
@@ -153,7 +154,7 @@ unsigned int cryptrand(unsigned char *buf, unsigned int len)
             buf[rlen++] = (unsigned char)(rand() >> 7) & 0xff;
     }
 #endif
-    return len;
+   return rlen;
 }
 
 int crypthead(const char *passwd, uint8_t *buf, int buf_size, uint32_t *pkeys,

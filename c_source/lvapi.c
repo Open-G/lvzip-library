@@ -177,6 +177,7 @@ static char version[250] = {0};
 LibAPI(const char *) lvzlib_zlibVersion(void)
 {
 	if (!version[0])
+	{
 		snprintf(version, sizeof(version), "LabVIEW ZIP library, version: 4.2, Dec 2018\n"
 		                                   "zlib version: %s, build flags: 0x%lX\n"
 										   "minizip version: 1.2.0, September 16th, 2017"
@@ -189,9 +190,11 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
                                            , BZ2_bzlibVersion())
 #endif
                                            ;
-    return version;
+	}
+	return version;
 }
 
+/* exported zlib deflate and inflate functions */
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen,
                              const Bytef *source, uInt32 sourceLen, int level)
 {
@@ -214,6 +217,20 @@ LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size)
 	return cryptrand(buf, size);
 }
 
+/* exported zip functions */
+
+/****************************************************************************************************
+ *
+ * Opens or creates a ZIP archive for writing
+ *
+ * Parameters:
+ *  pathname: The path and filename of the archive to open for a disk based archive file
+ *  append: 0 - create new, 1 - append to end of file, 2 - add to archive
+ *  globalcomment: 
+ *  filefuncs: A pointer to a record containing the function pointers to use for access to the archive 
+ *  refnum: An archive file reference
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment,
                              zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
@@ -250,6 +267,30 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 	return fNotFound;
 }
 
+/****************************************************************************************************
+ *
+ * Adds a new archive entry to the archive and opens it to add data to it
+ *
+ * Parameters:
+ *  refnum: An archive file reference
+ *  filename: The filename to use for this new entry
+ *  zipfi: fileinfo structure with settings for this entry
+ *  extrafield_local:
+ *  extrafield_global:
+ *  comment: 
+ *  method:
+ *  level:
+ *  raw:
+ *  windowBits:
+ *  memLevel:
+ *  strategy:
+ *  password:
+ *  crecForCrypting:
+ *  version:
+ *  flags:
+ *  zip64:
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
 						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
 						   LStrHandle comment, int method, int level, int raw, int windowBits,
@@ -311,31 +352,29 @@ LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw64(LVRefNum *refnum, uInt64 uncompresse
 	return err;
 }
 
+/****************************************************************************************************
+ *
+ * Closes a ZIP archive that was opened for writing and finalize it
+ *
+ * Parameters:
+ *  refnum: An archive file reference
+ *  globalComment:
+ *  stream: A handle to return the compresses zip archive for memory streams
+ *
+ ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const LStrHandle globalComment, LStrHandle *stream)
 {
 	zipFile node;
 	MgErr err = lvzlibDisposeRefnum(refnum, &node, ZipMagic);
 	if (!err)
 	{
-		int retval;
-		LStrHandle comment = NULL;
-        
         *refnum = kNotARefNum;
-
-        if (globalComment && LStrLen(*globalComment) > 0)
-		{
-			err = ConvertLString(globalComment, CP_ACP, &comment, CP_OEMCP, 0, NULL);
-			if (err)
-				comment = globalComment;
-		}
-		retval = zipClose2(node, (const char*)LStrBufH(comment), VERSIONMADEBY, (voidpf*)stream);
-		if (comment)
-			DSDisposeHandle((UHandle)comment);
-		if (!err && retval)
-			err = LibToMgErr(retval);
+		err = LibToMgErr(zipClose2(node, (const char*)LStrBufH(globalComment), VERSIONMADEBY, (voidpf*)stream));
 	}
 	return err;
 }
+
+/* exported unzip functions */
 
 /****************************************************************************************************
  *

@@ -154,115 +154,6 @@ void bz_internal_error(int errcode)
 #endif
 
 #if usesHFSPath
-static MgErr ConvertToPosixPath(const LStrHandle hfsPath, LStrHandle *posixPath, Boolean isDir)
-{
-    MgErr err = mFullErr;
-    CFURLRef urlRef = NULL;
-    CFStringRef fileRef, posixRef;
-    uInt32 encoding = CFStringGetSystemEncoding();
-
-	if (!posixPath)
-		return mgArgErr;
-
-	fileRef = CFStringCreateWithBytes(kCFAllocatorDefault, LStrBuf(*hfsPath), LStrLen(*hfsPath), encoding, false);
-    if (*posixPath)
-        LStrLen(**posixPath) = 0;
-    if (!fileRef)
-    {
-		return mFullErr;
-	}
-    urlRef = CFURLCreateWithFileSystemPath(NULL, fileRef, kCFURLHFSPathStyle, isDir);
-    CFRelease(fileRef);
-    if (!urlRef)
-    {
-		return mFullErr;
-	}
-    posixRef = CFURLCopyFileSystemPath(urlRef, kCFURLPOSIXPathStyle);
-    CFRelease(urlRef);
-    if (posixRef)
-    {
-		CFIndex len;
-		CFRange range = CFRangeMake(0, CFStringGetLength(posixRef));
-		if (CFStringGetBytes(posixRef, range, encoding, 0, false, NULL, 0, &len) > 0)
-		{
-			if (len > 0)
-			{
-				err = NumericArrayResize(uB, 1, (UHandle*)posixPath, len + 1);
-				if (!err)
-				{
-					if (CFStringGetBytes(posixRef, range, encoding, 0, false, LStrBuf(**posixPath), len, &len) > 0)
-					{
-						LStrBuf(**posixPath)[len] = 0;
-						LStrLen(**posixPath) = len;
-					}
-					else
-					{
-						err = bogusError;
-					}
-				}
-			}
-		}
-		else
-		{
-			err = bogusError;
-		}
-        CFRelease(posixRef);
-    }
-    return err;
-}
-
-static MgErr ConvertFromPosixPath(ConstCStr posixPath, int32 len, LStrHandle *hfsPath, Boolean isDir)
-{
-    MgErr err = mFullErr;
-    CFURLRef urlRef = NULL;
-    CFStringRef hfsRef;
-    uInt32 encoding = CFStringGetSystemEncoding();
-
-	if (!hfsPath)
-		return mgArgErr;
-
-    if (*hfsPath)
-        LStrLen(**hfsPath) = 0;
-
-    urlRef = CFURLCreateFromFileSystemRepresentation(NULL, posixPath, len, isDir);
-    if (!urlRef)
-    {
-		return mFullErr;
-	}
-    hfsRef = CFURLCopyFileSystemPath(urlRef, kCFURLHFSPathStyle);
-    CFRelease(urlRef);
-    if (hfsRef)
-    {
-		CFIndex len;
-		CFRange range = CFRangeMake(0, CFStringGetLength(hfsRef));
-		if (CFStringGetBytes(hfsRef, range, encoding, 0, false, NULL, 0, &len) > 0)
-		{
-			if (len > 0)
-			{
-				err = NumericArrayResize(uB, 1, (UHandle*)hfsPath, len + 1);
-				if (!err)
-				{
-					if (CFStringGetBytes(hfsRef, range, encoding, 0, false, LStrBuf(**hfsPath), len, &len) > 0)
-					{
-						LStrBuf(**hfsPath)[len] = 0;
-						LStrLen(**hfsPath) = len;
-					}
-					else
-					{
-						err = bogusError;
-					}
-				}
-			}
-		}
-		else
-		{
-			err = bogusError;
-		}
-        CFRelease(hfsRef);
-    }
-    return err;
-}
-
 static MgErr FSMakePathRef(Path path, FSRef *ref)
 {
 	LStrHandle str = NULL;
@@ -971,6 +862,50 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInf
 		return mgArgErr;
 
 #if Win32 && !defined(EMBEDDED)
+	err = NumericArrayResize(uPtr, 1, (UHandle*)nameArr, size);
+	if (err)
+		return err;
+
+	err = NumericArrayResize(uQ, 1, (UHandle*)typeArr, size);
+	if (err)
+		return err;
+
+	if (FDepth(folderPath) == 0)
+	{
+		DWORD drives = GetLogicalDrives();
+		int drive = 0;
+	    for (; !err && drive < 26; drive++)
+		{
+            if (drives & 01)
+		    {
+				if (index >= size)
+				{
+					size *= 2;
+					err = NumericArrayResize(uPtr, 1, (UHandle*)nameArr, size);
+					if (err)
+						return err;
+
+					err = NumericArrayResize(uQ, 1, (UHandle*)typeArr, size);
+					if (err)
+						return err;
+				}
+				(**typeArr)->elm[index].type = 0;
+				(**typeArr)->elm[index].type = 0;
+				(**typeArr)->numItems = index + 1;
+
+				err = NumericArrayResize(uB, 1, (UHandle*)((**nameArr)->elm + index), 1);
+				if (!err)
+				{
+					*LStrBuf(*((**nameArr)->elm[index])) = (uChar)('A' + drive);
+					LStrLen(*((**nameArr)->elm[index])) = 1;
+				}
+				index++;
+				(**nameArr)->numItems = index;
+		    }
+	        drives /= 2;
+		}
+		return err;
+	}
 	err = MakePathDSString(folderPath, &pathName, 260);
 	if (err)
 		return err;
@@ -987,14 +922,6 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInf
 	if (err)
 		goto FListDirOut;
 
-	err = NumericArrayResize(uPtr, 1, (UHandle*)nameArr, size);
-	if (err)
-		goto FListDirOut;
-
-	err = NumericArrayResize(uQ, 1, (UHandle*)typeArr, size);
-	if (err)
-		goto FListDirOut;
-
 	if (!Wow64DisableWow64FsRedirection(&oldRedirection))
 		/* Failed but lets go on anyhow, risking strange results for virtualized paths */
 		oldRedirection = NULL;
@@ -1004,10 +931,8 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInf
 	{
 		if (GetLastError() == ERROR_FILE_NOT_FOUND)
 		{
-			if (nameArr)
-				(**nameArr)->numItems = 0;
-			if (typeArr)
-				(**typeArr)->numItems = 0;
+			(**nameArr)->numItems = 0;
+			(**typeArr)->numItems = 0;
 		}
 		else
 		{
@@ -1686,7 +1611,7 @@ LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str)
 			LStrLen(**str) = pathLen;
 #if usesHFSPath
 			if (!err)
-				err = ConvertToPosixPath(*str, str, false);
+				err = ConvertToPosixPath(*str, CP_ACP, str, CP_ACP, '?', NULL, false);
 #endif
             if (LStrBuf(**str)[LStrLen(**str) - 1] == kPathSeperator)
             {
@@ -1703,7 +1628,7 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir)
 #if usesHFSPath
 	LStrHandle hfsPath = NULL;
 	/* Convert the posix path to an HFS path */
-	err = ConvertFromPosixPath(str, len, &hfsPath, isDir);
+	err = ConvertFromPosixPath(str, len, CP_ACP, &hfsPath, CP_ACP, '?', NULL, isDir);
 	if (!err)
 	{
 		err = FTextToPath(LStrBuf(*hfsPath), LStrLen(*hfsPath), path);
@@ -2872,26 +2797,22 @@ LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp)
 #endif
 }
 
-LibAPI(uInt32) determine_codepage(uInt32 *flags, LStrHandle string)
+LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string)
 {
-	uInt32 cp = Hi16(*flags);
-	if (!cp)
+	if (string)
 	{
 		int32 i = LStrLen(*string) - 1;
 		UPtr ptr = LStrBuf(*string);
 
-		cp = CP_OEMCP;
-		// No codepage defined, try to find out if we have extended characters and set UTF_* in that case
 		for (; i >= 0; i--)
 		{
-			if (ptr[i] >= 0x80)
+			if (*ptr++ >= 0x80)
 			{
-				cp = CP_UTF8;
-				break;
+				return LV_TRUE;
 			}
 		}
 	}
-	return cp;
+	return LV_FALSE;
 }
 
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
@@ -2926,7 +2847,7 @@ LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHand
 }
 
 /* Converts a Unix style path to a LabVIEW platform path */
-LibAPI(MgErr) ConvertCPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
+LibAPI(MgErr) ConvertFromPosixPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
 {
     MgErr err = mgNotSupported;
 #if usesWinPath
@@ -2954,7 +2875,6 @@ LibAPI(MgErr) ConvertCPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle
     Unused(isDir);
 	err = ConvertCString(src, srclen, srccp, dest, destcp, defaultChar, defUsed);
 #elif usesHFSPath
-    Unused(defaultChar);
     Unused(defUsed);
 	CFStringEncoding encoding = ConvertCodepageToEncoding(srccp);
 	if (encoding != kCFStringEncodingInvalidId)
@@ -2977,7 +2897,7 @@ LibAPI(MgErr) ConvertCPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle
 		{
 			CFIndex len;
 			CFRange range = CFRangeMake(0, CFStringGetLength(hfsRef));
-			if (CFStringGetBytes(hfsRef, range, encoding, 0, false, NULL, 0, &len) > 0)
+			if (CFStringGetBytes(hfsRef, range, encoding, defaultChar, false, NULL, 0, &len) > 0)
 			{
 				if (len > 0)
 				{
@@ -3053,7 +2973,7 @@ static void TerminateLStr(LStrHandle *dest, int32 numBytes)
 #endif
 
 /* Converts a LabVIEW platform path to Unix style path */
-LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
+LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
 {
     MgErr err = mgNotSupported;
 #if usesWinPath
@@ -3081,7 +3001,6 @@ LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest,
     Unused(isDir);
 	err = ConvertLString(src, srccp, dest, destcp, defaultChar, defUsed);
 #elif usesHFSPath
-    Unused(defaultChar);
     Unused(defUsed);
 	CFStringEncoding encoding = ConvertCodepageToEncoding(srccp);
 	if (encoding != kCFStringEncodingInvalidId)
@@ -3092,7 +3011,7 @@ LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest,
 		{
 			return mFullErr;
 		}
-		urlRef = CFURLCreateWithFileSystemPath(NULL, fileRef, kCFURLHFSPathStyle, isDir);
+		urlRef = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, fileRef, kCFURLHFSPathStyle, isDir);
 		CFRelease(fileRef);
 		if (!urlRef)
 		{
@@ -3104,7 +3023,7 @@ LibAPI(MgErr) ConvertLPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest,
 		{
 			CFIndex len;
 			CFRange range = CFRangeMake(0, CFStringGetLength(posixRef));
-			if (CFStringGetBytes(posixRef, range, encoding, 0, false, NULL, 0, &len) > 0)
+			if (CFStringGetBytes(posixRef, range, encoding, defaultChar, false, NULL, 0, &len) > 0)
 			{
 				if (len > 0)
 				{
@@ -3378,11 +3297,10 @@ LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle 
 			}
 		}
 #elif MacOSX
-        Unused(srclen);
 		CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
 		if (encoding != kCFStringEncodingInvalidId)
 		{
-			CFStringRef cfpath = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, (const char)src, encoding, kCFAllocatorNull);
+			CFStringRef cfpath = CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*)src, srclen, encoding, false);
 			if (cfpath)
 			{
 				CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
@@ -3417,56 +3335,7 @@ LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle 
 
 LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt32 codePage)
 {
-	if (*dest)
-		LStrLen(**dest) = 0;
-	if (LStrLen(*src) > 0)
-	{
-		MgErr err = mgNotSupported;
-#if Win32
-		int32 numChars = MultiByteToWideChar(codePage, 0, (LPCSTR)LStrBuf(*src), LStrLen(*src), NULL, 0);
-		if (numChars > 0)
-		{ 
-			err = NumericArrayResize(uW, 1, (UHandle*)dest, numChars);
-			if (!err)
-			{
-				LStrLen(**dest) = MultiByteToWideChar(codePage, 0, (LPCSTR)LStrBuf(*src), LStrLen(*src), LStrBuf(**dest), numChars);	
-			}
-		}
-#elif MacOSX
-		CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
-		if (encoding != kCFStringEncodingInvalidId)
-		{
-			CFStringRef cfpath = CFStringCreateWithBytes(kCFAllocatorDefault, LStrBuf(*src), LStrLen(*src), encoding, false);
-			if (cfpath)
-			{
-				CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
-				CFRelease(cfpath);
-				if (cfpath2)
-				{
-					CFIndex numChars;
-					
-					CFStringNormalize(cfpath2, kCFStringNormalizationFormC);
-    
-					numChars = CFStringGetLength(cfpath2);
-					if (numChars > 0)
-					{ 
-						err = NumericArrayResize(uB, 1, (UHandle*)dest, numChars * sizeof(UniChar));
-						if (!err)
-						{
-							CFStringGetCharacters(cfpath2, CFRangeMake(0, numChars), (UniChar*)LStrBuf(**dest));
-							LStrLen(**dest) = numChars;
-						}
-					}
-					CFRelease(cfpath2); 
-				}
-			}
-		}
-#elif Unix
-		err = unix_convert_mbtow((const char*)LStrBuf(*src), LStrLen(*src), dest, codePage);
-#endif
-		return err;
-	}
-	return mgNoErr;
+	return MultiByteCStrToWideString(LStrBuf(*src), LStrLen(*src), dest, codePage);
 }
 
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest)
@@ -3511,10 +3380,10 @@ LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *
 			}
 		}
 #elif MacOSX
-		CFStringRef cfpath = CFStringCreateWithCharacters(NULL, src, srclen);
+		CFStringRef cfpath = CFStringCreateWithCharacters(kCFAllocatorDefault, src, srclen);
 		if (cfpath)
 		{
-			CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(NULL, 0, cfpath);
+			CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
 			CFRelease(cfpath);
 			if (cfpath2)
 			{

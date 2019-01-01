@@ -37,8 +37,8 @@ extern "C" {
 #include <limits.h>
 
 #if defined( _MSC_VER )
-#  include <stddef.h>
-#  define ptrint_t intptr_t
+# include <stddef.h>
+# define ptrint_t intptr_t
 # if ( _MSC_VER >= 1300 )
 #  include <stdint.h>
 # else
@@ -54,13 +54,13 @@ typedef int ssize_t;
 typedef unsigned int size_t;
 # endif
 #elif defined( __ECOS__ )
-#  define intptr_t unsigned int
-#  define ptrint_t intptr_t
+# define intptr_t unsigned int
+# define ptrint_t intptr_t
 #elif defined( __GNUC__ ) && ( __GNUC__ >= 3 )
-#  include <stdint.h>
-#  define ptrint_t intptr_t
+# include <stdint.h>
+# define ptrint_t intptr_t
 #else
-#  define ptrint_t int
+# define ptrint_t int
 #endif
 
 #ifndef BRG_UI32

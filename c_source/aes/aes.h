@@ -68,7 +68,8 @@ extern "C"
 /* elements can be used by code that implements additional modes    */
 
 typedef union
-{   uint32_t l;
+{
+	uint32_t l;
     uint8_t b[4];
 } aes_inf;
 

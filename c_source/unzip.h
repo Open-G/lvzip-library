@@ -280,16 +280,16 @@ typedef struct unz64_file_pos_s
 extern int ZEXPORT unzGetFilePos64(unzFile file, unz64_file_pos *file_pos);
 extern int ZEXPORT unzGoToFilePos64(unzFile file, const unz64_file_pos *file_pos);
 
-extern int32_t ZEXPORT unzGetOffset(unzFile file);
-extern int64_t ZEXPORT unzGetOffset64(unzFile file);
+extern uint32_t ZEXPORT unzGetOffset(unzFile file);
+extern uint64_t ZEXPORT unzGetOffset64(unzFile file);
 /* Get the current file offset */
 
 extern int ZEXPORT unzSetOffset(unzFile file, uint32_t pos);
 extern int ZEXPORT unzSetOffset64(unzFile file, uint64_t pos);
 /* Set the current file offset */
 
-extern int32_t ZEXPORT unzTell(unzFile file);
-extern int64_t ZEXPORT unzTell64(unzFile file);
+extern uint32_t ZEXPORT unzTell(unzFile file);
+extern uint64_t ZEXPORT unzTell64(unzFile file);
 /* return current position in uncompressed data */
 
 extern int ZEXPORT unzSeek(unzFile file, uint32_t offset, int origin);

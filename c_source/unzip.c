@@ -1852,17 +1852,17 @@ extern int ZEXPORT unzGoToFilePos64(unzFile file, const unz64_file_pos *file_pos
     return err;
 }
 
-extern int32_t ZEXPORT unzGetOffset(unzFile file)
+extern uint32_t ZEXPORT unzGetOffset(unzFile file)
 {
     uint64_t offset64 = 0;
 
     if (file == NULL)
         return UNZ_PARAMERROR;
     offset64 = unzGetOffset64(file);
-    return (int32_t)offset64;
+    return (uint32_t)offset64;
 }
 
-extern int64_t ZEXPORT unzGetOffset64(unzFile file)
+extern uint64_t ZEXPORT unzGetOffset64(unzFile file)
 {
     unz64_internal *s = NULL;
 
@@ -1901,7 +1901,7 @@ extern int ZEXPORT unzSetOffset64(unzFile file, uint64_t pos)
     return err;
 }
 
-extern int32_t ZEXPORT unzTell(unzFile file)
+extern uint32_t ZEXPORT unzTell(unzFile file)
 {
     unz64_internal *s = NULL;
     if (file == NULL)
@@ -1909,10 +1909,10 @@ extern int32_t ZEXPORT unzTell(unzFile file)
     s = (unz64_internal*)file;
     if (s->pfile_in_zip_read == NULL)
         return UNZ_PARAMERROR;
-    return (int32_t)s->pfile_in_zip_read->stream.total_out;
+    return (uint32_t)s->pfile_in_zip_read->stream.total_out;
 }
 
-extern int64_t ZEXPORT unzTell64(unzFile file)
+extern uint64_t ZEXPORT unzTell64(unzFile file)
 {
     unz64_internal *s = NULL;
     if (file == NULL)
