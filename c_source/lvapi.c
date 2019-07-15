@@ -362,14 +362,14 @@ LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw64(LVRefNum *refnum, uInt64 uncompresse
  *  stream: A handle to return the compresses zip archive for memory streams
  *
  ****************************************************************************************************/
-LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const LStrHandle globalComment, LStrHandle *stream)
+LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const char *globalComment, LStrHandle *stream)
 {
 	zipFile node;
 	MgErr err = lvzlibDisposeRefnum(refnum, &node, ZipMagic);
 	if (!err)
 	{
         *refnum = kNotARefNum;
-		err = LibToMgErr(zipClose2(node, (const char*)LStrBufH(globalComment), VERSIONMADEBY, (voidpf*)stream));
+		err = LibToMgErr(zipClose2(node, globalComment, VERSIONMADEBY, (voidpf*)stream));
 	}
 	return err;
 }
