@@ -901,7 +901,6 @@ static int unzGetCurrentFileInfoInternal(unzFile file, unz_file_info64 *pfile_in
 
     if (err == UNZ_OK)
         err = unzGetCurrentFileInfoField(file, &seek, comment, comment_size, file_info.size_file_comment, 1);
-
     if ((err == UNZ_OK) && (pfile_info != NULL))
         *pfile_info = file_info;
     if ((err == UNZ_OK) && (pfile_info_internal != NULL))

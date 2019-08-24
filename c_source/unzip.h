@@ -83,14 +83,13 @@ typedef struct unz_file_info64_s
     uint16_t size_filename;         /* filename length                 2 bytes, 34 */
     uint16_t size_file_extra;       /* extra field length              2 bytes, 36 */
     uint16_t size_file_comment;     /* file comment length             2 bytes, 38 */
-    uint16_t padding1;              /* filler1                         2 bytes, 40 */
+    uint16_t size_file_extra_internal; /*                              2 bytes, 40 */
     uint32_t disk_num_start;        /* disk number start               4 bytes, 44 */
     uint16_t internal_fa;           /* internal file attributes        2 bytes, 46 */
-    uint16_t padding2;              /* filler2                         2 bytes, 48 */
+//  uint16_t padding1;              /* filler1                         2 bytes, 48 */
     uint32_t external_fa;           /* external file attributes        4 bytes, 52 */
-    uint32_t padding3;              /* filler3                         4 bytes, 56 */
+//  uint32_t padding2;              /* filler2                         4 bytes, 56 */
     uint64_t disk_offset;           /* disk offset                     8 bytes, 64 */
-    uint16_t size_file_extra_internal; /*                              2 bytes, 66 */
 } unz_file_info64;
 
 typedef struct unz_file_info_s
@@ -109,7 +108,7 @@ typedef struct unz_file_info_s
    
     uint16_t disk_num_start;        /* disk number start               2 bytes, 32 */
     uint16_t internal_fa;           /* internal file attributes        2 bytes, 34 */
-    uint16_t padding1;              /* filler1                         2 bytes, 36 */
+//  uint16_t padding1;              /* filler1                         2 bytes, 36 */
     uint32_t external_fa;           /* external file attributes        4 bytes, 40 */
 
     uint64_t disk_offset;           /* disk offset                     8 bytes, 48 */
