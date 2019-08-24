@@ -1373,7 +1373,7 @@ LibAPI(MgErr) LVPath_UtilFileInfo(Path path,
 				{
 					DEBUGPRINTF(("FSSetCatalogInfo: err = %ld", err));
 				}
-				else if (LStrLen(*comment) > 0)
+				else if (LStrLenH(comment) > 0)
 				{
 					/* Ignore error for getting Desktop comments */
 					ret = OSErrToLVErr(PBDTGetPath(&dtpb));
@@ -1629,7 +1629,7 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir)
 	LStrHandle hfsPath = NULL;
 	/* Convert the posix path to an HFS path */
 	err = ConvertFromPosixPath(str, len, CP_ACP, &hfsPath, CP_ACP, '?', NULL, isDir);
-	if (!err)
+	if (!err && hsfPath)
 	{
 		err = FTextToPath(LStrBuf(*hfsPath), LStrLen(*hfsPath), path);
 	}
@@ -2817,7 +2817,7 @@ LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string)
 
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
 {
-	MgErr err;
+	MgErr err = noErr;
 	if (srccp != destcp)
 	{
 		UStrHandle ustr = NULL;
@@ -2833,12 +2833,15 @@ LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHand
 	{
 		if (srclen == -1)
 			srclen = StrLen(src);
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, srclen);
-		if (!err)
+		if (srclen > 0)
 		{
-			MoveBlock(src, LStrBuf(**dest), srclen);
-			LStrLen(**dest) = srclen;
-			return err;
+			err = NumericArrayResize(uB, 1, (UHandle*)dest, srclen);
+			if (!err)
+			{
+				MoveBlock(src, LStrBuf(**dest), srclen);
+				LStrLen(**dest) = srclen;
+				return err;
+			}
 		}
 	}
 	if (*dest)
@@ -2853,7 +2856,7 @@ LibAPI(MgErr) ConvertFromPosixPath(ConstCStr src, int32 srclen, uInt32 srccp, LS
 #if usesWinPath
     Unused(isDir);
     err = ConvertCString(src, srclen, srccp, dest, destcp, defaultChar, defUsed);
-	if (!err)
+	if (!err && *dest)
 	{
 		int32 len = LStrLen(**dest);
 		UPtr buf = LStrBuf(**dest);
@@ -2979,7 +2982,7 @@ LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle 
 #if usesWinPath
     Unused(isDir);
 	err = ConvertLString(src, srccp, dest, destcp, defaultChar, defUsed);
-	if (!err)
+	if (!err && *dest)
 	{
 		int32 len = LStrLen(**dest);
 		UPtr buf = LStrBuf(**dest);
@@ -3340,7 +3343,7 @@ LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt
 
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest)
 {
-	int32 size = dest ? LStrLen(**dest) : 0;
+	int32 size = LStrLenH(*dest);
 	MgErr err = NumericArrayResize(uB, 1, (UHandle*)dest, size + 1);
 	if (!err)
 		LStrBuf(**dest)[size] = 0;

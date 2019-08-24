@@ -89,7 +89,7 @@ voidpf ZCALLBACK mem_open_file_func (voidpf opaque, const void* filename, int mo
         memio->error = 0;
 
         if (opaque && !(mode & ZLIB_FILEFUNC_MODE_CREATE))
-             memio->pos = LStrLen(*(LStrHandle)opaque);
+             memio->pos = LStrLenH((LStrHandle)opaque);
     }
     return memio;
 }
@@ -115,8 +115,8 @@ uint32_t ZCALLBACK mem_read_file_func (voidpf opaque, voidpf stream, void* buf, 
 
         if (mem->pos + size > 0x7FFFFFFF)
           size = (uint32_t)(0x7FFFFFFF - mem->pos);
-        if (mem->pos + size > (uint64_t)LStrLen(*(LStrHandle)opaque))
-          size = (uint32_t)(LStrLen(*(LStrHandle)opaque) - mem->pos);
+        if (mem->pos + size > (uint64_t)LStrLenH((LStrHandle)opaque))
+          size = (uint32_t)(LStrLenH((LStrHandle)opaque) - mem->pos);
 
         zmemcpy(buf, LStrBuf(*(LStrHandle)opaque) + mem->pos, size);
         mem->pos += size;
@@ -206,8 +206,7 @@ long ZCALLBACK mem_seek64_file_func (voidpf opaque, voidpf stream, uint64_t offs
                 start = mem->pos;
                 break;
             case ZLIB_FILEFUNC_SEEK_END :
-                if (opaque)
-                    start = LStrLen(*(LStrHandle)opaque);
+                start = LStrLenH((LStrHandle)opaque);
                 /* no break */
              case ZLIB_FILEFUNC_SEEK_SET :
                 break;
