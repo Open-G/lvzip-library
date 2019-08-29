@@ -180,10 +180,10 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 	{
 		snprintf(version, sizeof(version), "LabVIEW ZIP library, version: 4.2, Dec 2018\n"
 		                                   "zlib version: %s, build flags: 0x%lX\n"
-										   "minizip version: 1.2.0, September 16th, 2017"
+										   "minizip version: 1.2.0, September 16th, 2017\n"
 										   "aes version: 2013\n"
 #ifdef HAVE_BZIP2
-										   "bzip2 version: %s"
+										   "bzip2 version: %s\n"
 #endif
                                            , lvzip_zlibVersion(), lvzip_zlibCompileFlags()
 #ifdef HAVE_BZIP2
