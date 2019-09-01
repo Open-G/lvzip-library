@@ -51,6 +51,7 @@
 		883262811B163FAF003BB2F4 /* aestab.h in Headers */ = {isa = PBXBuildFile; fileRef = 8832626C1B163FAF003BB2F4 /* aestab.h */; };
 		883262821B163FAF003BB2F4 /* brg_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 8832626D1B163FAF003BB2F4 /* brg_endian.h */; };
 		883262831B163FAF003BB2F4 /* brg_types.h in Headers */ = {isa = PBXBuildFile; fileRef = 8832626E1B163FAF003BB2F4 /* brg_types.h */; };
+		883262851B163FAF003BB2F4 /* entropy.h in Headers */ = {isa = PBXBuildFile; fileRef = 883262701B163FAF003BB2F4 /* entropy.h */; };
 		883262871B163FAF003BB2F4 /* fileenc.h in Headers */ = {isa = PBXBuildFile; fileRef = 883262721B163FAF003BB2F4 /* fileenc.h */; };
 		883262881B163FAF003BB2F4 /* hmac.c in Sources */ = {isa = PBXBuildFile; fileRef = 883262731B163FAF003BB2F4 /* hmac.c */; };
 		883262891B163FAF003BB2F4 /* hmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 883262741B163FAF003BB2F4 /* hmac.h */; };
@@ -124,6 +125,7 @@
 		8832626C1B163FAF003BB2F4 /* aestab.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = aestab.h; path = aes/aestab.h; sourceTree = "<group>"; };
 		8832626D1B163FAF003BB2F4 /* brg_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = brg_endian.h; path = aes/brg_endian.h; sourceTree = "<group>"; };
 		8832626E1B163FAF003BB2F4 /* brg_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = brg_types.h; path = aes/brg_types.h; sourceTree = "<group>"; };
+		883262701B163FAF003BB2F4 /* entropy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = entropy.h; path = aes/entropy.h; sourceTree = "<group>"; };
 		883262721B163FAF003BB2F4 /* fileenc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fileenc.h; path = aes/fileenc.h; sourceTree = "<group>"; };
 		883262731B163FAF003BB2F4 /* hmac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = hmac.c; path = aes/hmac.c; sourceTree = "<group>"; };
 		883262741B163FAF003BB2F4 /* hmac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hmac.h; path = aes/hmac.h; sourceTree = "<group>"; };
@@ -253,6 +255,7 @@
 				8832626C1B163FAF003BB2F4 /* aestab.h */,
 				8832626D1B163FAF003BB2F4 /* brg_endian.h */,
 				8832626E1B163FAF003BB2F4 /* brg_types.h */,
+				883262701B163FAF003BB2F4 /* entropy.h */,
 				883262721B163FAF003BB2F4 /* fileenc.h */,
 				883262731B163FAF003BB2F4 /* hmac.c */,
 				883262741B163FAF003BB2F4 /* hmac.h */,

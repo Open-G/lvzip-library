@@ -1629,7 +1629,7 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir)
 	LStrHandle hfsPath = NULL;
 	/* Convert the posix path to an HFS path */
 	err = ConvertFromPosixPath(str, len, CP_ACP, &hfsPath, CP_ACP, '?', NULL, isDir);
-	if (!err && hsfPath)
+	if (!err && hfsPath)
 	{
 		err = FTextToPath(LStrBuf(*hfsPath), LStrLen(*hfsPath), path);
 	}
