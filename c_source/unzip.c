@@ -1251,8 +1251,7 @@ extern int ZEXPORT unzOpenCurrentFile3(unzFile file, int *method, int *level, in
 #endif
         {
             int i;
-			int8_t actual;
-			uint8_t expected;
+			uint8_t actual, expected;
 
             s->pcrc_32_tab = (const z_crc_t*)get_crc_table();
             init_keys(password, s->keys, s->pcrc_32_tab);
@@ -1268,7 +1267,7 @@ extern int ZEXPORT unzOpenCurrentFile3(unzFile file, int *method, int *level, in
                 s->cur_file_info.crc >> 24);
 
 			actual = (uint8_t)source[11];
-            if (expected != actual) {
+            if ((actual != 0) && (expected != actual)) {
               return UNZ_BADPASSWORD;
             }
 

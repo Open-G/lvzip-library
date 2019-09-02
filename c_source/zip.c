@@ -1520,9 +1520,8 @@ extern int ZEXPORT zipWriteInFileInZip(zipFile file, const void *buf, uint32_t l
 
             if ((zi->ci.compression_method == Z_DEFLATED) && (!zi->ci.raw))
             {
+                uint32_t total_out_before = (uint32_t)zi->ci.stream.total_out;
 #ifdef HAVE_APPLE_COMPRESSION
-                uLong total_out_before = zi->ci.stream.total_out;
-
                 zi->ci.astream.src_ptr = zi->ci.stream.next_in;
                 zi->ci.astream.src_size = zi->ci.stream.avail_in;
                 zi->ci.astream.dst_ptr = zi->ci.stream.next_out;
@@ -1533,7 +1532,7 @@ extern int ZEXPORT zipWriteInFileInZip(zipFile file, const void *buf, uint32_t l
 
                 status = compression_stream_process(&zi->ci.astream, flags);
 
-                uLong total_out_after = len - zi->ci.astream.src_size;
+                uint32_t total_out_after = len - zi->ci.astream.src_size;
 
                 zi->ci.stream.next_in = zi->ci.astream.src_ptr;
                 zi->ci.stream.avail_in = zi->ci.astream.src_size;
@@ -1546,7 +1545,6 @@ extern int ZEXPORT zipWriteInFileInZip(zipFile file, const void *buf, uint32_t l
                 if (status == COMPRESSION_STATUS_ERROR)
                     err = ZIP_INTERNALERROR;
 #else
-                uint32_t total_out_before = (uint32_t)zi->ci.stream.total_out;
                 err = deflate(&zi->ci.stream, Z_NO_FLUSH);
                 zi->ci.pos_in_buffered_data += (uint32_t)(zi->ci.stream.total_out - total_out_before);
 #endif
@@ -1908,7 +1906,7 @@ extern int ZEXPORT zipClose2(zipFile file, const char *global_comment, uint16_t 
     pos = centraldir_pos_inzip - zi->add_position_when_writting_offset;
 
     /* Write the ZIP64 central directory header */
-    if (pos >= UINT32_MAX || zi->number_entry > UINT32_MAX)
+    if (pos >= UINT32_MAX || zi->number_entry > UINT16_MAX)
     {
         uint64_t zip64_eocd_pos_inzip = ZTELL64(zi->z_filefunc, zi->filestream);
         uint32_t zip64_datasize = 44;
