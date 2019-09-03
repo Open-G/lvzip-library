@@ -88,3 +88,13 @@ Save Level=0
 Default Destination=FALSE
 Apply New Password=""
 Namespace=""
+
+[Destination 3]
+Source Dir=fileutil.llb
+Target Dir=fileutil.llb
+Convert Target to LLB=FALSE
+Convert Target to EXE=FALSE
+Save Level=0
+Default Destination=FALSE
+Apply New Password=""
+Namespace=""

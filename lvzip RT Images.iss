@@ -3,12 +3,14 @@
 
 [Setup]
 AppName=OpenG ZIP Library for NI RT controllers
-AppVersion=4.1
-DefaultDirName={reg:HKLM32\Software\National Instruments\RT Images,Path|{pf32}\National Instruments\RT Images}\OpenG ZIP Tools\4.1.0
+AppVersion=4.2
+DefaultDirName={reg:HKLM32\Software\National Instruments\RT Images,Path|{pf32}\National Instruments\RT Images}\OpenG ZIP Tools\4.2.0
 DisableDirPage=yes
 SourceDir=RT Images
 OutputDir=..\built\RT Images
 PrivilegesRequired=admin
+UsePreviousAppDir=no
+OutputBaseFilename=ogsetup
 
 [Files]
 Source: "*.*"; DestDir: "{app}"; Flags: recursesubdirs
