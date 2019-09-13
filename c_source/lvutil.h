@@ -72,8 +72,6 @@ extern "C" {
   #define ProcessorType	kX64
  #elif defined(_M_ALPHA)
   #define ProcessorType	kDECAlpha
- #elif Compiler == kBorlandC
-  #define ProcessorType	kX86
  #elif defined(_ARM_)
   #define ProcessorType 	kARM
  #else
@@ -376,6 +374,33 @@ typedef struct {
     uChar   str[256];
 } LStr256;
 
+typedef struct ATIME128 {
+	union {
+	  struct {
+#if BigEndian
+		int32 valHi;
+	    uInt32 valLo;
+	    uInt32 fractHi;
+	    uInt32 fractLo;
+#else
+	    uInt32 fractLo;
+	    uInt32 fractHi;
+	    uInt32 valLo;
+		int32 valHi;
+#endif
+	  } p;
+	  struct {
+#if BigEndian
+	    int64 val;
+	    uInt64 fract;
+#else
+	    uInt64 fract;
+		int64 val;
+#endif
+	  } f;
+	} u;
+} ATime128, *ATime128Ptr;
+
 /* Magic Cookies */
 typedef uInt32 MagicCookie;
 
@@ -412,20 +437,6 @@ typedef int32	(*CleanupProcPtr)(UPtr);
 int32 RTSetCleanupProc(CleanupProcPtr, UPtr, int32);
 
 /* File Manager */
-typedef struct {
-	uInt32 type;    /* handled by LabVIEW Type & Creator */
-	uInt32 creator; /* handled by LabVIEW Type & Creator */
-	uInt64 size;
-	uInt64 rfSize;
-	uInt32 cDate;
-	uInt32 mDate;
-	uInt16 flags;   
-	LVPoint location;  /* Mac only */
-	uInt16 finderId;   /* Mac only */
-	uInt16 xFlags;     /* Mac only */
-	int32 putAwayId;   /* Mac only */
-} LVFileInfo;
-
 typedef enum _FMFileType {
 
 	kInvalidType	= 0,
@@ -456,9 +467,7 @@ typedef struct {			/**< file/directory information record */
 	uInt32	mdate;			/**< last modification date */
 	Bool32	folder;			/**< indicates whether path refers to a folder */
 	Bool32	isInvisible;    /**< indicates whether the file is visible in File Dialog */
-	struct {
-		int16 v, h;
-	} location;			    /**< system specific geographical location */
+	LVPoint location;		/**< system specific geographical location */
 	Str255	owner;			/**< owner (in pascal string form) of file or folder */
 	Str255	group;			/**< group (in pascal string form) of file or folder */
 } FInfoRec, *FInfoPtr;
@@ -489,10 +498,8 @@ typedef struct {			/**< file/directory information record */
 	uInt32	cdate;			/**< creation date */
 	uInt32	mdate;			/**< last modification date */
 	Bool32	folder;			/**< indicates whether path refers to a folder */
-	Bool32	isInvisible; /**< indicates whether the file is visible in File Dialog */
-	struct {
-		int16 v, h;
-	} location;			/**< system specific geographical location */
+	Bool32	isInvisible;    /**< indicates whether the file is visible in File Dialog */
+	LVPoint location;		/**< system specific geographical location */
 	Str255	owner;			/**< owner (in pascal string form) of file or folder */
 	Str255	group;			/**< group (in pascal string form) of file or folder */
 } FInfoRec64, *FInfo64Ptr;
@@ -640,7 +647,7 @@ typedef struct
 
 /* Our exported functions */
 /**************************/
-    
+
 /* Version string of the zlib library */
 LibAPI(void) DLLVersion(uChar*  Version);
 
@@ -653,17 +660,42 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
 
 /* List the directory contents with an additional array with flags and file type for each file in the names array */
 LibAPI(MgErr) LVPath_ListDirectory(Path dirname, LStrArrHdl *names, FileInfoArrHdl *fileInfo);
-    
-/* Retrieve MacOS finder information from the file, unsupported on non Mac platforms */
-LibAPI(MgErr) LVPath_UtilFileInfo(Path path, uInt8 write, uInt8 *isDirectory, LVFileInfo *finderInfo, LStrHandle comment);
+
+/* Windows portion of the flags parameter */
+#define kWinFileInfoReadOnly             0x00000001  
+#define kWinFileInfoHidden               0x00000002  
+#define kWinFileInfoSystem               0x00000004  
+#define kWinFileInfoDirectory            0x00000010  
+#define kWinFileInfoArchive              0x00000020  
+#define kWinFileInfoDevice               0x00000040  
+#define kWinFileInfoNormal               0x00000080  
+#define kWinFileInfoTemporary            0x00000100  
+#define kWinFileInfoSparseFile           0x00000200  
+#define kWinFileInfoReparsePoint         0x00000400  
+#define kWinFileInfoCompressed           0x00000800  
+#define kWinFileInfoOffline              0x00001000  
+#define kWinFileInfoNotIndexed           0x00002000  
+#define kWinFileInfoEncrypted            0x00004000  
+#define kWinFileInfoVirtual              0x00010000  
+
+typedef struct {
+	uInt32 type;       /* handled by LabVIEW Type & Creator */
+	uInt32 creator;    /* handled by LabVIEW Type & Creator */
+	uInt64 size;       /* file size or file count for directories */
+	uInt64 rfSize;     /* resource fork size, 0 on non MacOS platforms */
+	ATime128 cDate;    /* Creation date */
+	ATime128 mDate;    /* Modification date */
+	ATime128 aDate;    /* ast access date */
+	uInt16 winFlags;   /* Windows compatible flags */
+	uInt32 unixFlags;  /* Unix compatible flags */
+} LVFileInfo;
+
+/* Retrieve file information from the path */
+LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo);
 
 /* Create and read a link */
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
 LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 recursive, uInt32 *fileType);
-
-/* Legacy functions not supported on Mac OSX and all non-Mac platforms */
-LibAPI(MgErr) LVPath_EncodeMacbinary(Path srcFileName, Path dstFileName);
-LibAPI(MgErr) LVPath_DecodeMacbinary(Path srcFileName, Path dstFileName);
 
 typedef union
 {
@@ -683,7 +715,17 @@ typedef union
 #endif
 } FileOffset;
 
-LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, Path path, uInt8 rsrc, uInt32 openMode, uInt32 denyMode);
+enum { /* values for rsrc parameter */
+	kOpenFileRsrcData,
+	kOpenFileRsrcResource,
+	kOpenFileRsrcInfo,
+	kOpenFileRsrcDesktop,
+	kOpenFileRsrcIndex,
+	kOpenFileRsrcComment
+};
+
+LibAPI(MgErr) LVPath_OpenFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
+LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LStrHandle path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
 LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum);
 LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, FileOffset *size);
 LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size);
@@ -703,19 +745,19 @@ typedef struct
 {
 	int32 cnt;
 	uInt16 str[1];
-} UString, *UStrPtr, **UStrHandle;
+} WString, *WStrPtr, **WStrHandle;
 
-#define UStrLen(s)			(int32)(LStrLen(s) * sizeof(uInt16) / sizeof(wchar_t))
-#define UStrLenSet(s, l)    LStrLen(s) = l * sizeof(wchar_t) / sizeof(uInt16)
-#define UStrBuf(s)			((wchar_t*)(LStrBuf(s)))
+#define WStrLen(s)			(int32)(LStrLen(s) * sizeof(uInt16) / sizeof(wchar_t))
+#define WStrLenSet(s, l)    LStrLen(s) = l * sizeof(wchar_t) / sizeof(uInt16)
+#define WStrBuf(s)			((wchar_t*)(LStrBuf(s)))
 
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
 LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp);
 LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string);
-LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, UStrHandle *dest, uInt32 codePage);
-LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, UStrHandle *dest, uInt32 codePage);
-LibAPI(MgErr) WideStringToMultiByte(const UStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
+LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle *dest, uInt32 codePage);
+LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, WStrHandle *dest, uInt32 codePage);
+LibAPI(MgErr) WideStringToMultiByte(const WStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
 LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
 
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
