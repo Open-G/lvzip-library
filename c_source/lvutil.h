@@ -676,7 +676,6 @@ LibAPI(MgErr) LVPath_ListDirectory(Path dirname, LStrArrHdl *names, FileInfoArrH
 #define kWinFileInfoOffline              0x00001000  
 #define kWinFileInfoNotIndexed           0x00002000  
 #define kWinFileInfoEncrypted            0x00004000  
-#define kWinFileInfoVirtual              0x00010000  
 
 typedef struct {       /* off */
 	uInt32 type;       /*  0: handled by LabVIEW Type & Creator */
