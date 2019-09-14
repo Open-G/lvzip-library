@@ -33,6 +33,8 @@ CPP=gcc -E
 
 STATICLIB=lvzlib.a
 SHAREDLIB=liblvzlib.so
+SHAREDLIB32=lvzlib.so
+SHAREDLIB64=lvzlib64.so
 SHAREDLIBV=liblvzlib.so.4
 SHAREDLIBM=lvzlib.so
 LIBS=$(STATICLIB) $(SHAREDLIBV)
@@ -81,10 +83,10 @@ PIC_OBJS = $(patsubst %,$(ODIR)/%,$(PIC_OBJC)) $(patsubst %,$(ODIR)/%,$(PIC_OBJA
 all: static all64
 
 linux32: clean
-	$(MAKE) $(SHAREDLIBV) ODIR=./Linux_x86 CC_ARCH_SPEC="-m32"
+	$(MAKE) $(SHAREDLIB32) ODIR=./Linux_x86 CC_ARCH_SPEC="-m32"
 
 linux64: clean
-	$(MAKE) $(SHAREDLIBV) ODIR=./Linux_x64 CC_ARCH_SPEC="-m64"
+	$(MAKE) $(SHAREDLIB64) ODIR=./Linux_x64 CC_ARCH_SPEC="-m64"
 
 static: example$(EXE) minigzip$(EXE)
 
@@ -171,9 +173,9 @@ $(ODIR)/%.lo: %.c
 	-@mkdir $(ODIR)/bzip2 2>/dev/null || test -d $(ODIR)/bzip2
 	$(CC) $(SFLAGS) -DPIC -c -o $(ODIR)/$*.lo $<
 
-placebo $(SHAREDLIBV): $(PIC_OBJS)
+placebo $(SHAREDLIBV) $(SHAREDLIB32) $(SHAREDLIB64): $(PIC_OBJS)
 	$(LDSHARED) $(SFLAGS) -shared -o $(ODIR)/$@ $(PIC_OBJS) $(LDSHAREDLIBC) $(LDFLAGS)
-	rm -f $(ODIR)/$(SHAREDLIB) $(ODIR)/$(SHAREDLIBM)
+	rm -f $(ODIR)/$(SHAREDLIB) $(ODIR)/$(SHAREDLIBM) $(ODIR)/$(SHAREDLIBV)
 #	ln -s $(ODIR)/$@ $(ODIR)/$(SHAREDLIB)
 #	ln -s $(ODIR)/$@ $(ODIR)/$(SHAREDLIBM)
 

@@ -5,10 +5,10 @@ DEBUG_MODE = 0
 ADDED_CFLAGS = -DHAVE_AES -DHAVE_BZIP2 -DNO_BZ_STDIO
 
 ifeq ($(DEBUG_MODE),1)
-OBJ_DIR := PPC603gnu_DEBUG
+OBJ_DIR := $(OBJ_BASE)/Debug
 CFLAGS = -g -mlongcall
 else
-OBJ_DIR := PPC603gnu
+OBJ_DIR := $(OBJ_BASE)/Release
 CFLAGS = -Os -fstrength-reduce -fno-builtin -fno-strict-aliasing -mlongcall
 endif
 

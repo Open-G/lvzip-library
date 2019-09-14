@@ -519,7 +519,7 @@
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="true"
 				AdditionalDependencies="labview64.lib"
-				OutputFile="$(OutDir)\lvzlib.dll"
+				OutputFile="$(OutDir)\lvzlib64.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="../../cintools"
