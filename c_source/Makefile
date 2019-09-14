@@ -33,10 +33,10 @@ CPP=gcc -E
 
 STATICLIB=lvzlib.a
 SHAREDLIB=liblvzlib.so
-SHAREDLIB32=lvzlib.so
-SHAREDLIB64=lvzlib64.so
 SHAREDLIBV=liblvzlib.so.4
 SHAREDLIBM=lvzlib.so
+SHAREDLIB32=lvzlib.so
+SHAREDLIB64=lvzlib64.so
 LIBS=$(STATICLIB) $(SHAREDLIBV)
 
 AR=ar
@@ -175,7 +175,7 @@ $(ODIR)/%.lo: %.c
 
 placebo $(SHAREDLIBV) $(SHAREDLIB32) $(SHAREDLIB64): $(PIC_OBJS)
 	$(LDSHARED) $(SFLAGS) -shared -o $(ODIR)/$@ $(PIC_OBJS) $(LDSHAREDLIBC) $(LDFLAGS)
-	rm -f $(ODIR)/$(SHAREDLIB) $(ODIR)/$(SHAREDLIBM) $(ODIR)/$(SHAREDLIBV)
+#	rm -f $(ODIR)/$(SHAREDLIB) $(ODIR)/$(SHAREDLIBM) $(ODIR)/$(SHAREDLIBV)
 #	ln -s $(ODIR)/$@ $(ODIR)/$(SHAREDLIB)
 #	ln -s $(ODIR)/$@ $(ODIR)/$(SHAREDLIBM)
 
