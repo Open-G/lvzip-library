@@ -95,6 +95,7 @@
  #include <dirent.h>
  #include <fcntl.h>
  #include <unistd.h>
+ #include <sys/stat.h>
  #define ftruncate64 ftruncate
  #ifdef HAVE_ICONV
   #include <iconv.h>
@@ -102,10 +103,9 @@
  #include <wchar.h>
  #if VxWorks
   #include <sys/types.h>
-  #include <sys/stat.h>
   #include <string.h>
   #include <utime.h>
-  #include <ioLib.h>
+//  #include <ioLib.h>
   #ifdef __GNUC__
    #define ___unused __attribute__((unused))
   #else
@@ -120,14 +120,14 @@
   inline int link(const char* path1 ___unused, const char* path2 ___unused)
   {
 	// VxWorks < 6.2 has no link() support
-    errno = EACCES;
+    errno = ENOTSUP;
     return -1;
   }
 
   inline int chmod(const char* _path ___unused, mode_t _mode ___unused)
   {
 	// VxWorks < 6.2 has no chmod() support
-    errno = EACCES;
+    errno = ENOTSUP;
     return -1;
   }
   #endif
@@ -136,7 +136,7 @@
   inline int symlink(const char* path1 ___unused, const char* path2 ___unused)
   {
     // vxWorks has no symlinks -> always return an error!
-    errno = EACCES;
+    errno = ENOTSUP;
     return -1;
   }
 
@@ -217,19 +217,6 @@ static MgErr FSMakePathRef(Path path, FSRef *ref)
     return err;
 }
 
-/* Convert a Macintosh UTDDateTime to a LabVIEW timestamp and vice versa */
-static void MacConvertFromLVTime(uInt32 time, UTCDateTime *mTime)
-{
-	mTime->fraction = 0;
-	mTime->lowSeconds = time;
-	mTime->highSeconds = 0;
-}
-
-static void MacConvertToLVTime(UTCDateTime *mTime, uInt32 *time)
-{
-	*time = mTime->lowSeconds;
-}
-
 static MgErr OSErrToLVErr(OSErr err)
 {
     switch(err)
@@ -298,20 +285,6 @@ static void FileTimeToATime(FILETIME *pft, ATime128 *pt)
 	li.QuadPart -= LV1904_FILETIME_OFFSET;
 	pt->u.f.val = li.QuadPart / SECS_TO_FT_MULT;
 	pt->u.f.fract = ((li.QuadPart - pt->u.f.val) * 0x100000000 / SECS_TO_FT_MULT) << 32;
-}
-
-LibAPI(void) SystemTimeToATime(SYSTEMTIME *pst, ATime128 *pt)
-{
-	FILETIME ft;
-	SystemTimeToFileTime(pst, &ft);
-	FileTimeToATime(&ft, pt);
-}
-
-LibAPI(void) ATimeToSystemTime(ATime128 *pt, SYSTEMTIME *pst)
-{
-	FILETIME ft;
-	ATimeToFileTime(pt, &ft);
-	FileTimeToSystemTime(&ft, pst);
 }
 
 static MgErr Win32ToLVFileErr(DWORD winErr)
@@ -453,6 +426,8 @@ LibAPI(void) DLLVersion(uChar* version)
 
 #if Unix || MacOSX || defined(EMBEDDED)
 #define LWStrPtr  LStrPtr
+#define SStrBuf(s)  (char*)LStrBuf(s)
+
 /* wstr is filled with an 8 bit local encoded string from the path, which could be UTF8 on Linux and MacOSX systems */
 static int32 MakePathDSString(Path path, LWStrPtr *lstr, size_t reserve)
 {
@@ -1205,12 +1180,8 @@ FListDirOut:
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh)
 {
     MgErr  err = mgNoErr;
-#if Mac
-#if usesHFSPath
-    FSRef ref;
-#else
+#if MacOSX
     LStrHandle lstr = NULL;
-#endif
 #else
     Unused(path);
 #endif
@@ -1221,30 +1192,8 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
 	if (sizeHigh)
 		*sizeHigh = 0;
 
-#if Mac
-#if usesHFSPath // 32-Bit MacOSX
-    err = FSMakePathRef(path, &ref);
-    if (!err)
-    {
-		FSCatalogInfoBitmap whichInfo =  kFSCatInfoNodeFlags | kFSCatInfoRsrcSizes;
-		FSCatalogInfo		catalogInfo;
- 
-		/* get nodeFlags and catalog info */
-		err = OSErrToLVErr(FSGetCatalogInfo(&ref, whichInfo, &catalogInfo, NULL, NULL,NULL));
-		if (!err && catalogInfo.nodeFlags & kFSNodeIsDirectoryMask)
-			err = fIOErr;
-		if (!err && catalogInfo.rsrcLogicalSize > 0)
-		{
-			if (hasResFork)
-				*hasResFork = LV_TRUE;
-			if (sizeLow)
-				*sizeLow = Lo32(catalogInfo.rsrcLogicalSize);
-			if (sizeHigh)
-				*sizeHigh = Hi32(catalogInfo.rsrcLogicalSize);
-		}
-    }
-#else  // 64-Bit MacOSX
-    err = LVPath_ToText(path, &lstr);
+#if MacOSX
+    err = MakePathDSString(path, &lstr, 0);
     if (!err)
     {
         ssize_t len = getxattr((const char)LStrBuf(*lstr), XATTR_RESOURCEFORK_NAME, NULL, 0, 0, O_NOFOLLOW);
@@ -1260,7 +1209,6 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
         }
         DSDisposeHandle((UHandle)lstr);
     }
-#endif
 #endif
     return err;
 }
@@ -1399,12 +1347,15 @@ LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo)
 		{
 			fileInfo->type = kUnknownFileType;
 			fileInfo->creator = kUnknownCreator;
+			fileInfo->uid = 0xFFFFFFFF;
+			fileInfo->gid = 0xFFFFFFFF;
 			FileTimeToATime(&fi.ftCreationTime, &fileInfo->cDate);
 			FileTimeToATime(&fi.ftLastWriteTime, &fileInfo->mDate);
 			FileTimeToATime(&fi.ftLastAccessTime, &fileInfo->aDate);
 			fileInfo->rfSize = 0;
 			fileInfo->winFlags = Lo16(fi.dwFileAttributes);
 			fileInfo->unixFlags = FlagsFromWindows(fileInfo->winFlags);
+			fileInfo->xtraFlags = 0;
 			if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
 				if (!FDepth(path))
@@ -1484,12 +1435,31 @@ LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo)
 			UnixConvertFromATime(&fileInfo->cDate, &statbuf.st_ctim);
 			UnixConvertFromATime(&fileInfo->aDate, &times[0]);
 			UnixConvertFromATime(&fileInfo->mDate, &times[1]);
-			if (utimensat(0, LStrBuf(lstr), times, AT_SYMLINK_NOFOLLOW))
+			if (utimensat(0, SStrBuf(lstr), times, AT_SYMLINK_NOFOLLOW))
 
 #endif
 				err = UnixToLVFileErr();
-			else if (chmod(LStrBuf(lstr), (statbuf.st_mode & 0170000) | (fileInfo->unixFlags & 07777)))
+
+#if !VxWorks
+			/*
+			 * Changing the ownership probably won't succeed, unless we're root
+	         * or POSIX_CHOWN_RESTRICTED is not set.  Set uid/gid before setting
+	         * the mode; current BSD behavior is to remove all setuid bits on
+	         * chown. If chown fails, lose setuid/setgid bits.
+	         */
+	        else if (chown(SStrBuf(lstr), fileInfo->uid, fileInfo->gid))
+			{
+		        if (errno != EPERM && errno != ENOTSUP)
+					err = UnixToLVFileErr();
+		        fileInfo->unixFlags &= ~(S_ISUID | S_ISGID);
+	        }
+#endif
+	        if (!err && chmod(SStrBuf(lstr), (statbuf.st_mode & 0170000) | (fileInfo->unixFlags & 07777)) && errno != ENOTSUP)
 				err = UnixToLVFileErr();
+#if MacOSX
+			else if (chflags(SStrBuf(lstr), fileInfo->xtraFlags)
+				err = UnixToLVFileErr();			
+#endif
 		}
 		else
 		{
@@ -1505,6 +1475,8 @@ LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo)
 				fileInfo->type = kUnknownFileType;
 				fileInfo->creator = kUnknownCreator;
 			}
+			fileInfo->uid = statbuf.st_uid;
+			fileInfo->gid = statbuf.st_gid;
 #if VxWorks
 			VxWorksConvertToATime(statbuf.st_ctime, &fileInfo->cDate);
 			VxWorksConvertToATime(statbuf.st_atime, &fileInfo->aDate);
@@ -1514,10 +1486,6 @@ LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo)
 			UnixConvertToATime(&statbuf.st_mtim, &fileInfo->mDate);
 			UnixConvertToATime(&statbuf.st_atim, &fileInfo->aDate);
 #endif
-			fileInfo->rfSize = 0;
-			fileInfo->size = statbuf.st_size;
-			fileInfo->unixFlags = Lo16(statbuf.st_mode);
-			fileInfo->winFlags = FlagsFromUnix(fileInfo->unixFlags);
 			if (S_ISDIR(statbuf.st_mode))
 			{
 				DIR *dirp;
@@ -1530,15 +1498,27 @@ LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo)
 					count++;
 				closedir(dirp);
 				fileInfo->size = count - 2;
+				fileInfo->rfSize = 0;
 			}
 			else
 			{
+				fileInfo->size = statbuf.st_size;
 #if MacOSX
 				ssize_t size = getxattr(LStrBuf(*lstr), XATTR_RESOURCEFORK_NAME, NULL, 0, 0, O_NOFOLLOW);
 				if (size > 0)
 				    fileInfo->rfSize = (uInt64)size;
+				else
+#else
+					fileInfo->rfSize = 0;
 #endif
 			}
+			fileInfo->unixFlags = Lo16(statbuf.st_mode);
+			fileInfo->winFlags = FlagsFromUnix(fileInfo->unixFlags);
+#if MacOSX
+			fileInfo->xtraFlags = statbuf.st_flags;
+#else
+			fileInfo->xtraFlags = 0;
+#endif
 		}
     }
 #endif

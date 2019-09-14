@@ -678,17 +678,20 @@ LibAPI(MgErr) LVPath_ListDirectory(Path dirname, LStrArrHdl *names, FileInfoArrH
 #define kWinFileInfoEncrypted            0x00004000  
 #define kWinFileInfoVirtual              0x00010000  
 
-typedef struct {
-	uInt32 type;       /* handled by LabVIEW Type & Creator */
-	uInt32 creator;    /* handled by LabVIEW Type & Creator */
-	uInt64 size;       /* file size or file count for directories */
-	uInt64 rfSize;     /* resource fork size, 0 on non MacOS platforms */
-	ATime128 cDate;    /* Creation date */
-	ATime128 mDate;    /* Modification date */
-	ATime128 aDate;    /* ast access date */
-	uInt16 winFlags;   /* Windows compatible flags */
-	uInt32 unixFlags;  /* Unix compatible flags */
-} LVFileInfo;
+typedef struct {       /* off */
+	uInt32 type;       /*  0: handled by LabVIEW Type & Creator */
+	uInt32 creator;    /*  4: handled by LabVIEW Type & Creator */
+	uInt32 uid;        /*  8: Unix user id */
+	uInt32 gid;        /* 12: Unix group id */
+	uInt64 size;       /* 16: file size or file count for directories */
+	uInt64 rfSize;     /* 24: resource fork size, 0 on non MacOS platforms */
+	ATime128 cDate;    /* 32: Creation date */
+	ATime128 mDate;    /* 48: Modification date */
+	ATime128 aDate;    /* 64: ast access date */
+	uInt16 winFlags;   /* 80: Windows compatible flags */
+	uInt16 unixFlags;  /* 82: Unix compatible flags */
+	uInt32 xtraFlags;  /* 84: MacOSX extra file flags */
+} LVFileInfo;          /* 88: Total length */
 
 /* Retrieve file information from the path */
 LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo);
