@@ -31,6 +31,7 @@
 #ifndef lvzip_lvapi_h
 #define lvzip_lvapi_h
 LibAPI(const char *) lvzlib_zlibVersion(void);
+LibAPI(uInt32) lvzlib_isLittleEndian(void);
 /* exported zlib deflate and inflate functions */
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen, int level);
 LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen);

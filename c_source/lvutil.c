@@ -1233,7 +1233,7 @@ static uInt16 FlagsFromWindows(uInt16 attr)
 	}
 	else
 	{
-		flags |= 0100000; 
+		flags |= 010000; 
 	}
 	return flags;
 }

@@ -194,6 +194,17 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 	return version;
 }
 
+
+LibAPI(uInt32) lvzlib_isLittleEndian(void)
+{
+#if BigEndian
+	return FALSE;
+#else
+	return TRUE;
+#endif
+}
+
+
 /* exported zlib deflate and inflate functions */
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen,
                              const Bytef *source, uInt32 sourceLen, int level)
