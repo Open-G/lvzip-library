@@ -525,8 +525,8 @@ typedef CPStr FDirEntRec, *FDirEntPtr, **FDirEntHandle;
 #define kRecognizedType		0x02
 #define kIsLink				0x04
 #define kFIsInvisible		0x08
-#define kIsTopLevelVI		0x10	/**< Used only for VIs in archives */
-#define kErrGettingType		0x20	/**< error occurred getting type info */
+#define kIsTopLevelVI		0x10	/* Used only for VIs in archives */
+#define kErrGettingType		0x20	/* error occurred getting type info */
 #if Mac
 #define kFIsStationery		0x40
 #endif
@@ -591,9 +591,9 @@ MgErr FDisposePath(Path p);
 
 MgErr FNewRefNum(Path path, File fd, LVRefNum* refnum);
 Bool32 FIsARefNum(LVRefNum);
+MgErr FRefNumToFD(LVRefNum, File*);
 MgErr FDisposeRefNum(LVRefNum);
 Bool32 FExists(ConstPath path);
-MgErr FRefNumToFD(LVRefNum, File*);
 MgErr FGetInfo(ConstPath path, FInfoPtr infop);
 MgErr FGetInfo64(ConstPath path, FInfo64Ptr infop, FGetInfoWhich which);
 MgErr FSetInfo(ConstPath path, FInfoPtr infop);
@@ -606,6 +606,7 @@ uInt32 HasRezExt(Path path);
 
 int32 DbgPrintf(CStr fmt, ...);
 
+UPtr DSNewPtr(size_t size);
 UPtr DSNewPClr(size_t size);
 MgErr DSDisposePtr(UPtr);
 UHandle DSNewHandle(size_t size);
@@ -659,7 +660,8 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir);
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh);
 
 /* List the directory contents with an additional array with flags and file type for each file in the names array */
-LibAPI(MgErr) LVPath_ListDirectory(Path dirname, LStrArrHdl *names, FileInfoArrHdl *fileInfo);
+LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoArrHdl *fileInfo, int32 flags);
+LibAPI(MgErr) LVFile_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 flags);
 
 /* Windows portion of the flags parameter */
 #define kWinFileInfoReadOnly             0x00000001  
@@ -697,7 +699,7 @@ LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo);
 
 /* Create and read a link */
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 recursive, uInt32 *fileType);
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, Bool32 recursive, uInt32 *fileType);
 
 typedef union
 {
