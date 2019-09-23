@@ -345,6 +345,8 @@ int32 StrCpy(CStr t, const CStr s);
 int32 StrNCpy(CStr t, const CStr s, int32 l);
 int32 StrLen(ConstCStr str);
 int32 StrCmp(ConstCStr str1, ConstCStr str2);
+int32 StrNCmp(ConstCStr, ConstCStr, size_t);
+int32 StrNCaseCmp(ConstCStr, ConstCStr, size_t);
 
 /** @brief Concatenated Pascal string types. */
 typedef struct {
@@ -642,10 +644,6 @@ typedef struct
 	FMListDetails elm[1];
 } FileInfoArrRec, *FileInfoArrPtr, **FileInfoArrHdl;
 
-#define kLinkNone       0x00
-#define kLinkHard       0x01
-#define kLinkDir		0x02
-
 /* Our exported functions */
 /**************************/
 
@@ -696,10 +694,23 @@ typedef struct {       /* off */
 
 /* Retrieve file information from the path */
 LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo);
+LibAPI(MgErr) LVFile_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileInfo);
+
+/* Creation flags */
+#define kLinkSoft       0x00
+#define kLinkHard       0x01
+#define kLinkDir		0x02
+
+/* Resolution flags */
+#define kRecursive      0x01
+#define kResolveRel		0x02
 
 /* Create and read a link */
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, Bool32 recursive, uInt32 *fileType);
+LibAPI(MgErr) LVFile_CreateLink(LStrHandle path, Path target, uInt32 flags);
+
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 flags, uInt32 *fileType);
+LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, uInt32 flags, uInt32 *fileType);
 
 typedef union
 {

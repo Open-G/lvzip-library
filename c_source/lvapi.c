@@ -198,9 +198,9 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 LibAPI(uInt32) lvzlib_isLittleEndian(void)
 {
 #if BigEndian
-	return FALSE;
+	return LV_FALSE;
 #else
-	return TRUE;
+	return LV_TRUE;
 #endif
 }
 
@@ -257,7 +257,7 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 		MgErr err = lvzlibCreateRefnum(node, refnum, ZipMagic, LV_FALSE);
 		if (!err && comment)
 		{
-			int32 len = (int32)strlen(comment);
+			int32 len = (int32)StrLen((ConstCStr)comment);
 			if (len > 0)
 			{
 				err = NumericArrayResize(uB, 1, (UHandle*)globalcomment, len);
@@ -560,31 +560,16 @@ static MgErr RetrieveFileInfo(unzFile node, unz_file_info *pfile_info, LStrHandl
  *                 2 - case insensitive
  *
  ****************************************************************************************************/
-#if Win32
-#define strcasecmp _stricmp
-#endif
-
 static int caseInsensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)
 {
 	Unused(file);
-#if VxWorks
-	int32 c1, c2;
-
-	while (((c1 = *filename1++) == (c2 = *filename2++)) || (tolower(c1) == tolower(c2)))
-		if(c1 == '\0')
-			return 0;
-	c1 = tolower(c1);
-	c2 = tolower(c2);
-	return c1 - c2;
-#else
-	return strcasecmp(filename1, filename2);
-#endif
+	return StrNCaseCmp((ConstCStr)filename1, (ConstCStr)filename2, StrLen((ConstCStr)filename1));
 }
 
 static int caseSensitiveNameComparer(unzFile file, const char *filename1, const char *filename2)
 {
 	Unused(file);
-	return strcmp(filename1, filename2);
+	return StrCmp((ConstCStr)filename1, (ConstCStr)filename2);
 }
 
 LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iCaseSensitivity)
