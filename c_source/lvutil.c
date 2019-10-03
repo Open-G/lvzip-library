@@ -1,9 +1,9 @@
 /* 
    lvutil.c -- support functions for LabVIEW ZIP library
 
-   Version 1.25, Dec 07, 2018
+   Version 1.28, Sep 27, 2019
 
-   Copyright (C) 2002-2018 Rolf Kalbermatter
+   Copyright (C) 2002-2019 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -46,7 +46,7 @@
   #define _FILE_OFFSET_BIT 64
  #endif
 #endif
-#include <stdio.h>
+//#include <stdio.h>
 #include <string.h>
 #if Win32
  #define COBJMACROS
@@ -97,9 +97,6 @@
  #include <unistd.h>
  #include <sys/stat.h>
  #define ftruncate64 ftruncate
- #ifdef HAVE_ICONV
-  #include <iconv.h>
- #endif
  #include <wchar.h>
  #if VxWorks
   #include <sys/types.h>
@@ -150,20 +147,19 @@
   #define FCNTL_PARAM3_CAST(param)  (int32)(param)
  #else
   #define FCNTL_PARAM3_CAST(param)  (param)
- #define st_ctimespec st_ctim
- #define st_atimespec st_atim
- #define st_mtimespec st_mtim
+ #define st_atimespec     st_atim
+ #define st_mtimespec     st_mtim
  #endif
 #elif MacOSX
  #include <CoreFoundation/CoreFoundation.h>
  #include <CoreServices/CoreServices.h>
  #include <sys/types.h>
  #include <sys/stat.h>
+ #include <sys/attr.h>
  #include <sys/xattr.h>
  #include <dirent.h>
  #define ftruncate64 ftruncate
  #if ProcessorType!=kX64
-  #define MacSpec	FSRef
   #define MacIsInvisible(cpb) ((cpb).hFileInfo.ioFlFndrInfo.fdFlags & kIsInvisible)
   #define MacIsInvFolder(cpb) ((cpb).dirInfo.ioDrUsrWds.frFlags & kIsInvisible)
   #define MacIsDir(cpb)   ((cpb).nodeFlags & ioDirMask)
@@ -172,52 +168,25 @@
   #define kFileChanged    (1L<<7)
   static MgErr OSErrToLVErr(OSErr err);
  #endif
+
+#define kFinfoIsInvisible (OSSwapHostToBigConstInt16(kIsInvisible))
+
+typedef	struct finderinfo {
+    u_int32_t type;
+    u_int32_t creator;
+    u_int16_t fdFlags;
+    u_int32_t location;
+    u_int16_t reserved;
+    u_int32_t extendedFileInfo[4];
+} __attribute__ ((__packed__)) finderinfo;
+
+typedef struct fileinfobuf {
+    u_int32_t info_length;
+    u_int32_t data[8];
+} fileinfobuf;
 #endif
 
-#define usesHFSPath      MacOSX && ProcessorType != kX64
-#define usesPosixPath    Unix || (MacOSX && ProcessorType == kX64)
-#define usesWinPath      Win32
-
-#define kMaxFileExtLength   10
-
-#define kPosixPathSeperator  '/'
-
-#if usesHFSPath
-#define kPathSeperator ':'
-typedef FSIORefNum FileRefNum;
-#elif usesPosixPath
-#define kPathSeperator '/'
-typedef FILE* FileRefNum;
-#elif usesWinPath
-#define kPathSeperator '\\'
-typedef HANDLE FileRefNum;
-#endif
-
-#if usesWinPath && !defined(EMBEDDED)
-#define LWStrPtr          WStrPtr
-#define LWStrLen(p)       WStrLen(p)
-#define LWStrBuf(p)       WStrBuf(p)
-#define LWStrLenSet(p, s) WStrLenSet(p, s)
-
-#define LWStrNCat         WStrNCat
-#define lwslen            wcslen
-#define lwsrchr           wcsrchr
-
-static const wchar_t strWildcardPattern[] = L"*.*";
-#else
-#define LWStrPtr          LStrPtr
-#define LWStrLen(p)       LStrLen(p)
-#define LWStrBuf(p)       LStrBuf(p)
-#define LWStrLenSet(p, s) LStrLen(p) = s
-
-#define LWStrNCat         LStrNCat
-#define lwslen            strlen
-#define lwsrchr           strrchr
-
-static char strWildcardPattern[] = "*.*";
-
-#define SStrBuf(s)        (char*)LStrBuf(s)
-#endif
+#include "lwstr.h"
 
 #ifdef HAVE_BZIP2
 void bz_internal_error(int errcode);
@@ -367,126 +336,18 @@ static MgErr Win32GetLVFileErr(void)
 	return Win32ToLVFileErr(GetLastError());
 }
 
-static MgErr NormalizePath(LWStrPtr lwstr)
+static uInt16 LVFileFlagsFromWinFlags(DWORD dwAttrs)
 {
-#if EMBEDDED
-	LPSTR a, s, e, t = LWStrBuf(lwstr);
-#else
-	LPWSTR a, s, e, t = LWStrBuf(lwstr);
-#endif
-	int32 unc = FALSE, len = LWStrLen(lwstr);
-
-	a = s = t;
-	e = s + len;
-	if (!*s || !len)
-	{
-		*s = '\0';
-		return noErr;
-	}
-/*
-	\\?\UNC\server\share
-	\\?\C:\
-	\\.\UNC\server\share
-	\\.\C:\
-	\\server\share
-	C:\
-*/
-
-	if (s[0] == kPathSeperator)
-	{
-		int32 n = 1;
-		s++;
-		if (s[0] == kPathSeperator)
-		{
-			n++;
-			s++;
-			if ((s[0] == '?' || s[0] == '.') && s[1] == kPathSeperator)
-			{
-				n += 2;
-				s += 2;
-				if ((s[0] == 'U' || s[0] == 'u') && (s[1] == 'N' || s[1] == 'n') && (s[2] == 'C' || s[2] == 'C') && s[3] == kPathSeperator)
-				{
-					unc = TRUE;
-					n += 4;
-					s += 4;
-				}
-			}
-			else if (isalpha(s[0]))
-			{
-				unc = TRUE;
-			}
-			else
-			{
-				return mgArgErr;
-			}
-		}
-		t += n;
-		a = s;
-	}
-	if (isalpha(s[0]) && s[1] == ':')
-	{
-		/* X:\ */
-		s += 2;
-		t += 2;
-		if (s[0] == kPathSeperator)
-		{
-			s++; t++;
-		}
-	}
-
-	/* Canonicalize the rest of the path */
-	while (s < e)
-	{
-		if (s[0] == '.')
-		{
-			if (s[1] == kPathSeperator && (s == a || s[-1] == kPathSeperator || s[-1] == ':'))
-			{
-				s += 2; /* Skip .\ */
-			}
-			else if (s[1] == '.' && (t == a || t[-1] == kPathSeperator))
-			{
-				/* \.. backs up a directory, over the root if it has no \ following X:.
-				 * .. is ignored if it would remove a UNC server name or initial \\
-				 */
-				if (t != a)
-				{
-					if (t > a + 1 && t[-1] == kPathSeperator &&
-					    (t[-2] != kPathSeperator || t > a + 2))
-					{
-						if (t[-2] == ':' && (t > a + 3 || t[-3] == ':'))
-						{
-							t -= 2;
-							while (t > a && *t != kPathSeperator)
-								t--;
-							if (*t == kPathSeperator)
-								t++; /* Reset to last '\' */
-							else
-								t = a; /* Start path again from new root */
-						}
-						else if (t[-2] != ':' && !unc)
-							t -= 2;
-					}
-					while (t > a && *t != kPathSeperator)
-						t--;
-					if (t == a)
-					{
-						*t = kPathSeperator;
-						s++;
-					}
-				}
-				s += 2; /* Skip .. in src path */
-			}
-			else
-				*t++ = *s++;
-		}
-		else
-			*t++ = *s++;
-	}
-	/* Append \ to naked drive spec */
-	if (t - a == 2 && t[-1] == ':')
-		*t++ = kPathSeperator;
-	*t++ = '\0';
-	return noErr;
+	uInt16 flags = 0;
+	if (dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT)
+		flags |= kIsLink;
+	if (!(dwAttrs & FILE_ATTRIBUTE_DIRECTORY))
+		flags |= kIsFile;
+	if (dwAttrs & FILE_ATTRIBUTE_HIDDEN)
+        flags |= kFIsInvisible;
+	if (dwAttrs & FILE_ATTRIBUTE_COMPRESSED)
+		flags |= kIsCompressed;
+	return flags;
 }
 
 #undef CreateFile
@@ -494,295 +355,26 @@ static MgErr NormalizePath(LWStrPtr lwstr)
 #undef SetFileAttributes
 #undef FindFirstFile
 #undef FindNextFile
-#if EMBEDDED
+#if Pharlap
+static const char strWildcardPattern[] = "*.*";
 #define CreateFile(path, fl, sh, ds, op, se, ov) CreateFileA(LStrBuf(path), fl, sh, ds, op, se, ov)
 #define GetFileAttributes(path)         GetFileAttributesA(LStrBuf(path))
 #define SetFileAttributes(path, attr)   SetFileAttributesA(LStrBuf(path), attr)
 #define FindFirstFile(path, findFiles)  FindFirstFileA(LStrBuf(path), findFiles)
 #define FindNextFile(handle, findFiles) FindNextFileA(handle, findFiles)
 #else
+static const wchar_t strWildcardPattern[] = L"*.*";
 #define CreateFile(path, fl, sh, ds, op, se, ov) CreateFileW(WStrBuf(path), fl, sh, ds, op, se, ov)
 #define GetFileAttributes(path)         GetFileAttributesW(WStrBuf(path))
 #define SetFileAttributes(path, attr)   SetFileAttributesW(WStrBuf(path), attr)
 #define FindFirstFile(path, findFiles)  FindFirstFileW(WStrBuf(path), findFiles)
 #define FindNextFile(handle, findFiles) FindNextFileW(handle, findFiles)
-#endif
-
-#elif Unix || MacOSX
-/* seconds between Jan 1 1904 GMT and Jan 1 1970 GMT */
-#define dt1970re1904    2082844800L
-
-#if VxWorks
-// on VxWorks the stat time values are unsigned long integer
-static void VxWorksConvertFromATime(ATime128 *time, unsigned long *sTime)
-{
-	if (time->u.f.val > dt1970re1904)
-		*sTime = (unsigned long)(time->u.f.val - dt1970re1904);
-	else
-		*sTime = 0;
-} 
-
-static void VxWorksConvertToATime(unsigned long sTime, ATime128 *time)
-{
-	time->u.f.val = (int64_t)sTime + dt1970re1904;
-	time->u.f.fract = 0;
-}
-#else
-// on Mac/Linux kernel 2.6 and newer the stat time values are struct timespec values
-static void UnixConvertFromATime(ATime128 *time, struct timespec *sTime)
-{
-	sTime->tv_sec = (time_t)(time->u.f.val - dt1970re1904);
-	sTime->tv_nsec = (int32_t)(time->u.p.fractHi / 4.294967296);
-}
-
-static void UnixConvertToATime(struct timespec *sTime, ATime128 *time)
-{
-	time->u.f.val = (int64_t)sTime->tv_sec + dt1970re1904;
-	time->u.p.fractHi = (uint32_t)sTime->tv_nsec * 4.294967296;
-	time->u.p.fractLo = 0;
-}
-#endif
-
-static MgErr UnixToLVFileErr(void)
-{
-    switch (errno)
-    {
-      case 0:           return mgNoErr;
-      case ESPIPE:      return fEOF;
-      case EINVAL:
-      case EBADF:       return mgArgErr;
-      case ETXTBSY:     return fIsOpen;
-      case ENOENT:      return fNotFound;
-#ifdef EAGAIN
-      case EAGAIN:  /* SVR4, file is locked */
-#endif
-#ifdef EDEADLK
-      case EDEADLK: /* deadlock would occur */
-#endif
-#ifdef ENOLCK
-      case ENOLCK:  /* NFS, lock not avail */
-#endif
-      case EPERM:
-      case EACCES:      return fNoPerm;
-      case ENOSPC:      return fDiskFull;
-      case EEXIST:      return fDupPath;
-      case ENFILE:
-      case EMFILE:      return fTMFOpen;
-      case ENOMEM:      return mFullErr;
-      case EIO:         return fIOErr;
-    }
-    return fIOErr;   /* fIOErr generally signifies some unknown file error */
-}
-
-static MgErr NormalizePath(LWStrPtr lwstr)
-{
-	char *a, *s, *e, *t;
-	int32 len = LWStrLen(lwstr);
-
-	a = s = t = LWStrBuf(lwstr);
-	e = s + len;
-	if (!*s || !len)
-		return noErr;
-  
-	/* Canonicalize the path */
-	while (s < e)
-	{
-		if (s[0] == kPosixPathSeperator && s[1] == kPosixPathSeperator)
-		{
-				s++; /* Reduce // to / */ 
-		}
-		else if (s[0] == '.')
-		{
-			if (s[1] == kPosixPathSeperator && (s == a && s[-1] == kPosixPathSeperator))
-			{
-				s += 2; /* Skip ./ */
-			}
-			else if (s[1] == '.')
-			{
-				/* .. backs up a directory but only if it is not at the root of the path
-				 */
-				if (t == a || t > a + 2 && t[-1] == kPosixPathSeperator && t[-2] == '.')
-				{
-					*t++ = *s++;
-					*t++ = *s++;
-				}
-				else if (t > a + 2 && t[-1] == kPosixPathSeperator && (t[-2] != kPosixPathSeperator))
-				{
-					t -= 2;
-					while (t > a && *t != kPosixPathSeperator)
-						t--;
-					if (*t == kPosixPathSeperator)
-						t++; /* Reset to last '\' */
-					s += 3; /* Skip ../ in src path */
-				}
-				else
-					return mgArgErr;
-			}
-			else
-				*t++ = *s++;
-		}
-		else
-			*t++ = *s++;
-	}
-	if (*t == kPosixPathSeperator && t > a + 1)
-		t--;
-	*t = '\0';
-	return noErr;
-}
-#endif
-
-#if Unix || MacOSX || defined(EMBEDDED)
-static MgErr makeFileDSString(LStrHandle string, uInt32 codePage, LWStrPtr *lwstr, int32 *reserve)
-{
-	MgErr err = noErr;
-	LStrHandle dest = NULL;
-	int32 bufLen = 0;
-	if (LStrLenH(string))
-	{
-#if usesHFSPath
-		err = ConvertToPosixPath(string, codePage, &dest, CP_ACP, '?', NULL, FALSE);
-#else
-		err = ConvertLString(string, codePage, &dest, CP_ACP, '?', NULL);
-#endif
-	}
-#if Unix || MacOSX
-	else
-	{
-		bufLen = 1;
-	}
-#endif
-	if (!err)
-	{
-		bufLen += LStrLenH(dest) + 1 + (reserve ? *reserve : 0);
-		if (*lwstr && LStrLenH(lwstr) + 1 < bufLen)
-		{
-			DSDisposePtr((UPtr)*lwstr);
-			*lwstr = NULL;
-		}
-		if (!*lwstr)
-		{
-			*lwstr = (LWStrPtr)DSNewPtr(sizeof(int32) + bufLen);
-			if (!*lwstr)
-			{
-				DSDisposeHandle((UHandle)dest);
-				return mFullErr;
-			}
-		}
-		if (LStrLenH(string))
-		{
-			MoveBlock((UPtr)*dest, (UPtr)*lwstr, sizeof(int32) + LStrLenH(dest));
-		}
-#if Unix || MacOSX
-		else
-		{
-			LStrBuf(*lwstr)[0] = kPathSeperator;
-			LStrLen(*lwstr) = 1;
-		}
-#endif
-		LStrBuf(*lwstr)[LStrLen(*lwstr)] = 0;
-		DSDisposeHandle((UHandle)dest);
-		if (reserve)
-			*reserve = bufLen;
-	}
-	return NormalizePath(*lwstr);
-}
-
-static MgErr LStrNCat(LStrPtr lstr, int32 off, int32 bufLen, const char *str, int32 strLen)
-{
-	if (strLen == -1)
-	    strLen = strlen(str);
-	if (off == -1)
-		off = LStrLen(lstr);
-	if (off + strLen < bufLen)
-	{
-		strncpy(LStrBuf(lstr) + off, str, strLen);
-		LStrBuf(lstr)[off + strLen] = 0;
-		LStrLen(lstr) = off + strLen;
-		return noErr;
-	}
-	return mgArgErr;
-}
-
-#else /* Windows and not Pharlap */
-static MgErr makeFileDSString(LStrHandle string, uInt32 codePage, LWStrPtr *wstr, int32 *reserve)
-{
-	LPCSTR buf = (LPCSTR)LStrBufH(string);
-	int32 bufLen = 0, off = 0, len = 0;
-	
-	if (LStrLenH(string))
-	{
-		bufLen = MultiByteToWideChar(codePage, 0, buf, LStrLenH(string), NULL, 0);
-		if (bufLen <= 0)
-			return Win32GetLVFileErr();
-
-		if (iswalpha(buf[0]) && buf[1] == ':')
-		{
-			/* Absolute path with drive letter */
-			len = 4;
-		}
-		else if (buf[0] == kPathSeperator && buf[1] == kPathSeperator && iswalpha(buf[2]))
-		{
-			/* Absolute UNC path */
-			len = 7;
-			off = 1;
-		}
-	}
-	bufLen += len + 1 + (reserve ? *reserve : 0);
-	if (*wstr && WStrLen(*wstr) + 1 < bufLen)
-	{
-		DSDisposePtr((UPtr)*wstr);
-		*wstr = NULL;
-	}
-	if (!*wstr)
-	{
-		*wstr = (WStrPtr)DSNewPtr(sizeof(int32) + sizeof(wchar_t) * bufLen);
-		if (!*wstr)
-			return mFullErr;
-	}
-	if (LStrLenH(string))
-	{
-		if (isalpha(buf[0]) && buf[1] == ':')
-		{
-			wcscpy(WStrBuf(*wstr), L"\\\\?\\");
-		}
-		else if (buf[0] == kPathSeperator && buf[1] == kPathSeperator && isalpha(buf[2]))
-		{
-			wcscpy(WStrBuf(*wstr), L"\\\\?\\UNC");
-		}
-		len += MultiByteToWideChar(CP_ACP, 0, buf + off, LStrLenH(string) - off, WStrBuf(*wstr) + len, bufLen - len);
-	}
-	WStrLenSet(*wstr, len);
-	WStrBuf(*wstr)[len] = 0;
-
-	if (reserve)
-		*reserve = bufLen;
-
-	return NormalizePath(*wstr);
-}
-
-static MgErr WStrNCat(WStrPtr wstr, int32 off, int32 bufLength, const wchar_t *str, int32 strLen)
-{
-	if (strLen == -1)
-	    strLen = (int32)wcslen(str);
-	if (off == -1)
-		off = WStrLen(wstr);
-	if (off + strLen < bufLength)
-	{
-		wcsncpy(WStrBuf(wstr) + off, str, strLen);
-		WStrBuf(wstr)[off + strLen] = 0;
-		WStrLenSet(wstr, off + strLen);
-		return noErr;
-	}
-	return mgArgErr;
-}
-
-#define Win32HasDOSDevicePrefix(str, len) (len >= 4 && str[0] == kPathSeperator && str[1] == kPathSeperator && (str[2] == '?' || str[2] == '.') && str[3] == kPathSeperator)
 
 static WCHAR *extStr = L".LNK";
 
-static int Win32CanBeShortcutLink(WCHAR *str, int32 len)
+static int Win32CanBeShortCutLink(WCHAR *str, int32 len)
 {
-	int32 extLen = (int32)wcslen(extStr);
+	int32 extLen = lwslen(extStr);
 	return (len >= extLen && !_wcsicmp(str + len - extLen, extStr));
 }
 
@@ -795,7 +387,7 @@ LibAPI(MgErr) Win32ResolveShortCut(WStrPtr wStr, WStrPtr *wTgt, int32 *bufLen, u
 	WCHAR tempPath[MAX_PATH * 4], *srcPath = WStrBuf(wStr);
 
 	// Don't bother trying to resolve shortcut if it doesn't have a ".lnk" extension.
-	if (!Win32CanBeShortcutLink(srcPath, WStrLen(wStr)))
+	if (!Win32CanBeShortCutLink(srcPath, WStrLen(wStr)))
 		return cancelError;
 
 	// Get a pointer to the IShellLink interface.
@@ -808,56 +400,46 @@ LibAPI(MgErr) Win32ResolveShortCut(WStrPtr wStr, WStrPtr *wTgt, int32 *bufLen, u
 		{
 			// Load the shortcut.
 			err = IPersistFile_Load(ppf, srcPath, STGM_READ);
-			if (SUCCEEDED(err))
+			if (SUCCEEDED(err) && flags)
 			{
 				// Resolve the shortcut.
 				err = IShellLinkW_Resolve(psl, NULL, SLR_NO_UI);
+			}
+			if (SUCCEEDED(err))
+			{
+				fileData.dwFileAttributes = INVALID_FILE_ATTRIBUTES;
+				err = IShellLinkW_GetPath(psl, tempPath, MAX_PATH * 4, &fileData, flags ? 0 : SLGP_RAWPATH); 
 				if (SUCCEEDED(err))
 				{
-					fileData.dwFileAttributes = INVALID_FILE_ATTRIBUTES;
-					err = IShellLinkW_GetPath(psl, tempPath, MAX_PATH * 4, &fileData, SLGP_RAWPATH); 
-					if (SUCCEEDED(err))
+					*dwAttrs = fileData.dwFileAttributes;
+					if (err == S_OK)
 					{
-						*dwAttrs = fileData.dwFileAttributes;
-						if (err == S_OK)
+						int32 len = lwslen(tempPath);
+						if (flags & kRecursive && Win32CanBeShortCutLink(tempPath, len))
 						{
-							int32 len = (int32)wcslen(tempPath);
-							if (flags & kRecursive && Win32CanBeShortcutLink(tempPath, len))
+							srcPath = tempPath;
+							continue;
+						}
+						if (*dwAttrs == INVALID_FILE_ATTRIBUTES)
+							*dwAttrs = GetFileAttributesW(tempPath);
+						
+						if (wTgt)
+						{
+							err = LWStrRealloc(wTgt, bufLen, 0, len + 10);
+							if (!err)
 							{
-								srcPath = tempPath;
-								continue;
+								LWStrNCat(*wTgt, 0, *bufLen, tempPath, len);
 							}
-							if (*dwAttrs == INVALID_FILE_ATTRIBUTES)
-								*dwAttrs = GetFileAttributesW(tempPath);
-							
-							if (wTgt)
+							else
 							{
-								if (*wTgt && *bufLen <= len)
-								{
-									DSDisposePtr((UPtr)*wTgt);
-									*wTgt = NULL;
-								}
-								if (!*wTgt)
-								{
-									*bufLen = len + 10;
-									*wTgt = (WStrPtr)DSNewPClr(sizeof(int32) + (*bufLen) * sizeof(WCHAR));
-								}
-								if (*wTgt)
-								{
-									wcscpy(WStrBuf(*wTgt), tempPath);
-									WStrLenSet(*wTgt, len);
-								}
-								else
-								{
-									err = E_OUTOFMEMORY;
-								}
+								err = E_OUTOFMEMORY;
 							}
 						}
-						else
-						{
-							/* Path couldn't be retrieved, is there any other way we can get the info? */
-							fileData.cFileName;
-						}
+					}
+					else
+					{
+						/* Path couldn't be retrieved, is there any other way we can get the info? */
+						fileData.cFileName;
 					}
 				}
 			}
@@ -891,13 +473,14 @@ static BOOL Win32ModifyBackupPrivilege(BOOL fEnable)
 	return success;
 }
 
-LibAPI(MgErr) Win32ResolveLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, int32 flags, DWORD *dwAttrs)
+LibAPI(MgErr) Win32ResolveSymLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, int32 flags, DWORD *dwAttrs)
 {
 	HANDLE handle;
 	MgErr err = noErr;
 	DWORD bytes = MAXIMUM_REPARSE_DATA_BUFFER_SIZE;
 	PREPARSE_DATA_BUFFER buffer = NULL;
-	WStrPtr wIntermediate = wSrc;
+	int32 intLen = wTgt && bufLen ? *bufLen : 0;
+	WStrPtr wIntermediate = wTgt && bufLen ? *wTgt : NULL;
 
 	*dwAttrs = GetFileAttributes(wSrc);
 	if (*dwAttrs == INVALID_FILE_ATTRIBUTES)
@@ -911,7 +494,7 @@ LibAPI(MgErr) Win32ResolveLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, int32
 	do
 	{
 		// Open the link file or directory
-		handle = CreateFile(wIntermediate, GENERIC_READ, 0 /*FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE */, 
+		handle = CreateFile(wSrc, GENERIC_READ, 0 /*FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE */, 
 			                 NULL, OPEN_EXISTING, FILE_FLAG_OPEN_REPARSE_POINT | FILE_FLAG_BACKUP_SEMANTICS, NULL);
 		if (handle == INVALID_HANDLE_VALUE)
 			return Win32GetLVFileErr();
@@ -955,64 +538,65 @@ LibAPI(MgErr) Win32ResolveLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, int32
 			}
 			if (length)
 			{
-				WStrPtr tempPath = NULL;
-				int32 offset = 0, parentLen = 0, intLen = length;
-				if (Win32HasDOSDevicePrefix(start, length))
+				int32 parentLen = 0, newLen = length,
+					  offset = HasDOSDevicePrefix(start, length);
+
+				switch (offset)
 				{
-					offset = 4;
-					if (length >= 7 && towlower(start[4]) == 'u' && towlower(start[5]) == 'n' && towlower(start[6]) == 'c' && start[7] == kPathSeperator)
-					{
+					case 0:
+						/* No DOS device prefix, if it is an UNC name allocate 6 extra bytes and copy from the second character */
+						if (length >= 2 && start[0] == kPathSeperator && start[1] == kPathSeperator)
+						{
+							relative = FALSE;
+							offset = 1;
+							newLen += 6;
+						}
+						/* fall through */
+					case 4:
+						/* If absolute path with drive specification */
+						if (length - offset >= 3 && start[offset] < 128 && isalpha(start[offset]) && start[offset + 1] == ':' && start[offset + 2] == kPathSeperator)
+						{
+							relative = FALSE;
+							newLen += (4 - offset);
+						}
+						break;
+					case 8:
+						/* DOS device prefix with UNC extension */
 						relative = FALSE;
-					}
-				}
-				else
-				{
-					if (length >= 2 && start[0] == kPathSeperator && start[1] == kPathSeperator)
-					{
-						relative = FALSE;
-						offset = 1;
-						intLen += 6;
-					}
-				}
-				if (length - offset >= 3 && isalpha(start[offset]) && start[offset + 1] == ':' && start[offset + 2] == kPathSeperator)
-				{
-					relative = FALSE;
-				    intLen += (4 - offset);
+						offset = 7;
+						break;
+					default:
+						err = mgArgErr;
+						break;
 				}
 				intLen++;
 
 				if (relative)
 				{
-					wchar_t *ptr = WStrBuf(wIntermediate);
-					parentLen = WStrLen(wIntermediate);
-					while (ptr[--parentLen] != kPathSeperator);
-					parentLen++;
-					intLen = parentLen + length + 1;
+					parentLen = LWStrParentPath(wSrc, -1);
+					if (length && start[0] != kPathSeperator)
+						parentLen++;
+					newLen = parentLen + length + 1;
 				}
 
-				tempPath = (WStrPtr)DSNewPtr(sizeof(int32) + sizeof(WCHAR) * intLen);
-				if (tempPath)
+				err = LWStrRealloc(&wIntermediate, &intLen, 0, newLen);
+				if (!err)
 				{
 					if (relative)
 					{
 						if (start[0] == kPathSeperator)
-						{
-							 parentLen--;
-						}
-						err = WStrNCat(tempPath, 0, intLen, WStrBuf(wIntermediate), parentLen);
-						offset = parentLen;
+							 offset = 1;
+
+						err = WStrNCat(wIntermediate, 0, intLen, WStrBuf(wIntermediate), parentLen);
 					}
-					else if (offset == 1)
+					else if (offset == 1 || offset == 7)
 					{
-						err = WStrNCat(tempPath, 0, intLen, L"\\\\?\\UNC", 7);
+						err = WStrNCat(wIntermediate, 0, intLen, L"\\\\?\\UNC", 7);
 					}
 					else
 					{
-						err = WStrNCat(tempPath, 0, intLen, L"\\\\?\\", 4);
+						err = WStrNCat(wIntermediate, 0, intLen, L"\\\\?\\", 4);
 					}
-					if (wIntermediate != wSrc)
-						DSDisposePtr((UPtr)wIntermediate);
-					wIntermediate = tempPath;
 
 					if (!err)
 						err = WStrNCat(wIntermediate, -1, intLen, start + offset, length - offset);
@@ -1026,17 +610,10 @@ LibAPI(MgErr) Win32ResolveLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, int32
 						}
 						else if (!(flags & kRecursive) || !(*dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT))
 						{
-							if (relative && !(flags & kResolveRel))
+							if (relative && !flags)
 								err = WStrNCat(wIntermediate, 0, intLen, start, length);
 
-							if (!err && wTgt)
-							{
-								DSDisposePtr((UPtr)*wTgt);
-								*wTgt = wIntermediate;
-								if (bufLen)
-									*bufLen = intLen;
-								return noErr;
-							}
+							break;
 						}
 					}
 				}
@@ -1048,95 +625,151 @@ LibAPI(MgErr) Win32ResolveLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, int32
 			else
 				err = fIOErr;
 		}
+		wSrc = wIntermediate;
 	} while (!err);
 	Win32ModifyBackupPrivilege(FALSE);
 	DSDisposePtr((UPtr)buffer);
-	if (wIntermediate != wSrc)
-		DSDisposePtr((UPtr)wIntermediate);
+	if (!err)
+	{
+		if (bufLen)
+			*bufLen = intLen;
+		if (wTgt)
+		{
+			*wTgt = wIntermediate;
+			return noErr;
+		}
+	}
+	LWStrDispose(wIntermediate);
 	return err;
 }
 #endif
+#elif Unix || MacOSX
+/* seconds between Jan 1 1904 GMT and Jan 1 1970 GMT */
+#define dt1970re1904    2082844800L
 
-#if Win32 && !EMBEDDED
-static uInt32 PtrHasRezExt(WCHAR *ptr, int32 len)
-#else
-static uInt32 PtrHasRezExt(char *ptr, int32 len)
-#endif
+#if VxWorks
+// on VxWorks the stat time values are unsigned long integer
+static void VxWorksConvertFromATime(ATime128 *time, unsigned long *sTime)
 {
-	int32 k = 1;
-#if Win32 && !EMBEDDED
-	if (len < 0)
-		len = (int32)wcslen(ptr);
+	/* VxWorks uses unsignde integers and can't represent dates before Jan 1, 1970 */
+	if (time->u.f.val > dt1970re1904)
+		*sTime = (unsigned long)(time->u.f.val - dt1970re1904);
+	else
+		*sTime = 0;
+} 
+
+static void VxWorksConvertToATime(unsigned long sTime, ATime128 *time)
+{
+	time->u.f.val = (int64_t)sTime + dt1970re1904;
+	time->u.f.fract = 0;
+}
 #else
-	if (len < 0)
-		len = strlen(ptr);
-#endif
-	/* look backwards	*/
-	for (ptr += len; k < len && k < kMaxFileExtLength; --ptr, k++)
+// on Mac/Linux kernel 2.6 and newer the stat time values are struct timespec values
+static void UnixConvertFromATime(ATime128 *time, struct timespec *sTime)
+{
+	/* The LabVIEW default default value is used to indicate to not update this value */
+	if (time->u.f.val || time->u.f.fract)
 	{
-		if (*ptr == '.')
-		{
-			uChar str[16];
-            PStrLen(str) = (uChar)k - 1;
-            for (len = 1; k; k--)
-				str[len++] = (uChar)*ptr++;
-			return PStrHasRezExt(str);
-		}
+		sTime->tv_sec = (time_t)(time->u.f.val - dt1970re1904);
+		sTime->tv_nsec = (int32_t)(time->u.p.fractHi / 4.294967296);
 	}
-	return 0;
+	else
+	{
+		sTime->tv_nsec = UTIME_OMIT;
+	}
 }
 
-static MgErr LWAppendPathSeparator(LWStrPtr pathName, int32 bufLen)
+static void UnixConvertToATime(struct timespec *sTime, ATime128 *time)
 {
-	if (LWStrBuf(pathName)[LWStrLen(pathName) - 1] != kPathSeperator)
+	time->u.f.val = (int64_t)sTime->tv_sec + dt1970re1904;
+	time->u.p.fractHi = (uint32_t)sTime->tv_nsec * 4.294967296;
+	time->u.p.fractLo = 0;
+}
+#endif
+
+static MgErr UnixToLVFileErr(void)
+{
+    switch (errno)
+    {
+      case 0:           return mgNoErr;
+      case ESPIPE:      return fEOF;
+      case EINVAL:
+      case EBADF:       return mgArgErr;
+      case ETXTBSY:     return fIsOpen;
+      case ENOENT:      return fNotFound;
+#ifdef EAGAIN
+      case EAGAIN:  /* SVR4, file is locked */
+#endif
+#ifdef EDEADLK
+      case EDEADLK: /* deadlock would occur */
+#endif
+#ifdef ENOLCK
+      case ENOLCK:  /* NFS, lock not avail */
+#endif
+      case EPERM:
+      case EACCES:      return fNoPerm;
+      case ENOSPC:      return fDiskFull;
+      case EEXIST:      return fDupPath;
+      case ENFILE:
+      case EMFILE:      return fTMFOpen;
+      case ENOMEM:      return mFullErr;
+      case EIO:         return fIOErr;
+    }
+    return fIOErr;   /* fIOErr generally signifies some unknown file error */
+}
+
+static uInt16 UnixFileTypeFromStat(struct stat *statbuf)
+{
+	uInt16 flags = 0;
+	switch (statbuf->st_mode & S_IFMT)
 	{
-		if (LWStrLen(pathName) + 1 >= bufLen)
-		{
-			return mgArgErr;
-		}
-		LWStrBuf(pathName)[LWStrLen(pathName)] = kPathSeperator;
-		LWStrLenSet(pathName, LWStrLen(pathName) + 1);
-		LWStrBuf(pathName)[LWStrLen(pathName)] = 0;
+		case S_IFREG:
+			flags = kIsFile;
+			break;
+		case S_IFLNK:
+			flags = kIsLink;
 	}
+
+#if MacOSX
+	if (statbuf->st_flags & UF_HIDDEN)
+        flags |= kFIsInvisible;
+
+	if (statbuf->st_flags & UF_COMPRESSED)
+		flags |= kIsCompressed;
+#endif
+	return flags;
+}
+
+#if MacOSX
+typedef struct
+{
+    uint32_t     length;
+    off_t        size;
+} FSizeAttrBuf;
+
+static MgErr MacGetResourceSize(const char *path, uInt64 *size)
+{
+    int          err;
+    attrlist_t   attrList;
+    FSizeAttrBuf attrBuf;
+
+    memset(&attrList, 0, sizeof(attrList));
+    attrList.bitmapcount = ATTR_BIT_MAP_COUNT;
+    attrList.fileattr  = ATTR_FILE_RSRCLENGTH;
+
+	if (getattrlist(path, &attrList, &attrBuf, sizeof(attrBuf), FSOPT_NOFOLLOW)}
+		return UnixToLVFileErr();
+
+	assert(attrBuf.length == sizeof(attrBuf));
+	*size = attrBuf.size;
 	return noErr;
 }
+#endif
+#endif
 
-static uInt32 LWHasRezExt(LWStrPtr pathName)
-{
-	return PtrHasRezExt(LWStrBuf(pathName), LWStrLen(pathName));
-}
-
-/* Windows: path is an UTF8 encoded path string and lwstr is filled with a Windows UTF16LE string from the path
-   MacOSX, Unix, VxWorks, Pharlap: path is an UTF8 encoded path string and lwstr is filled with a local encoded MBC
-   string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-static MgErr MakeFileDSString(LStrHandle path, LWStrPtr *lwstr, int32 *reserve)
-{
-	return makeFileDSString(path, CP_UTF8, lwstr, reserve);
-}
-
-/* Windows: path is a LabVIEW path and lwstr is filled with a Windows UTF16LE string from this path
-   MacOSX, Unix, VxWorks, Pharlap: path is a LabVIEW pathand lwstr is filled with a local encoded MBC
-   string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-static int32 MakePathDSString(Path path, LWStrPtr *lwstr, int32 *reserve)
-{
-	LStrPtr lstr;
-    int32 bufLen = -1;
-    MgErr err = FPathToText(path, (LStrPtr)&bufLen);
-    if (!err)
-    {
-		bufLen += 1 + (reserve ? *reserve : 0);
-        lstr = (LStrPtr)DSNewPClr(sizeof(int32) + bufLen);
-        if (!lstr)
-            return mFullErr;
-        LStrLen(lstr) = bufLen;
-        err = FPathToText(path, lstr);
-        if (!err)
-			err = makeFileDSString(&lstr, CP_ACP, lwstr, reserve);
-
-		DSDisposePtr((UPtr)lstr);
-    }
-    return err;
-}
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
+static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, uInt32 flags, uInt32 *fileType);
+#endif
 
 /* Internal list directory function
    On Windows the pathName is a wide char Long String pointer and the function returns UTF8 encoded filenames in the name array
@@ -1145,16 +778,18 @@ static int32 MakePathDSString(Path path, LWStrPtr *lwstr, int32 *reserve)
 static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, uInt32 cp, int32 flags)
 {
 	MgErr err;
-	int32 rootLength, type, index = 0, size = 8;
+	int32 rootLength, index = 0, size = 8;
 #if Win32
 	HANDLE dirp = INVALID_HANDLE_VALUE;
 	DWORD dwAttrs;
-#if EMBEDDED
+#if Pharlap
 	LPSTR fileName = NULL;
 	WIN32_FIND_DATAA fileData;
 #else
 	PVOID oldRedirection = NULL;
 	WStrPtr wTgt = NULL;
+    int32 intLen = 0;
+	DWORD dwAttrsResolved;
 	LPWSTR fileName = NULL;
 	WIN32_FIND_DATAW fileData;
 #endif
@@ -1196,8 +831,8 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 					if (err)
 						return err;
 				}
-				(**typeArr)->elm[index].flags = 0;
-				(**typeArr)->elm[index].type = 0;
+				(**typeArr)->elm[index].fileFlags = 0;
+				(**typeArr)->elm[index].fileType = 0;
 
 				err = NumericArrayResize(uB, 1, (UHandle*)((**nameArr)->elm + index), 1);
 				if (!err)
@@ -1231,7 +866,7 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 	if (err)
 		goto FListDirOut;
 
-#if !EMBEDDED
+#if !Pharlap
 	if (!Wow64DisableWow64FsRedirection(&oldRedirection))
 		/* Failed but lets go on anyhow, risking strange results for virtualized paths */
 		oldRedirection = NULL;
@@ -1268,8 +903,8 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 					goto FListDirOut;
 			}
 
-			(**typeArr)->elm[index].flags = 0;
-			(**typeArr)->elm[index].type = 0;
+			(**typeArr)->elm[index].fileFlags = 0;
+			(**typeArr)->elm[index].fileType = 0;
 			fileName = fileData.cFileName;
 
 			/* Create the path to the file for intermediate operations */
@@ -1280,41 +915,35 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 			dwAttrs = fileData.dwFileAttributes;
 			if (dwAttrs != INVALID_FILE_ATTRIBUTES)
 			{
-#if !EMBEDDED
-				if (dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT)
-				{
-					(**typeArr)->elm[index].flags |= kIsLink;
-				}
-				else if (!Win32ResolveShortCut(pathName, NULL, NULL, 0, &dwAttrs))
-				{
-					(**typeArr)->elm[index].flags |= (kIsLink | kIsFile);
-				}
+#if Pharlap
+                (**typeArr)->elm[index].fileFlags = LVFileFlagsFromWinFlags(dwAttrs);
+#else
+				lvFile_ReadLink(pathName, &wTgt, &intLen, flags, &((**typeArr)->elm[index].fileFlags));
 #endif
 				if (!(dwAttrs & FILE_ATTRIBUTE_DIRECTORY))
 				{
-					(**typeArr)->elm[index].flags |= kIsFile;
-#if EMBEDDED
-					type = PtrHasRezExt(fileName, -1);
-#else
-					type = PtrHasRezExt(wTgt ? LWStrBuf(wTgt) : fileName, -1);
-#endif
-					if (type)
+#if !Pharlap
+					if (flags && wTgt && (**typeArr)->elm[index].fileFlags & kIsLink)
 					{
-						(**typeArr)->elm[index].flags |= kRecognizedType;
-						(**typeArr)->elm[index].type = type;
+						LWStrGetFileTypeAndCreator(wTgt, &((**typeArr)->elm[index].fileType),  NULL);
 					}
-				}
-				if (dwAttrs & FILE_ATTRIBUTE_HIDDEN)
-				{
-					(**typeArr)->elm[index].flags |= kFIsInvisible;
+					else 
+#endif
+					{
+						LWStrGetFileTypeAndCreator(pathName, &((**typeArr)->elm[index].fileType),  NULL);
+					}
+					if ((**typeArr)->elm[index].fileType && (**typeArr)->elm[index].fileType != kUnknownFileType)
+					{
+						(**typeArr)->elm[index].fileFlags |= kRecognizedType;
+					}
 				}
 			}
 			else
 			{
 				/* can happen if file disappeared since we did FindNextFile */
-				(**typeArr)->elm[index].flags |= kErrGettingType | kIsFile;
+				(**typeArr)->elm[index].fileFlags |= kErrGettingType | kIsFile;
 			}
-#if EMBEDDED
+#if Pharlap
 			err = ConvertCString(fileName, -1, CP_ACP, (**nameArr)->elm + index, cp, 0, NULL);
 #else
 			err = WideCStrToMultiByte(fileName, -1, (**nameArr)->elm + index, cp, 0, NULL);
@@ -1330,8 +959,8 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 		err = Win32GetLVFileErr();
 
 FListDirOut:
-#if !EMBEDDED
-	DSDisposePtr((UPtr)wTgt);
+#if !Pharlap
+	LWStrDispose(wTgt);
 	if (oldRedirection)
 		Wow64RevertWow64FsRedirection(&oldRedirection);
 #endif
@@ -1385,7 +1014,10 @@ FListDirOut:
 			        goto FListDirOut;
 			}
 
-			err = ConvertCString(dp->d_name, -1, CP_ACP, (**nameArr)->elm + index, cp, 0, NULL);
+			(**typeArr)->elm[index].fileFlags = 0;
+			(**typeArr)->elm[index].fileType = 0;
+
+			err = ConvertCString((ConstCStr)dp->d_name, -1, CP_ACP, (**nameArr)->elm + index, cp, 0, NULL);
 			if (err)
 			    goto FListDirOut;
 	
@@ -1395,26 +1027,24 @@ FListDirOut:
 
 			if (lstat(SStrBuf(pathName), &statbuf))
 			{
-				(**typeArr)->elm[index].flags |= kErrGettingType;
+				(**typeArr)->elm[index].fileFlags |= kErrGettingType;
 			}
 			else
 			{
-#if !VxWorks    /* no links */
+#if !VxWorks    /* VxWorks does not support links */
 				if (S_ISLNK(statbuf.st_mode))
 				{
-					(**typeArr)->elm[index].flags |= kIsLink;
+					(**typeArr)->elm[index].fileFlags |= kIsLink;
 					if (stat(SStrBuf(pathName), &tmpstatbuf) == 0)	/* If link points to something */
-						statbuf = tmpstatbuf;				/* return info about it not link. */
+						statbuf = tmpstatbuf;				        /* return info about it not link. */
 				}
 #endif
 				if (!S_ISDIR(statbuf.st_mode))
 				{
-					(**typeArr)->elm[index].flags |= kIsFile;
-                    if (type = PtrHasRezExt(SStrBuf(pathName), LStrLen(pathName)))
-					{
-						(**typeArr)->elm[index].flags |= kRecognizedType;
-						(**typeArr)->elm[index].type = type;
-					}
+					(**typeArr)->elm[index].fileFlags |= kIsFile;
+					LWStrGetFileTypeAndCreator(pathName, &((**typeArr)->elm[index].fileType), NULL);
+                    if ((**typeArr)->elm[index].fileType && (**typeArr)->elm[index].fileType != kUnknownFileType)
+						(**typeArr)->elm[index].fileFlags |= kRecognizedType;
 				}
 			}
 			index++;
@@ -1447,12 +1077,12 @@ LibAPI(MgErr) LVFile_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, F
 #endif
 	{
 		bufLen = 280;
-		err = MakeFileDSString(folderPath, &pathName, &bufLen);
+		err = UPathToLWStr(folderPath, &pathName, &bufLen);
 		if (err)
 			return err;
 	}
 	err = lvFile_ListDirectory(pathName, bufLen, nameArr, typeArr, CP_UTF8, flags);
-	DSDisposePtr((UPtr)pathName);
+	LWStrDispose(pathName);
 	return err;
 }
 
@@ -1471,23 +1101,23 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *nameArr, FileInf
 #endif
 		{
 			bufLen = 280;
-			err = MakePathDSString(folderPath, &pathName, &bufLen);
+			err = LPathToLWStr(folderPath, &pathName, &bufLen);
 			if (err)
 				return err;
 		}
 		err = lvFile_ListDirectory(pathName, bufLen, nameArr, typeArr, CP_ACP, flags);
-		DSDisposePtr((UPtr)pathName);
+		LWStrDispose(pathName);
 	}
 	return err;
 }
 
-LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh)
+LibAPI(MgErr) LVPath_HasResourceFork(Path pathName, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh)
 {
     MgErr  err = mgNoErr;
 #if MacOSX
-    LStrHandle lstr = NULL;
+    LWStrPtr lwstr = NULL;
 #else
-    Unused(path);
+    Unused(pathName);
 #endif
     if (hasResFork)
 	    *hasResFork = 0;
@@ -1497,52 +1127,82 @@ LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *s
 		*sizeHigh = 0;
 
 #if MacOSX
-    err = MakePathDSString(path, &lstr, NULL);
+    err = LPathToLWStr(path, &lwstr, NULL);
     if (!err)
     {
-        ssize_t len = getxattr((const char)LStrBuf(*lstr), XATTR_RESOURCEFORK_NAME, NULL, 0, 0, O_NOFOLLOW);
-        if (len != -1)
-        {
+		FileOffset offset;
+		err = MacGetResourceSize(SStrBuf(lwstr), &offset.q);
+		if (!err)
+		{
             if (hasResFork)
                 *hasResFork = LV_TRUE;
             if (sizeLow)
-                *sizeLow = Lo32(len);
+                *sizeLow = offset.l.lo;
             if (sizeHigh)
-                *sizeHigh = Hi32(len);
+                *sizeHigh = offset.l.hi;
            
         }
-        DSDisposeHandle((UHandle)lstr);
+        DSDisposeHandle((UHandle)lwstr);
     }
 #endif
     return err;
 }
 
+#if MacOSX
+#ifndef UTIME_NOW
+#define	UTIME_NOW	-1
+#define	UTIME_OMIT	-2
+#endif
+static int lutimens(const char *path, struct timespec times_in[3])
+{
+
+    size_t attrbuf_size = 0;
+    struct timespec times_out[3] = {};
+    struct attrlist a = {
+		.commonattr = 0;
+        .bitmapcount = ATTR_BIT_MAP_COUNT
+    };
+    struct timespec *times_cursor = times_out;
+    if (times_in[2].tv_nsec != UTIME_OMIT)
+    {
+        a.commonattr |= ATTR_CMN_CRTIME;
+        *times_cursor++ = times_in[2];
+        attrbuf_size += sizeof(struct timespec);
+    }
+    if (times_in[1].tv_nsec != UTIME_OMIT)
+    {
+        a.commonattr |= ATTR_CMN_MODTIME;
+        *times_cursor++ = times_in[1];
+        attrbuf_size += sizeof(struct timespec);
+    }
+    if (times_in[0].tv_nsec != UTIME_OMIT)
+    {
+        a.commonattr |= ATTR_CMN_ACCTIME;
+        *times_cursor = times_in[0];
+        attrbuf_size += sizeof(struct timespec);
+    }
+    return setattrlist(path, &a, &times_out, attrbuf_size, FSOPT_NOFOLLOW);
+}
+#endif
+
 #define kSetableWinFileFlags kWinFileInfoArchive | kWinFileInfoHidden | kWinFileInfoNotIndexed | \
 				             kWinFileInfoOffline | kWinFileInfoReadOnly | kWinFileInfoSystem | kWinFileInfoTemporary
 
-static uInt16 FlagsFromWindows(uInt16 attr)
+static uInt16 UnixFlagsFromWindows(uInt16 attr)
 {
 	uInt16 flags = attr & kWinFileInfoReadOnly ?  0444 : 0666;
 	if (attr & kWinFileInfoDirectory)
-	{
 		flags |= 040000;
-	}
 	else if (attr & kWinFileInfoDevice)
-	{
 		flags |= 060000;
-	}
 	else if (attr & kWinFileInfoReparsePoint)
-	{
 		flags |= 0120000;
-	}
 	else
-	{
 		flags |= 010000; 
-	}
 	return flags;
 }
 
-static uInt16 FlagsFromUnix(uInt32 mode)
+static uInt16 WinFlagsFromUnix(uInt32 mode)
 {
 	uInt16 flags = mode & 0222 ? 0 : kWinFileInfoReadOnly;
 	switch (mode & 0170000)
@@ -1563,13 +1223,27 @@ static uInt16 FlagsFromUnix(uInt32 mode)
 	return flags;
 }
 
+static uInt32 MacFlagsFromWindows(uInt16 attr)
+{
+	uInt32 flags = 0;
+	if (!(attr & kWinFileInfoDirectory) && (attr & kWinFileInfoReadOnly))
+		flags |= kMacFileInfoImmutable;
+	if (attr & kWinFileInfoHidden)
+		flags |= kMacFileInfoHidden;
+	if (attr & kWinFileInfoCompressed)
+		flags |= kMacFileInfoCompressed;
+	if (!(attr & kWinFileInfoArchive))
+		flags |= kMacFileInfoNoDump;
+	return flags;
+}
+
 static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFileInfo *fileInfo)
 {
 	MgErr err = noErr;
 #if Win32 // Windows
     HANDLE handle = NULL;
 	uInt64 count = 0;
-#if EMBEDDED
+#if Pharlap
 	WIN32_FIND_DATAA fi = {0};
 #else
 	WIN32_FIND_DATAW fi = {0};
@@ -1580,7 +1254,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 #if VxWorks
     struct utimbuf times;
 #else
-	struct timespec times[2];
+	struct timespec times[3];
 #endif
 #endif
 
@@ -1628,7 +1302,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 				if (fi.dwFileAttributes != INVALID_FILE_ATTRIBUTES)
 			    {
 					if (!fileInfo->winFlags && fileInfo->unixFlags)
-							fileInfo->winFlags = FlagsFromUnix(fileInfo->unixFlags);
+							fileInfo->winFlags = WinFlagsFromUnix(fileInfo->unixFlags);
 
 					fi.dwFileAttributes = (fi.dwFileAttributes & ~kSetableWinFileFlags) | (fileInfo->winFlags & kSetableWinFileFlags);
                     if (!fi.dwFileAttributes)
@@ -1640,8 +1314,6 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 		}
 		else
 		{
-			fileInfo->type = kUnknownFileType;
-			fileInfo->creator = kUnknownCreator;
 			fileInfo->uid = 0xFFFFFFFF;
 			fileInfo->gid = 0xFFFFFFFF;
 			FileTimeToATime(&fi.ftCreationTime, &fileInfo->cDate);
@@ -1649,10 +1321,15 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 			FileTimeToATime(&fi.ftLastAccessTime, &fileInfo->aDate);
 			fileInfo->rfSize = 0;
 			fileInfo->winFlags = Lo16(fi.dwFileAttributes);
-			fileInfo->unixFlags = FlagsFromWindows(fileInfo->winFlags);
-			fileInfo->xtraFlags = 0;
+			fileInfo->unixFlags = UnixFlagsFromWindows(fileInfo->winFlags);
+			fileInfo->macFlags = MacFlagsFromWindows(fileInfo->winFlags);
+			fileInfo->lvFlags = LVFileFlagsFromWinFlags(fi.dwFileAttributes);
+
 			if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
+				fileInfo->type = kUnknownFileType;
+				fileInfo->creator = kUnknownCreator;
+
 				if (!pathName || !LWStrLen(pathName))
 				{
 					DWORD drives = GetLogicalDrives();
@@ -1674,7 +1351,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 
 					err = LWAppendPathSeparator(pathName, bufLen);
 					if (!err)
-				        err = LWStrNCat(pathName, 0, bufLen, strWildcardPattern, 3);
+				        err = LWStrNCat(pathName, -1, bufLen, strWildcardPattern, 3);
 				    if (!err)
 				    {
 					    handle = FindFirstFile(pathName, &fi);
@@ -1687,24 +1364,16 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 					}
 				}
 	            /* FindFirstFile doesn't enumerate . and .. entries in a volume root */
-				if (!pathName || LWStrLen(pathName) < 3)
+				if (!pathName || LWStrLen(pathName) <= 3)
 				    fileInfo->size = count;
 				else
 				    fileInfo->size = count - 2;
 			}
 			else
-			{
-				uInt32 type = LWHasRezExt(pathName);
-				if (type)
-				{
-					fileInfo->type = type;
-			        fileInfo->creator = kLVCreatorType;
-				}
-				else
-				{
-					fileInfo->type = kUnknownFileType;
-					fileInfo->creator = kUnknownCreator;
-				}
+			{		
+				LWStrGetFileTypeAndCreator(pathName, &fileInfo->type, &fileInfo->creator);
+				if (fileInfo->type && fileInfo->type != kUnknownFileType)
+					fileInfo->lvFlags |= kRecognizedType;
 				fileInfo->size = Quad(fi.nFileSizeHigh, fi.nFileSizeLow);
 			}
 		}
@@ -1715,18 +1384,23 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 
 	if (write)
 	{
-		if (!fileInfo->unixFlags && fileInfo->winFlags)
-			fileInfo->unixFlags = FlagsFromWindows(fileInfo->winFlags);
+		if (fileInfo->winFlags)
+		{
+			if (!fileInfo->unixFlags)
+				fileInfo->unixFlags = UnixFlagsFromWindows(fileInfo->winFlags);
+			if (!fileInfo->macFlags)
+				fileInfo->macFlags = MacFlagsFromWindows(fileInfo->winFlags);
+		}
 #if VxWorks
-		VxWorksConvertFromATime(&fileInfo->cDate, &statbuf.st_ctime);
 		VxWorksConvertFromATime(&fileInfo->aDate, &times.actime);
 		VxWorksConvertFromATime(&fileInfo->mDate, &times.modtime);
+        VxWorksConvertFromATime(&fileInfo->cDate, &statbuf.st_ctime);
 		if (utime(SStrBuf(pathName), &times))
 #else
-		UnixConvertFromATime(&fileInfo->cDate, &statbuf.st_ctim);
 		UnixConvertFromATime(&fileInfo->aDate, &times[0]);
 		UnixConvertFromATime(&fileInfo->mDate, &times[1]);
-		if (utimensat(0, SStrBuf(pathName), times, AT_SYMLINK_NOFOLLOW))
+        UnixConvertFromATime(&fileInfo->cDate, &times[2]);
+		if (lutimens(SStrBuf(pathName), times))
 #endif
 			err = UnixToLVFileErr();
 #if !VxWorks
@@ -1734,7 +1408,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 		 * Changing the ownership probably won't succeed, unless we're root
          * or POSIX_CHOWN_RESTRICTED is not set.  Set uid/gid before setting
          * the mode; current BSD behavior is to remove all setuid bits on
-         * chown. If chown fails, lose setuid/setgid bits.
+         * chown. If chown fails, loose setuid/setgid bits.
          */
         else if (chown(SStrBuf(pathName), fileInfo->uid, fileInfo->gid))
 		{
@@ -1746,24 +1420,12 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
         if (!err && chmod(SStrBuf(pathName), (statbuf.st_mode & 0170000) | (fileInfo->unixFlags & 07777)) && errno != ENOTSUP)
 			err = UnixToLVFileErr();
 #if MacOSX
-		else if (chflags(SStrBuf(pathName), fileInfo->xtraFlags)
+		else if (fileInfo->macFlags && lchflags(SStrBuf(pathName), fileInfo->macFlags))
 			err = UnixToLVFileErr();			
 #endif
 	}
 	else
 	{
-		/* Try to determine LabVIEW file types based on file ending? */
-		int32 type = LWHasRezExt(pathName);
-		if (type)
-		{
-			fileInfo->type = type;
-		    fileInfo->creator = kLVCreatorType;
-		}
-		else
-		{
-			fileInfo->type = kUnknownFileType;
-			fileInfo->creator = kUnknownCreator;
-		}
 		fileInfo->uid = statbuf.st_uid;
 		fileInfo->gid = statbuf.st_gid;
 #if VxWorks
@@ -1771,14 +1433,28 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 		VxWorksConvertToATime(statbuf.st_atime, &fileInfo->aDate);
 		VxWorksConvertToATime(statbuf.st_mtime, &fileInfo->mDate);
 #else
-		UnixConvertToATime(&statbuf.st_ctimespec, &fileInfo->cDate);
+#if MacOSX
+		UnixConvertToATime(&statbuf.st_birthtimespec, &fileInfo->cDate);
+#endif
 		UnixConvertToATime(&statbuf.st_mtimespec, &fileInfo->mDate);
 		UnixConvertToATime(&statbuf.st_atimespec, &fileInfo->aDate);
 #endif
+		fileInfo->unixFlags = Lo16(statbuf.st_mode);
+		fileInfo->winFlags = WinFlagsFromUnix(fileInfo->unixFlags);
+#if MacOSX
+		fileInfo->macFlags = statbuf.st_flags;
+#else
+		fileInfo->macFlags = 0;
+#endif
+		fileInfo->lvFlags = UnixFileTypeFromStat(&statbuf);
+
 		if (S_ISDIR(statbuf.st_mode))
 		{
 			DIR *dirp;
 			struct dirent *dp;
+
+			fileInfo->type = kUnknownFileType;
+			fileInfo->creator = kUnknownCreator;
 
 			if (!(dirp = opendir(SStrBuf(pathName))))
 				return UnixToLVFileErr();
@@ -1791,52 +1467,21 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 		}
 		else
 		{
+			/* Try to determine LabVIEW file types based on file ending? */
+			err = LWStrGetFileTypeAndCreator(pathName, &fileInfo->type, &fileInfo->creator);
+			if (fileInfo->type && fileInfo->type != kUnknownFileType)
+				fileInfo->lvFlags |= kRecognizedType;
+
 			fileInfo->size = statbuf.st_size;
 #if MacOSX
-			ssize_t size = getxattr(SStrBuf(pathName), XATTR_RESOURCEFORK_NAME, NULL, 0, 0, O_NOFOLLOW);
-			if (size > 0)
-			    fileInfo->rfSize = (uInt64)size;
-			else
+			MacGetResourceSize(SStrBuf(pathName), &fileInfo->rfSize);
 #else
-				fileInfo->rfSize = 0;
+			fileInfo->rfSize = 0;
 #endif
 		}
-		fileInfo->unixFlags = Lo16(statbuf.st_mode);
-		fileInfo->winFlags = FlagsFromUnix(fileInfo->unixFlags);
-#if MacOSX
-		fileInfo->xtraFlags = statbuf.st_flags;
-#else
-		fileInfo->xtraFlags = 0;
-#endif
 	}
 #endif
     return err;
-}
-
-static Bool32 LStrIsAbsPath(LStrHandle filePath)
-{
-	int32 len = LStrLenH(filePath);
-	UPtr ptr = LStrBufH(filePath);
-#if usesWinPath
-	int32 offset = 0;
-#if !EMBEDDED
-	if (Win32HasDOSDevicePrefix(ptr, len))
-	{
-		offset = 4;
-	}
-#endif
-	if (!len || ((len - offset) >= 3 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator)
-		|| (!offset && len >= 3 && ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && isalpha(ptr[2]))
-#if !EMBEDDED
-		|| (offset && len - offset >= 4 && StrNCaseCmp(ptr + offset, (ConstCStr)"UNC\\", 4))
-#endif
-		)
-		return LV_TRUE;
-#else
-	if (!len || LStrBuf(*filePath)[0] == '/')
-		return LV_TRUE;
-#endif
-	return LV_FALSE;
 }
 
 LibAPI(MgErr) LVFile_FileInfo(LStrHandle filePath, uInt8 write, LVFileInfo *fileInfo)
@@ -1851,14 +1496,14 @@ LibAPI(MgErr) LVFile_FileInfo(LStrHandle filePath, uInt8 write, LVFileInfo *file
 	if (LStrLenH(filePath))
 	{
 		bufLen = 4;
-		err = MakeFileDSString(filePath, &pathName, &bufLen);
+		err = UPathToLWStr(filePath, &pathName, &bufLen);
 		if (err)
 			return err;
 	}
     if (!err)
 	{
 		err = lvFile_FileInfo(pathName, bufLen, write, fileInfo);
-		DSDisposePtr((UPtr)pathName);
+		LWStrDispose(pathName);
 	}
 	return err;
 }
@@ -1872,11 +1517,11 @@ LibAPI(MgErr) LVPath_FileInfo(Path filePath, uInt8 write, LVFileInfo *fileInfo)
 	if (!FIsAbsPath(filePath))
       return mgArgErr;
 
-    err = MakePathDSString(filePath, &pathName, &bufLen);
+    err = LPathToLWStr(filePath, &pathName, &bufLen);
     if (!err)
 	{
 		err = lvFile_FileInfo(pathName, bufLen, write, fileInfo);
-		DSDisposePtr((UPtr)pathName);
+		LWStrDispose(pathName);
 	}
 	return err;
 }
@@ -1927,7 +1572,7 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir)
 	return err;
 }
 
-#if Win32 && !defined(EMBEDDED)
+#if Win32 && !Pharlap
 typedef BOOL (WINAPI *tCreateHardLinkW)(LPCWSTR lpFileName, LPCWSTR lpExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 MgErr Win32CreateHardLinkW(WStrPtr lwFileName, WStrPtr lwExistingFileName, LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
@@ -1983,7 +1628,7 @@ MgErr Win32CreateSymbolicLinkW(WStrPtr lwSymlinkFileName, WStrPtr lwTargetFileNa
 {
 	MgErr err = mgNotSupported;
 	static tCreateSymbolicLinkW pCreateSymbolicLinkW = NULL;
-	if (!pCreateSymbolicLinkW)
+	if (!(dwFlags & 0x8000) && !pCreateSymbolicLinkW)
 	{
 		HMODULE hLib = LoadLibrary("kernel32.dll");
 		if (hLib)
@@ -2000,7 +1645,7 @@ MgErr Win32CreateSymbolicLinkW(WStrPtr lwSymlinkFileName, WStrPtr lwTargetFileNa
 	}
 	else
 	{
-		BOOL isRelative = FALSE, isDirectory = FALSE;
+		BOOL isRelative = TRUE, isDirectory = FALSE;
 		HANDLE hFile;
 		BOOL (WINAPI *deletefunc)();
 		DWORD attr = GetFileAttributes(lwTargetFileName);
@@ -2015,12 +1660,12 @@ MgErr Win32CreateSymbolicLinkW(WStrPtr lwSymlinkFileName, WStrPtr lwTargetFileNa
 			{
 				return Win32GetLVFileErr();
 			}
-			hFile = CreateFile(lwSymlinkFileName, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+			hFile = CreateFile(lwSymlinkFileName, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, lpsa, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS || FILE_FLAG_OPEN_REPARSE_POINT, NULL);
 			deletefunc = RemoveDirectoryW;
 		}
 		else
 		{
-			hFile = CreateFile(lwSymlinkFileName, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, lpsa, CREATE_NEW, 0, NULL);
+			hFile = CreateFile(lwSymlinkFileName, GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, lpsa, CREATE_NEW, FILE_FLAG_OPEN_REPARSE_POINT, NULL);
 			deletefunc = DeleteFileW;
 	    }
 		if (hFile != INVALID_HANDLE_VALUE)
@@ -2032,31 +1677,27 @@ MgErr Win32CreateSymbolicLinkW(WStrPtr lwSymlinkFileName, WStrPtr lwTargetFileNa
 			PREPARSE_DATA_BUFFER buffer = (PREPARSE_DATA_BUFFER)DSNewPClr(bytes);
 			if (buffer)
 			{
-				wcscpy(namebuf, L"\\\\?\\");
-				if (length < MAX_PATH + 4 && Win32HasDOSDevicePrefix(lpTargetFileName, length))
+				offset = HasDOSDevicePrefix(lpTargetFileName, length);
+				switch (offset)
 				{
-					offset = 4;
+					case 0:
+						if (length >= 3 && lpTargetFileName[0] == kPathSeperator && lpTargetFileName[1] == kPathSeperator && lpTargetFileName[2] < 128 && isalpha(lpTargetFileName[2]))
+						{
+							isRelative = FALSE;
+						}
+					case 4:
+						if (length >= 2 && lpTargetFileName[offset] < 128 && isalpha(lpTargetFileName[offset]) && lpTargetFileName[offset + 1] == ':')
+						{
+							isRelative = FALSE;
+						}
+						break;
+					case 8:
+						isRelative = FALSE;
+						break;
+					default:
+						break;
 				}
-				if (isalpha(lpTargetFileName[offset]) && lpTargetFileName[offset + 1] == ':')
-				{
-					if (!GetFullPathNameW(lpTargetFileName + offset, sizeof(namebuf) / sizeof(namebuf[0]) - 4, namebuf + 4, NULL))
-					{
-						err = Win32GetLVFileErr();
-						CloseHandle(hFile);
-						return err;
-					}
-				}
-				else if (!offset && lpTargetFileName[0] == kPathSeperator && lpTargetFileName[1] == kPathSeperator && isalpha(lpTargetFileName[2]))
-				{
-					if (!GetFullPathNameW(lpTargetFileName, sizeof(namebuf) / sizeof(namebuf[0]) - 6, namebuf + 6, NULL))
-					{
-						err = Win32GetLVFileErr();
-						CloseHandle(hFile);
-						return err;
-					}
-					wcscpy(namebuf + 4, L"UNC\\");
-				}
-				else if (offset == 4 && (CompareStringW(LOCALE_SYSTEM_DEFAULT, 0, lpTargetFileName + offset, 4, L"UNC\\", 4) == CSTR_EQUAL))
+				if (!isRelative)
 				{
 					if (!GetFullPathNameW(lpTargetFileName, sizeof(namebuf) / sizeof(namebuf[0]), namebuf, NULL))
 					{
@@ -2099,7 +1740,6 @@ MgErr Win32CreateSymbolicLinkW(WStrPtr lwSymlinkFileName, WStrPtr lwTargetFileNa
 						while (rem-- && (*tgt++ = *src++) != kPathSeperator);
 					}
 					*tgt = 0;
-					isRelative = TRUE;
 				}
 				buffer->ReparseTag = IO_REPARSE_TAG_SYMLINK;
 				buffer->Reserved = 0;
@@ -2115,7 +1755,7 @@ MgErr Win32CreateSymbolicLinkW(WStrPtr lwSymlinkFileName, WStrPtr lwTargetFileNa
 				memcpy((char *)buffer->SymbolicLinkReparseBuffer.PathBuffer + buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset,
 		                namebuf, buffer->SymbolicLinkReparseBuffer.SubstituteNameLength);
 
-				buffer->SymbolicLinkReparseBuffer.Flags = isRelative ? 1 : 0;
+				buffer->SymbolicLinkReparseBuffer.Flags = isRelative ? SYMLINK_FLAG_RELATIVE : 0;
 				buffer->ReparseDataLength = 12 + buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset + buffer->SymbolicLinkReparseBuffer.SubstituteNameLength;
 				
 				bytes = 8 + buffer->ReparseDataLength;
@@ -2133,105 +1773,249 @@ MgErr Win32CreateSymbolicLinkW(WStrPtr lwSymlinkFileName, WStrPtr lwTargetFileNa
 }
 #endif
 
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
+static MgErr lvFile_CreateLink(LWStrPtr src, LWStrPtr tgt, uInt32 flags)
+{
+    MgErr err = mgNotSupported;
+#if MacOSX || Unix
+    if (flags & kLinkHard)
+    {
+        if (link(SStrBuf(src), (const char*)LStrBuf(tgt)))
+            err = UnixToLVFileErr();
+    }
+    else
+    {
+        if (symlink(SStrBuf(src), (const char*)LStrBuf(tgt)))
+            err = UnixToLVFileErr();
+    }
+#elif Win32
+    // Need to acquire backup privileges in order to be able to call symlink kernel entry points
+	Win32ModifyBackupPrivilege(TRUE);
+    if (flags & kLinkHard)
+    {
+		err = Win32CreateHardLinkW(src, tgt, NULL);
+    }
+	else 
+	{
+		err = Win32CreateSymbolicLinkW(src, tgt, NULL, flags & kLinkDir ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0);
+    }
+ 	Win32ModifyBackupPrivilege(FALSE);
+#endif
+    return err;
+}
+#endif
+
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags)
 {
-    MgErr err = mgNoErr;
+    MgErr err = mgNotSupported;
     LWStrPtr src = NULL;
     LWStrPtr tgt = NULL;
 
     if (!FIsAbsPath(path))
         return mgArgErr;
 
-#if Win32 && EMBEDDED
-	return mgNotSupported;
-#else
-	err =  MakePathDSString(path, &src, NULL);
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
+	err =  LPathToLWStr(path, &src, NULL);
     if (!err)
     {
-        err = MakePathDSString(target, &tgt, NULL);
+        err = LPathToLWStr(target, &tgt, NULL);
         if (!err)
         {
-#if MacOSX || Unix
-            if (flags & kLinkHard)
-            {
-                if (link((const char*)LStrBuf(src), (const char*)LStrBuf(tgt)))
-                    err = UnixToLVFileErr();
-            }
-            else
-            {
-                if (symlink((const char*)LStrBuf(src), (const char*)LStrBuf(tgt)))
-                    err = UnixToLVFileErr();
-            }
-#elif Win32
-            if (!err)
-            {
-				// Need to acquire backup privileges in order to be able to call symlink kernel entry points
-				Win32ModifyBackupPrivilege(TRUE);
-                if (flags & kLinkHard)
-                {
-					err = Win32CreateHardLinkW(src, tgt, NULL);
-                }
-				else 
-				{
-					err = Win32CreateSymbolicLinkW(src, tgt, NULL, flags & kLinkDir ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0);
-                }
- 				Win32ModifyBackupPrivilege(FALSE);
-           }
+			err = lvFile_CreateLink(src, tgt, flags);
+			LWStrDispose(tgt);
+		}
+		LWStrDispose(src);
+	}
 #endif
-            DSDisposePtr((UPtr)tgt);
-        }
-        DSDisposePtr((UPtr)src);
-    }
-    return err;
-#endif
+	return err;
 }
+
+LibAPI(MgErr) LVFile_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags)
+{
+    MgErr err = mgNotSupported;
+    LWStrPtr src = NULL;
+    LWStrPtr tgt = NULL;
+
+    if (!LStrIsAbsPath(path))
+        return mgArgErr;
+
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
+	err =  UPathToLWStr(path, &src, NULL);
+    if (!err)
+    {
+        err = UPathToLWStr(target, &tgt, NULL);
+        if (!err)
+        {
+			err = lvFile_CreateLink(src, tgt, flags);
+			LWStrDispose(tgt);
+		}
+		LWStrDispose(src);
+	}
+#endif
+	return err;
+}
+
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
+/* Read the path a link points to
+   src: Path of the supposed link to read its destination
+   tgt: Returned path with the location
+   bufLen: on input the size of the buffer in tgt passed in, on return the reallocated size if any
+   flags: kRecursive, resolve the link over multiple levels if applicable
+          kResolve, resolve the location to be an absolute path if it wasn't absolute
+		  none, return relative paths if the link is relative
+   fileType: the file type of the returned location
+   Returns: noErr on success resolution, cancelErr if the path is not a symlink, other errors as returned by the used API functions
+*/
+static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, uInt32 flags, uInt32 *fileType)
+{
+	MgErr err = noErr;
+	LWStrPtr src = wSrc, tmp = NULL;
+	int32 tmpLen = 0; 
+#if Win32
+	DWORD dwAttr = GetFileAttributes(wSrc);
+	if (dwAttr == INVALID_FILE_ATTRIBUTES)
+        return Win32GetLVFileErr();
+
+	*fileType = LVFileFlagsFromWinFlags(dwAttr);
+
+	do
+	{
+		if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT)
+		{
+			err = Win32ResolveSymLink(src, wTgt, tgtLen, flags, &dwAttr);
+		}
+		else if (!(dwAttr & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			err = Win32ResolveShortCut(src, wTgt, tgtLen, flags, &dwAttr);
+			if (!err)
+				*fileType |= kIsLink;
+		}
+		if (!err && flags)
+		{
+			int32 offset = 0;
+			/* Is the link target a relative path? We allow an empty path to be equivalent to . */
+			if (!LWStrLen(*wTgt) || !LWStrIsAbsPath(*wTgt))
+			{
+				offset = LWStrParentPath(src, -1);
+				if (LWStrLen(*wTgt) && LWStrBuf(*wTgt)[0] != kPathSeperator)
+					offset++;
+			}
+			err = LWStrRealloc(&tmp, &tmpLen, offset, offset + LWStrLen(*wTgt));
+			if (!err && offset && src == wSrc)
+ 				err = LWStrNCat(tmp, 0, tmpLen, LWStrBuf(src), offset);
+			if (!err && LWStrLen(*wTgt))
+ 				err = LWStrNCat(tmp, offset, tmpLen, LWStrBuf(*wTgt), LWStrLen(*wTgt));
+
+			/* lstat could fail as the symlink path does not have to point to a valid file or directory */
+			if (!err && (dwAttr = GetFileAttributes(tmp)) == INVALID_FILE_ATTRIBUTES)
+				break;
+
+			src = tmp;
+		}
+    }
+	while (!err && flags & kRecursive);
+
+	if (err == cancelError)
+		err = noErr;
+
+	if (!err && tmp)
+		*fileType |= LVFileFlagsFromWinFlags(dwAttr) << 16;
+#else
+    struct stat statbuf;
+
+    if (lstat(SStrBuf(src), &statbuf))
+        return UnixToLVFileErr();
+
+	*fileType = UnixFileTypeFromStat(&statbuf);
+
+	if (!S_ISLNK(statbuf.st_mode))
+		/* no symlink, abort */
+        return cancelError;
+        
+    do
+    {
+		do
+		{
+			err = LWStrReallocBuf(wTgt, tgtLen, 0, statbuf.st_size);
+		    if (!err)
+			{
+				statbuf.st_size = readlink(SStrBuf(src), SStrBuf(*wTgt), *tgtLen);
+				if (statbuf.st_size < 0)
+					err = UnixToLVFileErr();
+			}
+		}
+		while (!err && statbuf.st_size >= *tgtLen);
+		if (!err && flags)
+		{
+			int32 offset = 0;
+			/* Is the link target a relative path? */
+			if (!statbuf.st_size || LWStrBuf(*wTgt)[0] != kPosixPathSeperator)
+			{
+				offset = LWStrParentPath(src, -1);
+				if (LWStrLen(*wTgt) && LWStrBuf(*wTgt)[0] != kPosixPathSeperator)
+					offset++;
+			}
+			err = LWStrReallocBuf(&tmp, &tmpLen, offset, offset + statbuf.st_size );
+			if (!err && offset && src == wSrc)
+ 				err = LWStrNCat(tmp, 0, tmpLen, LWStrBuf(src), offset);
+			if (!err && statbuf.st_size)
+ 				err = LWStrNCat(tmp, offset, tmpLen, LWStrBuf(*wTgt), statbuf.st_size);
+
+			/* lstat could fail as the symlink path does not have to point to a valid file or directory */
+			if (!err && lstat(SStrBuf(tmp), &statbuf))
+				break;
+
+			src = tmp;
+		}
+    }
+	while (!err && flags & kRecursive && S_ISLNK(statbuf.st_mode));
+
+	if (!err && tmp)
+		*fileType |= UnixFileTypeFromStat(&statbuf) << 16;
+
+#endif
+	LWStrDispose(tmp);
+	return err;
+}
+#endif
 
 LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, uInt32 flags, uInt32 *fileType)
 {
     MgErr err = mgNoErr;
     LWStrPtr src = NULL;
+	int32 bufLen = 0;
 
-#if Win32 && EMBEDDED
-	return mgNotSupported;
-#else
-    err = MakeFileDSString(path, &src, NULL);
+	if (fileType)
+		*fileType = 0;
+
+	if (!LStrIsAbsPath(path))
+        return mgArgErr;
+
+#if !Pharlap && !VxWorks
+    err = UPathToLWStr(path, &src, NULL);
     if (!err)
     {
-#if MacOSX || Unix
-#else
-		WStrPtr wTgt = NULL;
-		DWORD dwAttr;
-
-		err = Win32ResolveLink(src, &wTgt, NULL, flags, &dwAttr);
-		*fileType = 0;
+		LWStrPtr wTgt = NULL;
+		err = lvFile_ReadLink(src, &wTgt, &bufLen, flags, fileType);
 		if (!err && wTgt)
 		{
-			int32 offset = 0;
-			if (Win32HasDOSDevicePrefix(WStrBuf(wTgt), WStrLen(wTgt)))
-				offset += 4;
-
+#if usesWinPath
+			int32 offset = HasDOSDevicePrefix(LWStrBuf(wTgt), LWStrLen(wTgt));
+			if (offset == 8)
+				offset = 6;
 			err = WideCStrToMultiByte(WStrBuf(wTgt) + offset, WStrLen(wTgt) - offset, target, CP_UTF8, 0, NULL);
-		}
-		if (!err)
-		{
-            if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT)
-			{
-				*fileType |= kIsLink;
-			}
-			if (!(dwAttr & FILE_ATTRIBUTE_DIRECTORY))
-			{
-				*fileType |= kIsFile;
- 			}
-			if (dwAttr & FILE_ATTRIBUTE_HIDDEN)
-			{
-				*fileType |= kFIsInvisible;
- 			}
-		}
-        DSDisposePtr((UPtr)wTgt);
+			if (!err && offset == 6)
+				LStrBuf(**target)[offset] = kPathSeperator;
+#else
+			err = ConvertToPosixPath(&wTgt, CP_ACP, target, CP_UTF8, 0, NULL, !(*fileType & kIsFile));
 #endif
-        DSDisposePtr((UPtr)src);
+		}
+		LWStrDispose(wTgt);
     }
+    LWStrDispose(src);
     return err;
+#else
+	return mgNotSupported;
 #endif
 }
 
@@ -2239,161 +2023,43 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 flags, uInt32 *fil
 {
     MgErr err = mgNoErr;
     LWStrPtr src = NULL;
+	int32 bufLen = 0;
 
     if (!FIsAbsPath(path))
         return mgArgErr;
 
-#if Win32 && EMBEDDED
-	return mgNotSupported;
-#else
+#if !Pharlap && !VxWorks
 	if (fileType)
 		*fileType = 0;
 
-    err = MakePathDSString(path, &src, NULL);
+    err = LPathToLWStr(path, &src, NULL);
     if (!err)
     {
-#if MacOSX || Unix
-        struct stat st;
-        char *buf = NULL, *ptr = NULL;
-        int len = 0;
-
-        if (lstat(SStrBuf(src), &st))
-        {
-            err = UnixToLVFileErr();
-        }
-        else if (S_ISLNK(st.st_mode))
-        {
-            len = st.st_size + 1;
-            buf = malloc(len);
-            if (!buf)
-            {
-                err = mFullErr;
-            }
-        }
-        else
-        {
-            err = mgArgErr;
-        }
-        
-        while (!err)
-        {
-            ssize_t retval = readlink(SStrBuf(src), buf, len);
-            if (retval < 0)
-            {
-                err = UnixToLVFileErr();
-            }
-            else if (retval < len)
-            {
-                /* Is the link target a relative path */
-                if (buf[0] != '/')
-                {
-                    ptr = realloc(buf, retval + LStrLen(src) + 1);
-                    if (ptr)
-                    {
-                        buf = ptr;
-						for (ptr = SStrBuf(src) + LStrLen(src); *ptr != kPathSeperator; ptr--);
-						LStrLen(src) = ptr - SStrBuf(src) + 1;
-                        memmove(buf + LStrLen(src), buf, retval);
-                        memmove(buf, SStrBuf(src), LStrLen(src));
-                        retval += LStrLen(src);
-                    }
-                    else
-                    {
-                        err = mFullErr;
-                    }
-                }
-                if (!err)
-                {
-                    err = LVPath_FromText((CStr)buf, retval, target, LV_FALSE);
-                    if (!err && fileType)
-                    {
-                        if (lstat(buf, &st))
-                        {
-							*fileType = 
-                            err = UnixToLVFileErr();
-                        }
-                        else if (S_ISLNK(st.st_mode))
-                        {
-							*fileType = kIsLink;
-                            if (stat(buf, &st))
-                            {
-                                err = UnixToLVFileErr();
-                            }
-                            else if (!S_ISDIR(st.st_mode))
-                            {
-                                *fileType |= kIsFile;
-                            }
-                        }
-                        else
-                        {
-                            if (!S_ISDIR(st.st_mode))
-                            {
-                                *fileType = kIsFile;
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-            else // retval >= len
-            {
-                len += len;
-                ptr = realloc(buf, len);
-                if (!ptr)
-                {
-                    err = mFullErr;
-                }
-                else
-                {
-                    buf = ptr;
-                }
-            }
-        }
-        if (buf)
-        {
-            free(buf);
-        }
-#else
-		WStrPtr wTgt = NULL;
-		int32 bufLen = 0;
-		DWORD dwAttr;
-
-		err = Win32ResolveShortCut(src, &wTgt, &bufLen, flags, &dwAttr);
-		if (err)
-			err = Win32ResolveLink(src, &wTgt, &bufLen, flags, &dwAttr);
+		LWStrPtr wTgt = NULL;
+		err = lvFile_ReadLink(src, &wTgt, &bufLen, flags, fileType);
 		if (!err && wTgt)
 		{
-			int32 offset = 0;
 			LStrHandle handle = NULL;
-			if (Win32HasDOSDevicePrefix(WStrBuf(wTgt), WStrLen(wTgt)))
-				offset += 4;
-
-			err = WideCStrToMultiByte(WStrBuf(wTgt) + offset, WStrLen(wTgt) - offset, &handle, CP_ACP, 0, NULL);
+#if usesWinPath
+			int32 offset = HasDOSDevicePrefix(LWStrBuf(wTgt), LWStrLen(wTgt));
+			if (offset == 8)
+				offset = 6;
+			err = WideCStrToMultiByte(LWStrBuf(wTgt) + offset, LWStrLen(wTgt) - offset, &handle, CP_ACP, 0, NULL);
+			if (!err && offset == 6)
+				LStrBuf(*handle)[offset] = kPathSeperator;
+#else
+			err = ConvertFromPosixPath(LWStrBuf(wTgt), LWStrLen(wTgt), CP_ACP, &handle, CP_ACP, '?', NULL, !(*fileType & kIsFile));
+#endif
 			if (!err)
 				err = FTextToPath(LStrBuf(*handle), LStrLen(*handle), target);
-			if (handle)
-				DSDisposeHandle((UHandle)handle);
+			DSDisposeHandle((UHandle)handle);
 		}
-		if (!err)
-		{
-            if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT)
-			{
-				*fileType |= kIsLink;
-			}
-			if (!(dwAttr & FILE_ATTRIBUTE_DIRECTORY))
-			{
-				*fileType |= kIsFile;
- 			}
-			if (dwAttr & FILE_ATTRIBUTE_HIDDEN)
-			{
-				*fileType |= kFIsInvisible;
- 			}
-		}
-        DSDisposePtr((UPtr)wTgt);
-#endif
-        DSDisposePtr((UPtr)src);
+        LWStrDispose(wTgt);
     }
+    LWStrDispose(src);
     return err;
+#else
+ 	return mgNotSupported;
 #endif
 }
 
@@ -2797,13 +2463,13 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWStrPtr lwstr, int32 bufLen,
     DWORD shareAcc, openAcc;
     DWORD createMode = OPEN_EXISTING;
     int32 attempts = 3;
- #if !EMBEDDED
+ #if !Pharlap
 	wchar_t *rsrcPostfix = NULL;
  #endif
 #endif
     
 #if usesWinPath
- #if EMBEDDED
+ #if Pharlap
 	if (rsrc)
 		return mgArgErr;
  #else
@@ -2865,7 +2531,7 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWStrPtr lwstr, int32 bufLen,
 			return mgArgErr;
     }
 
- #if !EMBEDDED
+ #if !Pharlap
 	if (rsrcPostfix)
 		err = WStrNCat(lwstr, LWStrLen(lwstr), bufLen, rsrcPostfix, -1);
  #endif
@@ -2934,7 +2600,7 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWStrPtr lwstr, int32 bufLen,
  #if MacOSX
 	if (rsrc == kOpenFileRsrcResource)
 	{
-		err = LStrNCat(lwstr), LStrLen(lwstr)), bufLen, namedResourceFork, -1);
+		err = LStrNCat(lwstr, -1, bufLen, namedResourceFork, -1);
 		if (err)
 			return err;
 	}
@@ -2968,57 +2634,11 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWStrPtr lwstr, int32 bufLen,
 	}
  #endif
 #elif !usesHFSPath
- #error No supported code path
-#endif
-	if (err)
-	{
-		lvfile_CloseFile(*ioRefNum);
-		DEBUGPRINTF(((CStr)"OpenFile: err = %ld, rsrc = %d", err, (int16)rsrc));
-	}
-	return err;
-}
-
-LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LStrHandle filePath, uInt32 rsrc, uInt32 openMode, uInt32 denyMode)
-{
-#if usesWinPath && !EMBEDDED
-	int32 bufLen = rsrc ? 14 : 0;
-#elif MacOSX
-	int32 bufLen = rsrc ? strlen(namedResourceFork) : 0;
-#else
-	int32 bufLen = 0;
-#endif
-	LWStrPtr pathName = NULL;
-	FileRefNum ioRefNum = NULL;
-	MgErr err;
-
-	if (!LStrIsAbsPath(filePath))
-        return mgArgErr;
-
-#if usesWinPath
-	if (!LStrLenH(filePath))
-		return mgArgErr;
-#endif
-
-	err = MakeFileDSString(filePath, &pathName, &bufLen);
-	if (!err)
-	{
-		err = lvFile_OpenFile(&ioRefNum, pathName, bufLen, rsrc, openMode, denyMode);
-		DSDisposePtr((UPtr)pathName);
-		if (!err)
-		{
-			err = FNewRefNum(NULL, (File)(ioRefNum), refnum);
-		}
-	}
-	return err;
-}
-
-#if usesHFSPath
-static MgErr lvFile_OpenFileHFS(FileRefNum *ioRefNum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode)
-{
     FSRef ref;
 	HFSUniStr255 forkName;
     int8 perm;
     OSErr ret;
+    MgErr err;
 
 	if (rsrc > kOpenFileRsrcResource)
 		return mgArgErr;
@@ -3054,7 +2674,7 @@ static MgErr lvFile_OpenFileHFS(FileRefNum *ioRefNum, Path path, uInt32 rsrc, uI
 			return mgArgErr;
 	}
 
-    err = FSMakePathRef(path, &ref);
+    err = FSMakePathRef(lwstr, &ref);
     if (err)
 	{
 		DEBUGPRINTF(((CStr)"FSMakePathRef: err = %ld", err));
@@ -3082,6 +2702,7 @@ static MgErr lvFile_OpenFileHFS(FileRefNum *ioRefNum, Path path, uInt32 rsrc, uI
 		size.q = 0;
 		err = lvfile_SetSize(ioRefNum, &size);
 	}
+#endif
 	if (err)
 	{
 		lvfile_CloseFile(*ioRefNum);
@@ -3089,11 +2710,45 @@ static MgErr lvFile_OpenFileHFS(FileRefNum *ioRefNum, Path path, uInt32 rsrc, uI
 	}
 	return err;
 }
+
+LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LStrHandle filePath, uInt32 rsrc, uInt32 openMode, uInt32 denyMode)
+{
+#if (usesWinPath && !Pharlap)
+	int32 bufLen = rsrc ? 14 : 0;
+#elif MacOSX
+	int32 bufLen = rsrc ? strlen(namedResourceFork) : 0;
+#else
+	int32 bufLen = 0;
 #endif
+	LWStrPtr pathName = NULL;
+	FileRefNum ioRefNum = NULL;
+	MgErr err;
+
+	if (!LStrIsAbsPath(filePath))
+        return mgArgErr;
+
+#if usesWinPath
+	/* Can't open the root (desktop) */
+	if (!LStrLenH(filePath))
+		return mgArgErr;
+#endif
+
+	err = UPathToLWStr(filePath, &pathName, &bufLen);
+	if (!err)
+	{
+		err = lvFile_OpenFile(&ioRefNum, pathName, bufLen, rsrc, openMode, denyMode);
+		LWStrDispose(pathName);
+		if (!err)
+		{
+			err = FNewRefNum(NULL, (File)(ioRefNum), refnum);
+		}
+	}
+	return err;
+}
 
 LibAPI(MgErr) LVPath_OpenFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode)
 {
-#if usesWinPath && !EMBEDDED
+#if (usesWinPath && !Pharlap)
 	int32 bufLen = rsrc ? 14 : 0;
 #elif MacOSX
 	int32 bufLen = rsrc ? strlen(namedResourceFork) : 0;
@@ -3108,16 +2763,12 @@ LibAPI(MgErr) LVPath_OpenFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 o
 	if (!FIsAbsPath(path))
 		return mgArgErr;
 
-#if usesHFSPath
-	err = lvFile_OpenFileHFS(refnum, path, rsrc, openMode, denyMode);
-#else
-	err = MakePathDSString(path, &pathName, &bufLen);
+	err = LPathToLWStr(path, &pathName, &bufLen);
 	if (!err)
 	{
 		err = lvFile_OpenFile(&ioRefNum, pathName, bufLen, rsrc, openMode, denyMode);
-		DSDisposePtr((UPtr)pathName);
+		LWStrDispose(pathName);
 	}
-#endif
 	if (!err)
 		err = FNewRefNum(path, (File)(ioRefNum), refnum);
 	return err;
@@ -3228,649 +2879,4 @@ LibAPI(MgErr) InitializeStreamFuncs(LStrHandle filefunc_def, LStrHandle *memory)
 		fill_mem_filefunc(pzlib_filefunc_def, memory);
 	}
 	return err;
-}
-
-#if MacOSX
-static CFStringEncoding ConvertCodepageToEncoding(uInt32 codePage)
-{
-	CFStringEncoding encoding = CFStringConvertWindowsCodepageToEncoding(codePage);
-	if (encoding == kCFStringEncodingInvalidId)
-	{
-		encoding = CFStringGetSystemEncoding();
-	}
-	return encoding;
-}
-#endif
-
-LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp)
-{
-#if Win32
-	return acp ? GetACP() : GetOEMCP();
-#elif MacOSX
-    Unused(acp);
-	CFStringEncoding encoding = CFStringGetSystemEncoding();
-	return CFStringConvertEncodingToWindowsCodepage(encoding);
-#else
-    if (utf8_is_current_mbcs())
-		return CP_UTF8;
-	return acp ? CP_ACP : CP_OEMCP;
-#endif
-}
-
-LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string)
-{
-	if (string)
-	{
-		int32 i = LStrLen(*string) - 1;
-		UPtr ptr = LStrBuf(*string);
-
-		for (; i >= 0; i--)
-		{
-			if (*ptr++ >= 0x80)
-			{
-				return LV_TRUE;
-			}
-		}
-	}
-	return LV_FALSE;
-}
-
-LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
-{
-	MgErr err = noErr;
-	if (srccp != destcp)
-	{
-		WStrHandle ustr = NULL;
-		err = MultiByteCStrToWideString(src, srclen, &ustr, srccp);
-		if (!err && ustr)
-		{
-			err = WideStringToMultiByte(ustr, dest, destcp, defaultChar, defUsed);
-			DSDisposeHandle((UHandle)ustr);
-			return err;
-		}
-	}
-	else
-	{
-		if (srclen == -1)
-			srclen = StrLen(src);
-		if (srclen > 0)
-		{
-			err = NumericArrayResize(uB, 1, (UHandle*)dest, srclen);
-			if (!err)
-			{
-				MoveBlock(src, LStrBuf(**dest), srclen);
-				LStrLen(**dest) = srclen;
-				return err;
-			}
-		}
-	}
-	if (*dest)
-		LStrLen(**dest) = 0;
-	return err;
-}
-
-/* Converts a Unix style path to a LabVIEW platform path */
-LibAPI(MgErr) ConvertFromPosixPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
-{
-    MgErr err = mgNotSupported;
-#if usesWinPath
-    Unused(isDir);
-    err = ConvertCString(src, srclen, srccp, dest, destcp, defaultChar, defUsed);
-	if (!err && *dest)
-	{
-		int32 len = LStrLen(**dest);
-		UPtr buf = LStrBuf(**dest);
-		if (src[0] == '/' && src[1] != '/')
-		{
-			*buf++ = src[1];
-			*buf++ = ':';
-			len -= 2;
-		}
-		for (; len; len--, buf++)
-		{
-			if (*buf == '/')
-			{
-				*buf = '\\';
-			}
-		}
-	}
-#elif usesPosixPath
-    Unused(isDir);
-	err = ConvertCString(src, srclen, srccp, dest, destcp, defaultChar, defUsed);
-#elif usesHFSPath
-    Unused(defUsed);
-	CFStringEncoding encoding = ConvertCodepageToEncoding(srccp);
-	if (encoding != kCFStringEncodingInvalidId)
-	{
-		CFURLRef urlRef = NULL;
-		CFStringRef hfsRef, fileRef = CFStringCreateWithBytes(kCFAllocatorDefault, src, srclen, encoding, false);
-		if (!fileRef)
-		{
-			return mFullErr;
-		}
-		urlRef = CFURLCreateWithFileSystemPath(NULL, fileRef, kCFURLPOSIXPathStyle, isDir);
-		CFRelease(fileRef);
-		if (!urlRef)
-		{
-			return mFullErr;
-		}
-		hfsRef = CFURLCopyFileSystemPath(urlRef, kCFURLHFSPathStyle);
-		CFRelease(urlRef);
-		if (hfsRef)
-		{
-			CFIndex len;
-			CFRange range = CFRangeMake(0, CFStringGetLength(hfsRef));
-			if (CFStringGetBytes(hfsRef, range, encoding, defaultChar, false, NULL, 0, &len) > 0)
-			{
-				if (len > 0)
-				{
-					err = NumericArrayResize(uB, 1, (UHandle*)dest, len + 1);
-					if (!err)
-					{
-						encoding = ConvertCodepageToEncoding(destcp);
-						if (encoding != kCFStringEncodingInvalidId)
-						{
-							if (CFStringGetBytes(hfsRef, range, encoding, 0, false, LStrBuf(**dest), len, &len) > 0)
-							{
-								LStrBuf(**dest)[len] = 0;
-								LStrLen(**dest) = len;
-								err = mgNoErr;
-							}
-							else
-							{	
-								err = bogusError;
-							}
-						}
-					}
-				}
-			}
-			CFRelease(hfsRef);
-		}
-		else
-		{
-			err = mFullErr;
-		}
-    }
-#endif
-	return err;
-}
-
-LibAPI(MgErr) ConvertLString(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
-{
-	MgErr err;
-	if (srccp != destcp)
-	{
-		WStrHandle wstr = NULL;
-		if (LStrLen(*src) > 0)
-		{
-			err = MultiByteToWideString(src, &wstr, srccp);
-			if (!err && wstr)
-			{
-				err = WideStringToMultiByte(wstr, dest, destcp, defaultChar, defUsed);
-				DSDisposeHandle((UHandle)wstr);
-			}
-			return err;
-		}
-	}
-	else
-	{
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, LStrLen(*src));
-		if (!err)
-		{
-			MoveBlock((ConstCStr)*src, (CStr)**dest, LStrLen(*src) + sizeof(int32));
-		}
-		return err;
-	}
-	if (*dest)
-		LStrLen(**dest) = 0;
-
-	return mgNoErr;
-}
-
-#if !Unix || !defined(HAVE_ICONV)
-static void TerminateLStr(LStrHandle *dest, int32 numBytes)
-{
-	LStrLen(**dest) = numBytes;
-	LStrBuf(**dest)[numBytes] = 0;
-}
-#endif
-
-/* Converts a LabVIEW platform path to Unix style path */
-LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
-{
-    MgErr err = mgNotSupported;
-#if usesHFSPath
-    Unused(defUsed);
-	CFStringEncoding encoding = ConvertCodepageToEncoding(srccp);
-	if (encoding != kCFStringEncodingInvalidId)
-	{
-		CFURLRef urlRef = NULL;
-		CFStringRef posixRef, fileRef = CFStringCreateWithBytes(kCFAllocatorDefault, LStrBuf(*src), LStrLen(*src), encoding, false);
-		if (!fileRef)
-		{
-			return mFullErr;
-		}
-		urlRef = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, fileRef, kCFURLHFSPathStyle, isDir);
-		CFRelease(fileRef);
-		if (!urlRef)
-		{
-			return mFullErr;
-		}
-		posixRef = CFURLCopyFileSystemPath(urlRef, kCFURLPOSIXPathStyle);
-		CFRelease(urlRef);
-		if (posixRef)
-		{
-			CFIndex len;
-			CFRange range = CFRangeMake(0, CFStringGetLength(posixRef));
-			if (CFStringGetBytes(posixRef, range, encoding, defaultChar, false, NULL, 0, &len) > 0)
-			{
-				if (len > 0)
-				{
-					err = NumericArrayResize(uB, 1, (UHandle*)dest, len + 1);
-					if (!err)
-					{
-						encoding = ConvertCodepageToEncoding(destcp);
-						if (encoding != kCFStringEncodingInvalidId)
-						{
-							if (CFStringGetBytes(posixRef, range, encoding, 0, false, LStrBuf(**dest), len, &len) > 0)
-							{
-								TerminateLStr(dest, len);
-								err = mgNoErr;
-							}
-							else
-							{	
-								err = bogusError;
-							}
-						}
-					}
-				}
-			}
-			CFRelease(posixRef);
-		}
-		else
-		{
-			err = mFullErr;
-		}
-	}
-#else
-    Unused(isDir);
-	err = ConvertLString(src, srccp, dest, destcp, defaultChar, defUsed);
-#if usesWinPath
-	if (!err && *dest)
-	{
-		int32 len = LStrLen(**dest);
-		UPtr buf = LStrBuf(**dest);
-		if (buf[1] == ':' && buf[2] == '\\')
-		{
-			*buf++ = '/';
-			*buf++ = LStrBuf(*src)[0];
-			len -= 2;
-		}
-		for (; len; len--, buf++)
-		{
-			if (*buf == '\\')
-			{
-				*buf = '/';
-			}
-		}
-	}
-#endif
-#endif
-	return err;
-}
-
-#if Unix
-#ifdef HAVE_ICONV
-static char *iconv_getcharset(uInt32 codePage)
-{
-	static char cp[10];
-	switch (codePage)
-	{
-		case CP_ACP:
-			return "CHAR";
-		case CP_OEMCP:
-			/* FIXME: determine current local and return according OEM */
-			return "CP437";
-		case CP_UTF8:
-			return "UTF-8";
-		default:
-			snprintf(cp, 10, "CP%d", codePage);
-			return cp;
-	}
-	return NULL;
-}
-
-static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uInt32 codePage)
-{
-	iconv_t cd = iconv_open("WCHAR_T", iconv_getcharset(codePage));
-	if (cd != (iconv_t)-1)
-	{
-		MgErr err;
-		if (len < 0)
-			len = strlen(src);
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, len * sizeof(wchar_t));
-		if (!err)
-		{
-			char *inbuf = (char*)src, *outbuf = (char*)LStrBuf(**dest);
-			size_t retval, inleft = len, outleft = len * sizeof(wchar_t);
-			retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
-			if (retval == (size_t)-1)
-				err = UnixToLVFileErr();
-			else
-			    WStrLenSet(**dest, (len * sizeof(wchar_t) - outleft) / sizeof(uInt16));
-		}
-		if (iconv_close(cd) != 0 && !err)
-			err = UnixToLVFileErr();
-		return err;
-	}
-	return UnixToLVFileErr();
-}
-
-static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
-{
-	MgErr err;
-	iconv_t cd = iconv_open(iconv_getcharset(codePage), "WCHAR_T");
-	Unused(defaultChar);
-	Unused(defaultCharWasUsed);
-	if (cd != (iconv_t)-1)
-	{
-		if (srclen == -1)
-			srclen = wcslen(src);
-
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, srclen * sizeof(uInt16) * 2);
-		if (!err)
-		{
-			char *inbuf = (char*)src, *outbuf = (char*)LStrBuf(**dest);
-			size_t retval, inleft = srclen * sizeof(uInt16), outleft = srclen * sizeof(uInt16) * 2;
-			retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
-			if (retval == (size_t)-1)
-				err = UnixToLVFileErr();
-			else
-				LStrLen(**dest) = srclen * 2 - outleft;
-		}
-		if (iconv_close(cd) != 0 && !err)
-			err = UnixToLVFileErr();
-		return err;
-	}
-	return UnixToLVFileErr();
-}
-#else // HAVE_ICONV
-/* We don't have a good way of converting from an arbitrary character set to wide char and back.
-   Just do default mbcs to wide char and vice versa ??? */
-static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uInt32 codePage)
-{
-	int32 offset = 0;
-	MgErr err = noErr;
-
-	if (codePage == CP_UTF8)
-        err = utf8towchar(src, len, NULL, &offset, 0);
-	else
-	{
-		size_t max, length;
-		char *pt = (char*)src;
-#if HAVE_MBRTOWC
-	    mbstate_t mbs;
-#endif
-		if (len < 0)
-			len = strlen(src);
-		max = len;
-#if HAVE_MBRTOWC
-	    length = mbrtowc(NULL, NULL, 0, &mbs);
-	    while (max > 0)
-	    {
-		    length = mbrtowc(NULL, pt, max, &mbs);
-		    if (length > 0)
-		    {
-			    pt += length;
-			    max -= length;
-			    offset++;
-		    }
-	    }
-#else
-	    length = mbtowc(NULL, NULL, 0);
-	    while (max > 0)
-	    {
-		    length = mbtowc(NULL, pt, max);
-		    if (length > 0)
-		    {
-			    pt += length;
-			    max -= length;
-			    offset++;
-		    }
-	     }
-#endif
-	}
-	if (offset > 0)
-	{
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, offset * sizeof(wchar_t));
-		if (!err)
-		{
-			if (codePage == CP_UTF8)
-			{
-				err = utf8towchar(src, len, WStrBuf(**dest), NULL, offset);
-			}
-			else
-			{
-				offset = mbstowcs(WStrBuf(**dest), src, offset);
-			}
-			if (!err)
-			    LStrLen(**dest) = offset * sizeof(wchar_t) / sizeof(uInt16); 
-		}
-	}
-	return err;
-}
-
-static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
-{
-	size_t dummy, length, size = 2 * srclen;
-	wchar_t wdefChar;
-	MgErr err = noErr;
-
-	if (codePage == CP_UTF8)
-	{
-		err = wchartoutf8(src, srclen, NULL, &size, 0);
-	}
-	else
-	{
-		if (defaultChar)
-		{
-			dummy = mbtowc(NULL, NULL, 0);
-			dummy = mbtowc(&wdefChar, &defaultChar, 1);
-		}
-
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, size);
-		if (!err)
-		{
-			uChar *dbuf = LStrBuf(**dest), *dend = LStrBuf(**dest) + size;
-			const wchar_t *sbuf = src, *send = sbuf + srclen;
-#ifdef HAVE_WCRTOMB
-			mbstate_t mbs;
-
-			wcrtomb(NULL, *sbuf, &mbs);
-			while (sbuf < send)
-			{
-				length = wcrtomb(dbuf, *sbuf, &mbs);
-				if ((length == 0) || (length > MB_CUR_MAX))
-				{
-					if (defaultChar)
-					{
-						length = wcrtomb(dbuf, wdefChar, &mbs);
-#else
-			dummy = wctomb(NULL, *sbuf);
-			while (sbuf < send)
-			{
-				length = wctomb(dbuf, *sbuf);
-				if ((length == 0) || (length > MB_CUR_MAX))
-				{
-					if (defaultChar)
-					{
-						length = wctomb(dbuf, wdefChar);
-#endif
-						*defaultCharWasUsed = LV_TRUE;
-					}
-					else
-					{
-						err = mgNotSupported;
-						break;
-					}
-				}
-				dbuf += length;
-				if ((dend - dbuf) < MB_CUR_MAX)
-				{
-					length = dbuf - LStrBuf(**dest);
-					LStrLen(**dest) = length;
-					size *= 2;
-					err = NumericArrayResize(uB, 1, (UHandle*)dest, size);
-					if (err)
-						break;
-					dbuf = LStrBuf(**dest) + length;
-					dend = LStrBuf(**dest) + size;
-				}
-				sbuf++;
-			}
-			if (!err)
-			{
-				length = dbuf - LStrBuf(**dest);
-				err = NumericArrayResize(uB, 1, (UHandle*)dest, length + 1);
-				TerminateLStr(dest, length);
-			}
-		}
-	}
-	return err;
-}
-#endif
-#endif
-
-LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle *dest, uInt32 codePage)
-{
-	if (*dest)
-		WStrLenSet(**dest, 0);
-	if (src && src[0])
-	{
-		MgErr err = mgNotSupported;
-#if Win32
-		int32 numChars = MultiByteToWideChar(codePage, 0, (LPCSTR)src, srclen, NULL, 0);
-		if (numChars > 0)
-		{ 
-			err = NumericArrayResize(uW, 1, (UHandle*)dest, numChars);
-			if (!err)
-			{
-				LStrLen(**dest) = MultiByteToWideChar(codePage, 0, (LPCSTR)src, srclen, LStrBuf(**dest), numChars);	
-			}
-		}
-#elif MacOSX
-		CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
-		if (encoding != kCFStringEncodingInvalidId)
-		{
-			CFStringRef cfpath = CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*)src, srclen, encoding, false);
-			if (cfpath)
-			{
-				CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
-				CFRelease(cfpath);
-				if (cfpath2)
-				{
-					CFIndex numChars;
-					
-					CFStringNormalize(cfpath2, kCFStringNormalizationFormC);
-    
-					numChars = CFStringGetLength(cfpath2);
-					if (numChars > 0)
-					{ 
-						err = NumericArrayResize(uB, 1, (UHandle*)dest, numChars * sizeof(UniChar));
-						if (!err)
-						{
-							CFStringGetCharacters(cfpath2, CFRangeMake(0, numChars), (UniChar*)LStrBuf(**dest));
-							LStrLen(**dest) = numChars;
-						}
-					}
-					CFRelease(cfpath2); 
-				}
-			}
-		}
-#elif Unix
-	    err = unix_convert_mbtow((const char*)src, srclen, dest, codePage);
-#endif
-		return err;
-	}
-	return mgNoErr;
-}
-
-LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, WStrHandle *dest, uInt32 codePage)
-{
-	return MultiByteCStrToWideString(LStrBuf(*src), LStrLen(*src), dest, codePage);
-}
-
-LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest)
-{
-	int32 size = LStrLenH(*dest);
-	MgErr err = NumericArrayResize(uB, 1, (UHandle*)dest, size + 1);
-	if (!err)
-		LStrBuf(**dest)[size] = 0;
-	return err;
-}
-
-LibAPI(MgErr) WideStringToMultiByte(const WStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
-{
-	return WideCStrToMultiByte(WStrBuf(*src), WStrLen(*src), dest, codePage, defaultChar, defaultCharWasUsed);
-}
-
-LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
-{
-	if (defaultCharWasUsed)
-		*defaultCharWasUsed = LV_FALSE;
-	if (dest && *dest)
-		LStrLen(**dest) = 0;
-
-	if (srclen < 0)
-		srclen = (int32)wcslen(src);
-
-	if (srclen > 0)
-	{
-		MgErr err = mgNotSupported;
-#if Win32 
-		int32 numBytes = WideCharToMultiByte(codePage, 0, src, srclen, NULL, 0, NULL, NULL);
-		if (numBytes > 0)
-		{ 
-			BOOL defUsed;
-			err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
-			if (!err)
-			{
-				numBytes = WideCharToMultiByte(codePage, 0, src, srclen, (LPSTR)LStrBuf(**dest), numBytes, &defaultChar, &defUsed);
-				TerminateLStr(dest, numBytes);
-				if (defaultCharWasUsed)
-					*defaultCharWasUsed = (LVBoolean)(defUsed != FALSE);
-			}
-		}
-#elif MacOSX
-		CFStringRef cfpath = CFStringCreateWithCharacters(kCFAllocatorDefault, src, srclen);
-		if (cfpath)
-		{
-			CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
-			CFRelease(cfpath);
-			if (cfpath2)
-			{
-				CFStringNormalize(cfpath2, kCFStringNormalizationFormD);
-				CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
-				if (encoding != kCFStringEncodingInvalidId)
-				{
-					CFIndex numBytes;
-					if (CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, NULL, 0, &numBytes) > 0)
-					{
-						err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
-						if (!err)
-						{
-							CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, (UInt8*)LStrBuf(**dest), numBytes, &numBytes);
-							TerminateLStr(dest, numBytes);
-						}
-					}
-				}
-				CFRelease(cfpath2);
-			}
-		}
-#elif Unix
-		err = unix_convert_wtomb(src, srclen, dest, codePage, defaultChar, defaultCharWasUsed);
-#endif
-		return err;
-	}
-	return mgNoErr;
 }

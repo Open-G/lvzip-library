@@ -1583,6 +1583,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\lwstr.c"
+				>
+			</File>
+			<File
 				RelativePath="MacBinaryIII.c"
 				>
 				<FileConfiguration
@@ -2189,6 +2193,10 @@
 			</File>
 			<File
 				RelativePath="lvutil.h"
+				>
+			</File>
+			<File
+				RelativePath=".\lwstr.h"
 				>
 			</File>
 			<File

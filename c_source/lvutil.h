@@ -25,7 +25,6 @@
    WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
    OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-#define test
 #ifndef _lvUtil_H
 #define _lvUtil_H
 
@@ -60,6 +59,7 @@ extern "C" {
   #define BigEndian 1
  #endif
  #define MacOS 1
+ #define Win32 0
  #ifdef __APPLE_CC__
   #define MacOSX 1
  #endif
@@ -82,6 +82,9 @@ extern "C" {
   #define DEBUG 1
  #endif
  #define BigEndian 0
+ #if EMBEDDED
+  #define Pharlap 1
+ #endif
  #define _WIN32_WINNT 0x0501
 #elif defined(linux) || defined(__linux) || defined(__linux__)
  #if defined(i386)
@@ -112,7 +115,8 @@ extern "C" {
  #define Win32 0
  #define HAVE_FCNTL
  #define HAVE_ICONV
- #define HAVE_WCRTOMB
+// #define HAVE_WCRTOMB
+// #define HAVE_MBRTOWC
 #elif defined(__VXWORKS__)
  #define Unix 1
  #define VxWorks 1
@@ -216,27 +220,38 @@ typedef int32           Bool32;
 
 /*** The Support Manager ***/
 
-#define HiNibble(x)		(uInt8)(((x)>>4) & 0x0F)
+#define HiNibble(x)		(uInt8)(((x) >> 4) & 0x0F)
 #define LoNibble(x)		(uInt8)((x) & 0x0F)
-#define HiByte(x)		((uInt8)((uInt16)(x)>>8))
+#define HiByte(x)		((uInt8)((uInt16)(x) >> 8))
 #define LoByte(x)		((uInt8)(x))
-#define Word(hi,lo)		(((uInt16)(hi)<<8) | ((uInt16)(uInt8)(lo)))
-#define Hi16(x)			((uInt16)((uInt32)(x)>>16))
+#define Word(hi,lo)		(((uInt16)(hi) << 8) | ((uInt16)(lo & 0xFF)))
+#define Hi16(x)			((uInt16)((uInt32)(x) >> 16))
 #define Lo16(x)			((uInt16)(x))
-#define Long(hi,lo)		(((uInt32)(hi)<<16) | ((uInt32)(uInt16)(lo)))
-#define Hi32(x)			((uInt32)((uInt64)(x)>>32))
+#define Long(hi,lo)		(((uInt32)(hi) << 16) | ((uInt32)(lo & 0xFFFF)))
+#define Hi32(x)			((uInt32)((uInt64)(x) >> 32))
 #define Lo32(x)			((uInt32)(x))
-#define Quad(hi,lo)		(((uInt64)(hi)<<32) | ((uInt64)(uInt32)(lo)))
+#define Quad(hi,lo)		(((uInt64)(hi) << 32) | ((uInt64)(lo & 0xFFFFFFFF)))
 
 #define Cat4Chrs(c1,c2,c3,c4)   (((int32)(uInt8)(c1)<<24)|((int32)(uInt8)(c2)<<16)|((int32)(uInt8)(c3)<<8)|((int32)(uInt8)(c4)))
 #define Cat2Chrs(c1,c2)         (((int16)(uInt8)(c1)<<8)|((int16)(uInt8)(c2)))
 
+#define Swap16(x)       (uInt16)(((x & 0xff) >> 8) | (x << 8))
+#define Swap32(x)       (uInt32)(((x & 0xff000000) >> 24) | ((x & 0x00ff0000) >> 8) | ((x & 0x0000ff00) << 8) | (x << 24))
+
 #if BigEndian
 #define RTToL(c1,c2,c3,c4)  Cat4Chrs(c1,c2,c3,c4)
 #define RTToW(c1,c2)        Cat2Chrs(c1,c2)
+#define ConvertBE16(x)		x
+#define ConvertBE32(x)		x
+#define ConvertLE16(x)		Swap16(x)
+#define ConvertLE32(x)		Swap32(x)
 #else
 #define RTToL(c1,c2,c3,c4)  Cat4Chrs(c4,c3,c2,c1)
 #define RTToW(c1,c2)        Cat2Chrs(c2,c1)
+#define ConvertBE16(x)		Swap16(x)
+#define ConvertBE32(x)		Swap32(x)
+#define ConvertLE16(x)		x
+#define ConvertLE32(x)		x
 #endif
 
 enum {                  /* Manager Error Codes */
@@ -324,6 +339,94 @@ enum {                  /* Manager Error Codes */
     ncNotConnectedErr,
     ncAlreadyConnectedErr,
     ncConnClosedErr,        /* 66 */
+
+	amInitErr,				/* (Inter-)Application Message Manager 67- */
+
+	occBadOccurrenceErr,	/* 68  Occurrence Mgr errors */
+	occWaitOnUnBoundHdlrErr,
+	occFunnyQOverFlowErr,
+
+	fDataLogTypeConflict,	/* 71 */
+	ecLVSBCannotBeCalledFromThread, /* ExtCode Mgr	72*/
+	amUnrecognizedType,
+	mCorruptErr,
+	ecLVSBErrorMakingTempDLL,
+	ecLVSBOldCIN,			/* ExtCode Mgr	76*/
+
+	dragSktNotFound,		/* Drag Manager 77 - 80*/
+	dropLoadErr,
+	oleRegisterErr,
+	oleReleaseErr,
+
+	fmtTypeMismatch,		/* String processing (printf, scanf) errors */
+	fmtUnknownConversion,
+	fmtTooFew,
+	fmtTooMany,
+	fmtScanError,
+
+	ecLVSBFutureCIN,		/* ExtCode Mgr	86*/
+
+	lvOLEConvertErr,
+	rtMenuErr,
+	pwdTampered,			/* Password processing */
+	LvVariantAttrNotFound,		/* LvVariant attribute not found 90-91*/
+	LvVariantTypeMismatch,		/* Cannot convert to/from type */
+
+	axEventDataNotAvailable,	/* Event Data Not Available 92-96*/
+	axEventStoreNotPresent,		/* Event Store Not Present */
+	axOccurrenceNotFound,		/* Occurence Not Found */
+	axEventQueueNotCreated,		/* Event Queue not created */
+	axEventInfoNotAvailable,	/* Event Info is not available */
+
+	oleNullRefnumPassed,		/* Refnum Passed is Null */
+
+	omidGetClassGUIDErr,		/* Error retrieving Class GUID from OMId 98-100*/
+	omidGetCoClassGUIDErr,		/* Error retrieving CoClass GUID from OMId */
+	omidGetTypeLibGUIDErr,		/* Error retrieving TypeLib GUID from OMId */
+
+	appMagicBad,				/* bad built application magic bytes */
+
+	iviInvalidDowncast,         /* IVI Invalid downcast*/
+	iviInvalidClassSesn,		/* IVI No Class Session Opened */
+
+	maxErr,						/* max manager 104-107 */
+	maxConfigErr,				/* something not right with config objects */
+	maxConfigLoadErr,			/* could not load configuration */
+	maxGroupNotSupported,
+
+	ncSockNotMulticast,			/* net connection multicast specific errors 108-112 */
+	ncSockNotSinglecast,
+	ncBadMulticastAddr,
+	ncMcastSockReadOnly,
+	ncMcastSockWriteOnly,
+
+	ncDatagramMsgSzErr,			/* net connection Datagram message size error 113 */
+
+	bufferEmpty,				/* CircularLVDataBuffer (queues/notifiers) */
+	bufferFull,					/* CircularLVDataBuffer (queues/notifiers) */
+	dataCorruptErr,				/* error unflattening data */
+
+	requireFullPathErr,			/* supplied folder path where full file path is required  */
+	folderNotExistErr,			/* folder doesn't exist */
+
+	ncBtInvalidModeErr,			/* invalid Bluetooth mode 119 */
+	ncBtSetModeErr,				/* error setting Bluetooth mode 120 */
+
+	mgBtInvalidGUIDStrErr,		/* The GUID string is invalid 121 */
+
+	rVersInFuture,			/* Resource file is a future version 122 */
+
+	mgErrSentinel,		/* 123 */
+
+	mgPrivErrBase = 500,	/* Start of Private Errors */
+	mgPrivErrLast = 599,	/* Last allocated in Error DB */
+
+
+	kAppErrorBase = 1000,	/* Start of application errors */
+	kAppInvalidEvent = 1325, /* Invalid event refnum */
+	kAppLicenseErr = 1380,	/* Failure to check out license error */
+	kAppCharsetConvertErr =1396, /* could not convert text from charset to charset */
+	kAppErrorLast = 1399	/* Last allocated in Error DB */
 };
 
 typedef struct
@@ -515,8 +618,8 @@ typedef struct {
 
 /** Used with FListDir2 */
 typedef struct {
-	uInt32 flags;
-	FMFileType type;
+	uInt32 fileFlags;
+	FMFileType fileType;
 } FMListDetails;
 
 /** @brief Data types used to describe a list of entries from a directory. */
@@ -532,6 +635,7 @@ typedef CPStr FDirEntRec, *FDirEntPtr, **FDirEntHandle;
 #if Mac
 #define kFIsStationery		0x40
 #endif
+#define kIsCompressed		0x80
     
 enum { openReadWrite, openReadOnly, openWriteOnly, openWriteOnlyTruncate }; /* open modes */
 enum { denyReadWrite, denyWriteOnly, denyNeither}; /* deny modes */
@@ -677,20 +781,31 @@ LibAPI(MgErr) LVFile_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, F
 #define kWinFileInfoNotIndexed           0x00002000  
 #define kWinFileInfoEncrypted            0x00004000  
 
-typedef struct {       /* off */
-	uInt32 type;       /*  0: handled by LabVIEW Type & Creator */
-	uInt32 creator;    /*  4: handled by LabVIEW Type & Creator */
-	uInt32 uid;        /*  8: Unix user id */
-	uInt32 gid;        /* 12: Unix group id */
-	uInt64 size;       /* 16: file size or file count for directories */
-	uInt64 rfSize;     /* 24: resource fork size, 0 on non MacOS platforms */
-	ATime128 cDate;    /* 32: Creation date */
-	ATime128 mDate;    /* 48: Modification date */
-	ATime128 aDate;    /* 64: ast access date */
-	uInt16 winFlags;   /* 80: Windows compatible flags */
-	uInt16 unixFlags;  /* 82: Unix compatible flags */
-	uInt32 xtraFlags;  /* 84: MacOSX extra file flags */
-} LVFileInfo;          /* 88: Total length */
+/* Mac extended flags */
+#define kMacFileInfoNoDump               0x00000001	   /* do not dump file */
+#define	kMacFileInfoImmutable		     0x00000002	   /* file may not be changed */
+#define kMacFileInfoCompressed           0x00000020    /* file is hfs-compressed (Mac OS X 10.6+) */
+//#define kMacFileInfoSystem               0x00000080	   /* Windows system file bit */
+//#define kMacFileInfoSparse               0x00000100	   /* sparse file */
+//#define kMacFileInfoOffline	           0x00000200	   /* file is offline */
+//#define kMacFileInfoArchive              0x00000800    /* file needs to be archived */
+#define kMacFileInfoHidden               0x00008000    /* hint that this item should not be displayed in a GUI (Mac OS X 10.5+) */
+
+typedef struct {        /* off */
+	FMFileType type;    /*  0: handled by LabVIEW Type & Creator */
+	FMFileType creator; /*  4: handled by LabVIEW Type & Creator */
+	uInt32 uid;         /*  8: Unix user id */
+	uInt32 gid;         /* 12: Unix group id */
+	uInt64 size;        /* 16: file size or file count for directories */
+	uInt64 rfSize;      /* 24: resource fork size, 0 on non MacOS platforms */
+	ATime128 cDate;     /* 32: Creation date */
+	ATime128 mDate;     /* 48: Modification date */
+	ATime128 aDate;     /* 64: ast access date */
+	uInt16 winFlags;    /* 80: Windows compatible flags */
+	uInt16 unixFlags;   /* 82: Unix compatible flags */
+	uInt32 macFlags;    /* 84: MacOSX extra file flags */
+	uInt32 lvFlags;     /* 88: LabVIEW file flags */
+} LVFileInfo;           /* 92: Total length */
 
 /* Retrieve file information from the path */
 LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo);
@@ -702,15 +817,15 @@ LibAPI(MgErr) LVFile_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileInfo
 #define kLinkDir		0x02
 
 /* Resolution flags */
-#define kRecursive      0x01
-#define kResolveRel		0x02
+#define kResolve        0x01
+#define kRecursive		0x02
 
 /* Create and read a link */
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
-LibAPI(MgErr) LVFile_CreateLink(LStrHandle path, Path target, uInt32 flags);
+LibAPI(MgErr) LVFile_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags);
 
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 flags, uInt32 *fileType);
-LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, uInt32 flags, uInt32 *fileType);
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 flags, uInt32 *fileFlags);
+LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, uInt32 flags, uInt32 *fileFlags);
 
 typedef union
 {
@@ -752,33 +867,7 @@ LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, U
 LibAPI(MgErr) InitializeFileFuncs(LStrHandle filefunc_def);
 LibAPI(MgErr) InitializeStreamFuncs(LStrHandle  filefunc_def, LStrHandle *memory);
 
-#define CP_ACP                    0           // default to ANSI code page
-#define CP_OEMCP                  1           // default to OEM  code page
-#define CP_UTF8                   65001       // UTF-8 translation
-
-typedef struct
-{
-	int32 cnt;
-	uInt16 str[1];
-} WString, *WStrPtr, **WStrHandle;
-
-#define WStrLen(s)			(int32)(LStrLen(s) * sizeof(uInt16) / sizeof(wchar_t))
-#define WStrLenSet(s, l)    LStrLen(s) = l * sizeof(wchar_t) / sizeof(uInt16)
-#define WStrBuf(s)			((wchar_t*)(LStrBuf(s)))
-
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
-
-LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp);
-LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string);
-LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle *dest, uInt32 codePage);
-LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, WStrHandle *dest, uInt32 codePage);
-LibAPI(MgErr) WideStringToMultiByte(const WStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
-LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
-
-LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
-LibAPI(MgErr) ConvertLString(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
-LibAPI(MgErr) ConvertFromPosixPath(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir);
-LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir);
 
 #ifdef __cplusplus
 }
