@@ -132,6 +132,18 @@ extern "C" {
  #error No target defined
 #endif
 
+#define usesHFSPath      MacOSX && ProcessorType != kX64
+#define usesPosixPath    Unix || (MacOSX && ProcessorType == kX64)
+#define usesWinPath      Win32
+
+#if Win32
+ #define COBJMACROS
+ #include <windows.h>
+#elif MacOSX
+#elif Unix
+ #include <stdio.h>
+#endif
+
 #if Win32
  #define LibAPI(retval) extern __declspec(dllexport) retval
 #else
@@ -474,11 +486,6 @@ typedef LStr const*const* ConstLStrH;
 #define CPStrLen		LStrLen			/* concatenated Pascal vs. LabVIEW strings */
 #define CPStrBuf		LStrBuf			/* concatenated Pascal vs. LabVIEW strings */
 
-typedef struct {
-    int32   cnt;
-    uChar   str[256];
-} LStr256;
-
 typedef struct ATIME128 {
 	union {
 	  struct {
@@ -505,6 +512,28 @@ typedef struct ATIME128 {
 	  } f;
 	} u;
 } ATime128, *ATime128Ptr;
+
+/* Memory Manager */
+UPtr DSNewPtr(size_t size);
+UPtr DSNewPClr(size_t size);
+MgErr DSDisposePtr(UPtr);
+UHandle DSNewHandle(size_t size);
+UHandle DSNewHClr(size_t size);
+MgErr DSSetHandleSize(UHandle, size_t);
+int32 DSGetHandleSize(UHandle);
+MgErr DSDisposeHandle(UHandle);
+MgErr DSCopyHandle(UHandle *ph, const UHandle hsrc);
+
+UHandle AZNewHandle(size_t size);
+UHandle AZNewHClr(size_t size);
+MgErr AZSetHandleSize(UHandle, size_t);
+int32 AZGetHandleSize(UHandle);
+MgErr AZDisposeHandle(UHandle);
+MgErr AZCopyHandle(void *ph, const void *hsrc);
+
+void MoveBlock(ConstUPtr ps, UPtr pd, size_t size);
+
+MgErr NumericArrayResize(int32, int32, UHandle*, size_t);
 
 /* Magic Cookies */
 typedef uInt32 MagicCookie;
@@ -662,6 +691,24 @@ SEEK_START
 */
 enum { fAbsPath, fRelPath, fNotAPath, fUNCPath, nPathTypes};                            /* path type codes */
 
+#define kMaxFileExtLength   10
+
+#define kPosixPathSeperator  '/'
+
+#if usesHFSPath
+ #define kPathSeperator ':'
+ #define kNativePathSeperator  kPosixPathSeperator
+ typedef FSIORefNum FileRefNum;
+#elif usesPosixPath
+ #define kPathSeperator '/'
+ #define kNativePathSeperator  kPosixPathSeperator
+ typedef FILE* FileRefNum;
+#elif usesWinPath
+ #define kPathSeperator '\\'
+ #define kNativePathSeperator  kPathSeperator
+ typedef HANDLE FileRefNum;
+#endif
+
 Private(File);
 typedef struct PATHREF PathRef;
 typedef PathRef* Path;
@@ -712,27 +759,6 @@ uInt32 HasRezExt(Path path);
 
 int32 DbgPrintf(CStr fmt, ...);
 
-UPtr DSNewPtr(size_t size);
-UPtr DSNewPClr(size_t size);
-MgErr DSDisposePtr(UPtr);
-UHandle DSNewHandle(size_t size);
-UHandle DSNewHClr(size_t size);
-MgErr DSSetHandleSize(UHandle, size_t);
-int32 DSGetHandleSize(UHandle);
-MgErr DSDisposeHandle(UHandle);
-MgErr DSCopyHandle(void *ph, const void *hsrc);
-
-UHandle AZNewHandle(size_t size);
-UHandle AZNewHClr(size_t size);
-MgErr AZSetHandleSize(UHandle, size_t);
-int32 AZGetHandleSize(UHandle);
-MgErr AZDisposeHandle(UHandle);
-MgErr AZCopyHandle(void *ph, const void *hsrc);
-
-void MoveBlock(ConstUPtr ps, UPtr pd, size_t size);
-
-MgErr NumericArrayResize(int32, int32, UHandle*, size_t);
-
 #define Min(a, b)      ((a) < (b)) ? (a) : (b) 
 #define Max(a, b)      ((a) > (b)) ? (a) : (b) 
 
@@ -745,11 +771,16 @@ typedef struct
 typedef struct
 {
 	int32 numItems;
-	FMListDetails elm[1];
+	uInt32 elm[1];
 } FileInfoArrRec, *FileInfoArrPtr, **FileInfoArrHdl;
 
 /* Our exported functions */
 /**************************/
+
+LibAPI(MgErr) InitializeFileFuncs(LStrHandle filefunc_def);
+LibAPI(MgErr) InitializeStreamFuncs(LStrHandle  filefunc_def, LStrHandle *memory);
+
+LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
 /* Version string of the zlib library */
 LibAPI(void) DLLVersion(uChar*  Version);
@@ -762,8 +793,8 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir);
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh);
 
 /* List the directory contents with an additional array with flags and file type for each file in the names array */
-LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoArrHdl *fileInfo, int32 flags);
-LibAPI(MgErr) LVFile_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 flags);
+LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoArrHdl *fileInfo, int32 resolveDepth);
+LibAPI(MgErr) LVFile_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
 
 /* Windows portion of the flags parameter */
 #define kWinFileInfoReadOnly             0x00000001  
@@ -782,13 +813,13 @@ LibAPI(MgErr) LVFile_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, F
 #define kWinFileInfoEncrypted            0x00004000  
 
 /* Mac extended flags */
-#define kMacFileInfoNoDump               0x00000001	   /* do not dump file */
+#define kMacFileInfoNoDump               0x00000001	   /* do not dump file, opposite from Windows archive flag */
 #define	kMacFileInfoImmutable		     0x00000002	   /* file may not be changed */
 #define kMacFileInfoCompressed           0x00000020    /* file is hfs-compressed (Mac OS X 10.6+) */
-//#define kMacFileInfoSystem               0x00000080	   /* Windows system file bit */
-//#define kMacFileInfoSparse               0x00000100	   /* sparse file */
-//#define kMacFileInfoOffline	           0x00000200	   /* file is offline */
-//#define kMacFileInfoArchive              0x00000800    /* file needs to be archived */
+//#define kMacFileInfoSystem             0x00000080    /* Windows system file bit */
+//#define kMacFileInfoSparse             0x00000100    /* sparse file */
+//#define kMacFileInfoOffline	         0x00000200    /* file is offline */
+//#define kMacFileInfoArchive            0x00000800    /* file needs to be archived */
 #define kMacFileInfoHidden               0x00008000    /* hint that this item should not be displayed in a GUI (Mac OS X 10.5+) */
 
 typedef struct {        /* off */
@@ -804,7 +835,7 @@ typedef struct {        /* off */
 	uInt16 winFlags;    /* 80: Windows compatible flags */
 	uInt16 unixFlags;   /* 82: Unix compatible flags */
 	uInt32 macFlags;    /* 84: MacOSX extra file flags */
-	uInt32 lvFlags;     /* 88: LabVIEW file flags */
+	uInt32 fileType;    /* 88: LabVIEW file type flags */
 } LVFileInfo;           /* 92: Total length */
 
 /* Retrieve file information from the path */
@@ -824,8 +855,8 @@ LibAPI(MgErr) LVFile_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileInfo
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
 LibAPI(MgErr) LVFile_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags);
 
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 flags, uInt32 *fileFlags);
-LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, uInt32 flags, uInt32 *fileFlags);
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
+LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 
 typedef union
 {
@@ -863,11 +894,6 @@ LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *offs);
 LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *offs, uInt16 mode);
 LibAPI(MgErr) LVFile_Read(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
-
-LibAPI(MgErr) InitializeFileFuncs(LStrHandle filefunc_def);
-LibAPI(MgErr) InitializeStreamFuncs(LStrHandle  filefunc_def, LStrHandle *memory);
-
-LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
 #ifdef __cplusplus
 }

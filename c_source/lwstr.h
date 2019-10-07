@@ -34,11 +34,6 @@ extern "C" {
 
 #include "lvutil.h"
 #include <string.h>
-#if Win32
-#include <windows.h>
-#elif MacOSX
-#include <xattr.h>
-#endif
 
 typedef struct
 {
@@ -74,36 +69,16 @@ typedef struct
 #define LWStrNCat         LStrNCat
 #define lwslen            (int32)strlen
 #define lwsrchr           strrchr
-
+#endif
 #define SStrBuf(s)        (char*)LStrBuf(s)
-#endif
 
-#define usesHFSPath      MacOSX && ProcessorType != kX64
-#define usesPosixPath    Unix || (MacOSX && ProcessorType == kX64)
-#define usesWinPath      Win32
+LibAPI(int32) LStrIsAbsPath(LStrHandle pathName);
+LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath);
+LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName);
 
-#define kMaxFileExtLength   10
-
-#define kPosixPathSeperator  '/'
-
-#if usesHFSPath
-#define kPathSeperator ':'
-#define kNativePathSeperator  kPosixPathSeperator
-typedef FSIORefNum FileRefNum;
-#elif usesPosixPath
-#define kPathSeperator '/'
-#define kNativePathSeperator  kPosixPathSeperator
-typedef FILE* FileRefNum;
-#elif usesWinPath
-#define kPathSeperator '\\'
-#define kNativePathSeperator  kPathSeperator
-typedef HANDLE FileRefNum;
-#endif
-
-Bool32 LStrIsAbsPath(LStrHandle pathName);
 Bool32 LWStrIsAbsPath(LWStrPtr pathName);
-int32 LWStrParentPath(LWStrPtr pathName, int32 end);
 int32 LWStrPathDepth(LWStrPtr pathName, int32 end);
+int32 LWStrParentPath(LWStrPtr pathName, int32 end);
 MgErr LWStrAppendPath(LWStrPtr pathName, int32 end, LWStrPtr relPath);
 
 MgErr LWStrRealloc(LWStrPtr *buf, int32 *bufLen, int32 retain, size_t numChar);
@@ -124,9 +99,9 @@ MgErr LWNormalizePath(LWStrPtr pathName);
 MgErr LWAppendPathSeparator(LWStrPtr pathName, int32 bufLen);
 MgErr LWStrGetFileTypeAndCreator(LWStrPtr pathName, FMFileType *fType, FMFileType *fCreator);
 
+MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrPtr *lwstr, int32 *reserve);
 MgErr UPathToLWStr(LStrHandle pathName, LWStrPtr *lwstr, int32 *reserve);
 MgErr LPathToLWStr(Path pathName, LWStrPtr *lwstr, int32 *reserve);
-
 
 /* Different conversion functions between various codepages */
 

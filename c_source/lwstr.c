@@ -27,6 +27,7 @@
 */
 #include "lvutil.h"
 #include "lwstr.h"
+#include "utf.h"
 #if Win32
 #include <windows.h>
 #elif MacOSX
@@ -283,68 +284,209 @@ MgErr LWStrNCat(LWStrPtr lstr, int32 off, int32 bufLen, const wchar_t *str, int3
 }
 #endif
 
-Bool32 LStrIsAbsPath(LStrHandle filePath)
+static int32 StrUNCOffset(const char *ptr, int32 offset)
+{
+	int32 sep = 0;
+	for (ptr += offset; *ptr; offset++)
+	{
+		if (*ptr++ == kNativePathSeperator)
+		{
+			sep++;
+			offset++;
+			if (sep >= 3)
+				return offset;
+			if (*ptr++ == kNativePathSeperator)
+				return -2;
+		}
+	}
+	return -2;  
+}
+
+LibAPI(int32) LStrIsAbsPath(LStrHandle filePath)
 {
 	int32 len = LStrLenH(filePath);
 	if (len)
 	{
 		const char *ptr = (const char*)LStrBufH(filePath);
-#if usesWinPath
-#if !Pharlap
+#if usesWinPath && !Pharlap
 		int32 offset = HasDOSDevicePrefix(ptr, len);
-		if (offset == 8 || (!offset && ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2])) ||
-			(len >= 3 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator))
+		if ((len >= 3 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator))
+			return offset + 3;
+		if (offset == 6 || (!offset && len >= 3 && ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2])))
+			return StrUNCOffset(ptr, offset + 1);
+#elif usesWinPath && Pharlap
+		if (len >= 3 && (ptr[0] < 128 && isalpha(ptr[0]) && ptr[1] == ':' && ptr[2] == kPathSeperator))
+			return 3;
+		if (len >= 3 && ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2]))
+			return StrUNCOffset(ptr, 1);
 #else
-		if ((len >= 3 && (ptr[0] < 128 && isalpha(ptr[0]) && ptr[1] == ':' && ptr[2] == kPathSeperator) || 
-				         (ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2]))))
+		if (len >= 1 && ptr[0] == kPosixPathSeperator)
+		{
+			if (len >= 2 && ptr[1] == kPosixPathSeperator)
+				return StrUNCOffset(ptr, 1);
+			else
+				return 1;
+		}
 #endif
-#else
-		if (ptr[0] == kPosixPathSeperator)
-#endif
-			return LV_TRUE;
 	}
 	else
 	{
 		/* len == 0 is root path and always absolute */
-		return LV_TRUE;
+		return 0;
 	}
-	return LV_FALSE;
+	return -1;
 }
 
-Bool32 LWStrIsAbsPath(LWStrPtr filePath)
+LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath)
+{
+	MgErr err = mgNoErr;
+	int32 srcLen = LStrLenH(*pathName),
+		  relLen = LStrLenH(relPath),
+		  rootLen = LStrIsAbsPath(relPath),
+		  fullLen = srcLen + relLen + 1;
+
+	if (!relLen || rootLen == -2)
+		return mgNoErr;
+
+	if ((rootLen == -1 || relLen > rootLen) && LStrBuf(*relPath)[relLen - 1] == kNativePathSeperator)
+		relLen--;
+
+	if (!srcLen)
+	{
+		int32 offset = 0;
+#if !usesWinPath
+		if (rootLen == -1)
+			offset = 1;
+#endif
+		err = NumericArrayResize(uB, 1, (UHandle*)pathName, relLen + offset);
+		if (!err)
+		{
+			if (offset)
+				LStrBuf(**pathName)[0] = kNativePathSeperator;
+			MoveBlock(LStrBuf(*relPath), LStrBuf(**pathName) + offset, relLen);
+			LStrLen(**pathName) = offset + relLen;
+		}
+	}
+	else
+	{
+		if (rootLen != -1)
+			return mgArgErr;
+
+		err = NumericArrayResize(uB, 1, (UHandle*)pathName, fullLen);
+		if (!err)
+		{ 
+			if (LStrBuf(**pathName)[srcLen - 1] != kNativePathSeperator)
+			{
+				LStrBuf(**pathName)[srcLen++] = kNativePathSeperator;
+			}
+			MoveBlock(LStrBuf(*relPath), LStrBuf(**pathName) + srcLen, relLen);
+			LStrLen(**pathName) = srcLen + relLen;
+		}
+	}
+	return err;
+}
+
+LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName)
+{
+	MgErr err = mgNoErr;
+	int32 srcLen = LStrLenH(pathName),
+	      rootLen = LStrIsAbsPath(pathName);
+	const char *ptr = SStrBuf(*pathName);
+
+	if (!srcLen || rootLen == -2 || rootLen >= srcLen)
+		return mgArgErr;
+
+	if (ptr[srcLen - 1] == kNativePathSeperator)
+		LStrLen(*pathName) = --srcLen;
+
+	while (srcLen && srcLen >= rootLen && ptr[--srcLen] != kNativePathSeperator);
+
+	if (!srcLen)
+	{
+		// begin of relative path
+		err = DSCopyHandle((UHandle*)fileName, (UHandle)pathName);
+		LStrBuf(*pathName)[0] = '.';
+		LStrLen(*pathName) = 1;
+	}
+	else
+	{
+		int32 fileLen = LStrLenH(pathName) - srcLen - 1;
+		err = NumericArrayResize(uB, 1, (UHandle*)fileName, fileLen);
+		if (!err)
+		{
+			MoveBlock(LStrBuf(*pathName) + srcLen + 1, LStrBuf(**fileName), fileLen);
+			LStrLen(**fileName) = fileLen;
+		}
+		LStrLen(*pathName) = srcLen > rootLen ? srcLen : srcLen + 1;
+	}
+	return err;
+}
+
+static int32 LWStrUNCOffset(LWStrPtr lwstr, int32 offset)
+{
+	int32 sep = 0, len = LWStrLen(lwstr);
+#if usesWinPath && !Pharlap
+	const wchar_t *ptr = LWStrBuf(lwstr);
+#else
+	const char *ptr = SStrBuf(lwstr);
+#endif
+	for (ptr += offset; offset < len; offset++)
+	{
+		if (*ptr++ == kNativePathSeperator)
+		{
+			sep++;
+			offset++;
+			if (sep >= 3)
+				return offset;
+			if (*ptr++ == kNativePathSeperator)
+				return -2;
+		}
+	}
+	return -2;  
+}
+
+int32 LWStrIsAbsPath(LWStrPtr filePath)
 {
 	int32 len = filePath ? LWStrLen(filePath) : 0;
 	if (len)
 	{
-#if usesWinPath
-#if !Pharlap
+#if usesWinPath && !Pharlap
 		wchar_t *ptr = LWStrBuf(filePath);
-		int32 offset = HasDOSDevicePrefix(LWStrBuf(filePath), len);
-		if (offset == 8 || (!offset && ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2])) ||
-			(len >= 3 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator))
-#else
+		int32 offset = HasDOSDevicePrefix(ptr, len);
+		if ((len >= 3 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator))
+			return offset + 3;
+		if (offset == 6 || (!offset && len >= 3 && ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2])))
+			return LWStrUNCOffset(filePath, offset + 1);
+#elif usesWinPath && Pharlap
 		char *ptr = LWStrBuf(filePath);
-		if ((len >= 3 && (ptr[0] < 128 && isalpha(ptr[0]) && ptr[1] == ':' && ptr[2] == kPathSeperator) || 
-				         (ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2]))))
-#endif
+		if (len >= 3 && (ptr[0] < 128 && isalpha(ptr[0]) && ptr[1] == ':' && ptr[2] == kPathSeperator))
+			return 3;
+		if (len >= 3 && ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2]))
+			return LWStrUNCOffset(filePath, 1);
 #else
-		if (LWStrBuf(filePath)[0] == kPosixPathSeperator)
+		char *ptr = SStrBuf(filePath);
+		if (len >= 1 && ptr[0] == kPosixPathSeperator)
+		{
+			if (len >= 2 && ptr[1] == kPosixPathSeperator)
+				return LWStrUNCOffset(filePath, 1);
+			else
+				return 1;
+		}
 #endif
-			return LV_TRUE;
 	}
 	else
 	{
 		/* len == 0 is root path and always absolute */
-		return LV_TRUE;
+		return 0;
 	}
-	return LV_FALSE;
+	return -1;
 }
 
 MgErr LWAppendPathSeparator(LWStrPtr pathName, int32 bufLen)
 {
 	if (LWStrBuf(pathName)[LWStrLen(pathName) - 1] != kPathSeperator)
 	{
-		if (LWStrLen(pathName) + 1 >= bufLen)
+		if (LWStrLen(pathName) + 2 >= bufLen)
 		{
 			return bufferFull;
 		}
@@ -355,24 +497,33 @@ MgErr LWAppendPathSeparator(LWStrPtr pathName, int32 bufLen)
 	return noErr;
 }
 
-int32 LWStrParentPath(LWStrPtr pathName, int32 end)
+static int32 LWStrParentPathInternal(LWStrPtr pathName, int32 rootLen, int32 end)
 {
 	if (end < 0)
 		end = LWStrLen(pathName);
-	while (end && LWStrBuf(pathName)[--end] != kNativePathSeperator);
+	while (end && end >= rootLen && LWStrBuf(pathName)[--end] != kNativePathSeperator);
 	return end;
+}
+
+int32 LWStrParentPath(LWStrPtr pathName, int32 end)
+{
+	int32 rootLen = LWStrIsAbsPath(pathName);
+	if (rootLen >= -1)
+		return LWStrParentPathInternal(pathName, rootLen, end);
+	return -1;
 }
 
 int32 LWStrPathDepth(LWStrPtr pathName, int32 end)
 {
-	int32 i = 0, 
-		  offset = HasDOSDevicePrefix(LWStrBuf(pathName), LWStrLen(pathName));
-	while (end > offset)
+	int32 i = 0, rootLen = LWStrIsAbsPath(pathName);
+	if (end < 0)
+		end = LWStrLen(pathName);
+	while (end && end > rootLen)
 	{
-		end = LWStrParentPath(pathName, end);
+		end = LWStrParentPathInternal(pathName, rootLen, end);
 		i++;
 	}
-	return i;
+	return end > 0 ? i + 1 : i;
 }
 
 MgErr LWStrAppendPath(LWStrPtr pathName, int32 end, LWStrPtr relPath)
@@ -455,7 +606,7 @@ MgErr LWStrGetFileTypeAndCreator(LWStrPtr pathName, FMFileType *fType, FMFileTyp
 	return noErr;
 }
 
-static MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrPtr *lwstr, int32 *reserve)
+MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrPtr *lwstr, int32 *reserve)
 {
 	MgErr err = noErr;
 	int32 bufLen = 0;
@@ -478,7 +629,7 @@ static MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrPtr *lwstr
 	if (!err)
 	{
 		bufLen += LStrLenH(dest) + 1 + (reserve ? *reserve : 0);
-		err = LWStrReallocBuf(lwstr, reserve, 0, bufLen);
+		err = LWStrRealloc(lwstr, reserve, 0, bufLen);
 		if (!err)
 		{
 			if (LStrLenH(string))
@@ -845,19 +996,46 @@ LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle 
 #if usesWinPath
 	if (!err && *dest)
 	{
-		int32 len = LStrLen(**dest);
-		UPtr buf = LStrBuf(**dest);
-		if (buf[1] == ':' && buf[2] == '\\')
+		UPtr buf = LStrBufH(*dest);
+		int32 len = LStrLenH(*dest),
+			  offset = HasDOSDevicePrefix(buf, len);
+		if (offset == 6)
 		{
-			*buf++ = '/';
-			*buf++ = LStrBuf(*src)[0];
+			buf[0] = kPosixPathSeperator;
+			buf++;
+			len--;
+		}
+		else if (buf[offset + 1] == ':' && buf[offset + 2] == kPathSeperator)
+		{
+			buf[1] = buf[offset];
+			buf[0] = kPosixPathSeperator;
+			buf += 2;
 			len -= 2;
 		}
-		for (; len; len--, buf++)
+		if (offset)
 		{
-			if (*buf == '\\')
+			UPtr ptr = buf + offset;
+			for (len -= offset; len; len--, ptr++, buf++)
 			{
-				*buf = '/';
+				if (*ptr == kPathSeperator)
+				{	
+					*buf = kPosixPathSeperator;
+				}
+				else
+				{
+					*buf = *ptr;
+				}
+			}
+			LStrLen(**dest) -= offset;
+		}
+		else
+		{
+			for (;len; len--, buf++)
+			{
+				if (*buf == kPathSeperator)
+				{	
+					*buf = kPosixPathSeperator;
+				}
 			}
 		}
 	}
