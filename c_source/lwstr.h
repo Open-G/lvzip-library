@@ -72,14 +72,18 @@ typedef struct
 #endif
 #define SStrBuf(s)        (char*)LStrBuf(s)
 
-LibAPI(int32) LStrIsAbsPath(LStrHandle pathName);
+LibAPI(int32) LStrRootPathLen(LStrHandle pathName);
+#define LStrIsAbsPath(pathName) LStrRootPathLen(pathName) >= 0  
+#define LStrIsRelPath(pathName) LStrRootPathLen(pathName) == -1 
 LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath);
 LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName);
 
-Bool32 LWStrIsAbsPath(LWStrPtr pathName);
+LibAPI(int32) LWStrRootPathLen(LWStrPtr pathName);
+#define LWStrIsAbsPath(pathName) LWStrRootPathLen(pathName) >= 0  
+#define LWStrIsRelPath(pathName) LWStrRootPathLen(pathName) == -1 
 int32 LWStrPathDepth(LWStrPtr pathName, int32 end);
 int32 LWStrParentPath(LWStrPtr pathName, int32 end);
-MgErr LWStrAppendPath(LWStrPtr pathName, int32 end, LWStrPtr relPath);
+MgErr LWStrAppendPath(LWStrPtr *pathName, int32 end, int32 *bufLen, LWStrPtr relPath);
 
 MgErr LWStrRealloc(LWStrPtr *buf, int32 *bufLen, int32 retain, size_t numChar);
 MgErr LWStrDispose(LWStrPtr buf);
@@ -96,7 +100,7 @@ MgErr LWStrNCat(LWStrPtr lstr, int32 off, int32 bufLen, const char *str, int32 s
 #endif
 
 MgErr LWNormalizePath(LWStrPtr pathName);
-MgErr LWAppendPathSeparator(LWStrPtr pathName, int32 bufLen);
+MgErr LWStrAppendPathSeparator(LWStrPtr pathName, int32 bufLen);
 MgErr LWStrGetFileTypeAndCreator(LWStrPtr pathName, FMFileType *fType, FMFileType *fCreator);
 
 MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrPtr *lwstr, int32 *reserve);

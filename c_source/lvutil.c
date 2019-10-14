@@ -826,8 +826,8 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 	if (!pathName || !LWStrLen(pathName))
 	{
 		DWORD drives = GetLogicalDrives();
-		int drive = 0;
-	    for (; !err && drive < 26; drive++)
+		uChar drive = 'A';
+	    for (; !err && drive <= 'Z'; drive++)
 		{
             if (drives & 01)
 		    {
@@ -844,11 +844,13 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 				}
 				(**typeArr)->elm[index] = 0;
 
-				err = NumericArrayResize(uB, 1, (UHandle*)((**nameArr)->elm + index), 1);
+				err = NumericArrayResize(uB, 1, (UHandle*)((**nameArr)->elm + index), 3);
 				if (!err)
 				{
-					*LStrBuf(*((**nameArr)->elm[index])) = (uChar)('A' + drive);
-					LStrLen(*((**nameArr)->elm[index])) = 1;
+					LStrBuf(*((**nameArr)->elm[index]))[0] = drive;
+					LStrBuf(*((**nameArr)->elm[index]))[1] = ':';
+					LStrBuf(*((**nameArr)->elm[index]))[2] = kPathSeperator;
+					LStrLen(*((**nameArr)->elm[index])) = 3;
 				}
 				index++;
 				(**nameArr)->numItems = index;
@@ -867,7 +869,7 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 	if (!(dwAttrs & FILE_ATTRIBUTE_DIRECTORY))
 		return mgArgErr;
 
-	err = LWAppendPathSeparator(pathName, bufLen);
+	err = LWStrAppendPathSeparator(pathName, bufLen);
 	if (err)
 		goto FListDirOut;
 
@@ -884,21 +886,17 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 	dirp = FindFirstFile(pathName, &fileData);
 	if (dirp == INVALID_HANDLE_VALUE)
 	{
-		if (GetLastError() == ERROR_FILE_NOT_FOUND)
-		{
-			(**typeArr)->numItems = 0;
-		}
-		else
-		{
-			err = fNotFound;
-		}
+		DWORD ret = GetLastError();
+		if (ret != ERROR_FILE_NOT_FOUND)
+			err = Win32ToLVFileErr(ret);
+		(**typeArr)->numItems = 0;
 		goto FListDirOut;
 	}
 
 	do
 	{
 		/* Skip the current dir, and parent dir entries */
-		if (fileData.cFileName[0] != '.' || (fileData.cFileName[1] != 0 && (fileData.cFileName[1] != '.' || fileData.cFileName[2] != 0)))
+		if (fileData.cFileName[0] != 0 && (fileData.cFileName[0] != '.' || (fileData.cFileName[1] != 0 && (fileData.cFileName[1] != '.' || fileData.cFileName[2] != 0))))
 		{
 			/* Make sure our arrays are resized to allow the new values */
 			if (index >= size)
@@ -982,7 +980,7 @@ FListDirOut:
 	if (!(dirp = opendir(path)))
 		return UnixToLVFileErr();
 
-	err = LWAppendPathSeparator(pathName, bufLen);
+	err = LWStrAppendPathSeparator(pathName, bufLen);
 	if (err)
 		goto FListDirOut;
 
@@ -1337,7 +1335,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 				{
 				    count = 1;
 
-					err = LWAppendPathSeparator(pathName, bufLen);
+					err = LWStrAppendPathSeparator(pathName, bufLen);
 					if (!err)
 				        err = LWStrNCat(pathName, -1, bufLen, strWildcardPattern, 3);
 				    if (!err)

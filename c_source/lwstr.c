@@ -302,7 +302,7 @@ static int32 StrUNCOffset(const char *ptr, int32 offset)
 	return -2;  
 }
 
-LibAPI(int32) LStrIsAbsPath(LStrHandle filePath)
+LibAPI(int32) LStrRootPathLen(LStrHandle filePath)
 {
 	int32 len = LStrLenH(filePath);
 	if (len)
@@ -342,46 +342,35 @@ LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath)
 	MgErr err = mgNoErr;
 	int32 srcLen = LStrLenH(*pathName),
 		  relLen = LStrLenH(relPath),
-		  rootLen = LStrIsAbsPath(relPath),
-		  fullLen = srcLen + relLen + 1;
+		  rootLen = LStrRootPathLen(relPath);
 
-	if (!relLen || rootLen == -2)
+	/* If start path is not empty and relative path is not relative, we have a problem */
+	if (srcLen && rootLen != -1)
+		return mgArgErr;
+
+	/* If empty relative path, there is nothing to append */
+	if (!relLen)
 		return mgNoErr;
+	
+	/* Remove trailing path seperator */
+	if (srcLen > LStrRootPathLen(*pathName) && LStrBuf(**pathName)[srcLen - 1] == kNativePathSeperator)
+		srcLen--;
 
-	if ((rootLen == -1 || relLen > rootLen) && LStrBuf(*relPath)[relLen - 1] == kNativePathSeperator)
+	if (relLen > rootLen && LStrBuf(*relPath)[relLen - 1] == kNativePathSeperator)
 		relLen--;
 
-	if (!srcLen)
+	err = NumericArrayResize(uB, 1, (UHandle*)pathName, srcLen + relLen + 1);
+	if (!err)
 	{
-		int32 offset = 0;
+		if (srcLen
 #if !usesWinPath
-		if (rootLen == -1)
-			offset = 1;
+		|| rootLen == -1
 #endif
-		err = NumericArrayResize(uB, 1, (UHandle*)pathName, relLen + offset);
-		if (!err)
-		{
-			if (offset)
-				LStrBuf(**pathName)[0] = kNativePathSeperator;
-			MoveBlock(LStrBuf(*relPath), LStrBuf(**pathName) + offset, relLen);
-			LStrLen(**pathName) = offset + relLen;
-		}
-	}
-	else
-	{
-		if (rootLen != -1)
-			return mgArgErr;
-
-		err = NumericArrayResize(uB, 1, (UHandle*)pathName, fullLen);
-		if (!err)
-		{ 
-			if (LStrBuf(**pathName)[srcLen - 1] != kNativePathSeperator)
-			{
-				LStrBuf(**pathName)[srcLen++] = kNativePathSeperator;
-			}
-			MoveBlock(LStrBuf(*relPath), LStrBuf(**pathName) + srcLen, relLen);
-			LStrLen(**pathName) = srcLen + relLen;
-		}
+		)
+		if (LStrBuf(**pathName)[srcLen - 1] != kNativePathSeperator)
+			LStrBuf(**pathName)[srcLen++] = kNativePathSeperator;
+		MoveBlock(LStrBuf(*relPath), LStrBuf(**pathName) + srcLen, relLen);
+		LStrLen(**pathName) = srcLen + relLen;
 	}
 	return err;
 }
@@ -390,7 +379,7 @@ LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName)
 {
 	MgErr err = mgNoErr;
 	int32 srcLen = LStrLenH(pathName),
-	      rootLen = LStrIsAbsPath(pathName);
+	      rootLen = LStrRootPathLen(pathName);
 	const char *ptr = SStrBuf(*pathName);
 
 	if (!srcLen || rootLen == -2 || rootLen >= srcLen)
@@ -445,7 +434,12 @@ static int32 LWStrUNCOffset(LWStrPtr lwstr, int32 offset)
 	return -2;  
 }
 
-int32 LWStrIsAbsPath(LWStrPtr filePath)
+/* Returns:
+   >= 0 for a valid absolute path, with 0 being the canonical root path and > 0 indicating the length of the first path element
+   -1 for a relative path
+   -2 when there is an invalid path
+ */
+int32 LWStrRootPathLen(LWStrPtr filePath)
 {
 	int32 len = filePath ? LWStrLen(filePath) : 0;
 	if (len)
@@ -482,7 +476,7 @@ int32 LWStrIsAbsPath(LWStrPtr filePath)
 	return -1;
 }
 
-MgErr LWAppendPathSeparator(LWStrPtr pathName, int32 bufLen)
+MgErr LWStrAppendPathSeparator(LWStrPtr pathName, int32 bufLen)
 {
 	if (LWStrBuf(pathName)[LWStrLen(pathName) - 1] != kPathSeperator)
 	{
@@ -507,7 +501,7 @@ static int32 LWStrParentPathInternal(LWStrPtr pathName, int32 rootLen, int32 end
 
 int32 LWStrParentPath(LWStrPtr pathName, int32 end)
 {
-	int32 rootLen = LWStrIsAbsPath(pathName);
+	int32 rootLen = LWStrRootPathLen(pathName);
 	if (rootLen >= -1)
 		return LWStrParentPathInternal(pathName, rootLen, end);
 	return -1;
@@ -515,7 +509,7 @@ int32 LWStrParentPath(LWStrPtr pathName, int32 end)
 
 int32 LWStrPathDepth(LWStrPtr pathName, int32 end)
 {
-	int32 i = 0, rootLen = LWStrIsAbsPath(pathName);
+	int32 i = 0, rootLen = LWStrRootPathLen(pathName);
 	if (end < 0)
 		end = LWStrLen(pathName);
 	while (end && end > rootLen)
@@ -526,18 +520,148 @@ int32 LWStrPathDepth(LWStrPtr pathName, int32 end)
 	return end > 0 ? i + 1 : i;
 }
 
-MgErr LWStrAppendPath(LWStrPtr pathName, int32 end, LWStrPtr relPath)
+MgErr LWStrAppendPath(LWStrPtr *pathName, int32 end, int32 *bufLen, LWStrPtr relPath)
 {
 	MgErr err = mgArgErr;
-	if (!LWStrIsAbsPath(relPath))
-		err = LWStrNCat(pathName, 0, end, LWStrBuf(relPath), LWStrLen(relPath));
+	int32 srcLen = LWStrLen(*pathName),
+		  relLen = LWStrLen(relPath),
+		  rootLen = LWStrRootPathLen(relPath);
+
+	/* If start path is not empty and relative path is not relative, we have a problem */
+	if (srcLen && rootLen != -1)
+		return mgArgErr;
+
+	/* If empty relative path, there is nothing to append */
+	if (!relLen)
+		return mgNoErr;
+	
+	/* Remove trailing path seperator */
+	if (srcLen > LWStrRootPathLen(*pathName) && LWStrBuf(*pathName)[srcLen - 1] == kNativePathSeperator)
+		srcLen--;
+
+	if (relLen > rootLen && LWStrBuf(relPath)[relLen - 1] == kNativePathSeperator)
+		relLen--;
+
+	err = LWStrRealloc(pathName, bufLen, 0, srcLen + relLen + 1);
+	if (!err)
+	{
+		if (srcLen
+#if !usesWinPath
+		|| rootLen == -1
+#endif
+		)
+		if (LWStrBuf(*pathName)[srcLen - 1] != kNativePathSeperator)
+			LWStrBuf(*pathName)[srcLen++] = kNativePathSeperator;
+		err = LWStrNCat(*pathName, srcLen, *bufLen, LWStrBuf(relPath), relLen);
+	}
 	return err;
 }
 
-int32 LWStrRelativePath(LWStrPtr fromPath, LWStrPtr toPath)
+/* Return values:
+   -2: invalid path
+   -1: no path segment left
+    0: empty path, canonical root
+   1..: next segment offset
+ */
+static int32 LWStrPathNextSegment(LWStrPtr path, int32 start, int32 end)
 {
+	if (end < 0)
+		end = LWStrLen(path);
+
+	if (LWStrBuf(path)[end - 1] == kNativePathSeperator)
+		end--;
+
+	if (start <= 0)
+	{
+		int32 rootLen = LWStrRootPathLen(path);
+		if (rootLen == -2)
+			return -2;
+		if (rootLen == -1)
+			start = 0;
+		else
+			return rootLen;
+	}
+
+	if (start == end)
+		return -1;
+
+	for (;start < end && LWStrBuf(path)[start] != kNativePathSeperator; start++);
+
+	return start;
+}
+
+MgErr LWStrRelativePath(LWStrPtr startPath, LWStrPtr endPath, LWStrPtr *relPath)
+{
+	int32 startCount, endCount, level, notchesUp;
+	int16 length, totalLength, remainingEndCount, i, err;
+#if Win32 && !Pharlap
+	wchar_t *startp, *endp;
+#else
+	uChar *startp, *endp;
+#endif
+
+	if (!(LWStrIsAbsPath(startPath) && LWStrIsAbsPath(endPath) && relPath))
+		return mgArgErr;
+
+	startCount = LWStrPathDepth(startPath, -1);
+	endCount = LWStrPathDepth(endPath, -1);
+	startp = LWStrBuf(startPath);
+	endp = LWStrBuf(endPath);
+	for (level = startCount; level > 0; level--)
+	{
+
+	}
+
+
+
 	return 0;
 }
+
+/*
+TH_REENTRANT MgErr FRelPath(Path start, Path end, Path relPath)
+	{
+	int16 startCount, endCount, level, notchesUp;
+	int16 length, totalLength, remainingEndCount, i, err;
+	uChar *startp, *endp;
+
+	if (!(FIsAbsPath(start) && FIsAbsPath(end) && relPath))
+		return mgArgErr;
+	startCount = PathCnt(start);
+	endCount = PathCnt(end);
+	startp = PathBuf(start);
+	endp = PathBuf(end);
+	for(level=startCount; level>0; level--) {
+		if(!FileNameEqual(startp, endp))
+			break;
+		startp += PStrLen(startp) + 1;
+		endp += PStrLen(endp) + 1;
+		}
+	notchesUp = level;
+	length = 0;
+	remainingEndCount = endCount-(startCount-level);
+	for(level = remainingEndCount; level>0; level--) {
+		length += *endp+1;
+		endp += *endp+1;
+		}
+	totalLength = length + notchesUp + sizeof(PathType(start)) + sizeof(PathCnt(start));
+	if(totalLength > AZGetHandleSize(relPath)) {
+		endp -= (int32)PathBuf(end);
+		if(err= AZSetHandleSize(relPath, totalLength))
+			return err;
+		endp += (int32)PathBuf(end);
+		MoveBlock(endp-length, PathBuf(relPath)+notchesUp, length);
+		}
+	else {
+		MoveBlock(endp-length, PathBuf(relPath)+notchesUp, length);
+		AZSetHandleSize(relPath, totalLength);
+		}
+	PathType(relPath) = fRelPath;
+	PathCnt(relPath) = remainingEndCount+notchesUp;
+	for(i=0, endp=PathBuf(relPath); i<notchesUp; i++)
+		*endp++ = 0;
+	return 0;
+	}
+*/
 
 static FMFileType LWStrFileTypeFromExt(LWStrPtr pathName)
 {
@@ -685,7 +809,7 @@ MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrPtr *lwstr, int32
 		{
 			LWStrNCat(*lwstr, 0, bufLen, L"\\\\?\\UNC", len);
 		}
-		bufLen = MultiByteToWideChar(CP_ACP, 0, buf + off, LStrLenH(string) - off, WStrBuf(*lwstr) + len, bufLen - len);
+		bufLen = MultiByteToWideChar(codePage, 0, buf + off, LStrLenH(string) - off, WStrBuf(*lwstr) + len, bufLen - len);
 		if (bufLen <= 0)
 			return mgArgErr;
 		len += bufLen;
