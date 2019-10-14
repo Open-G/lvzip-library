@@ -375,8 +375,7 @@ SOURCE=.\lvzlib.def
 # End Source File
 # Begin Source File
 
-SOURCE=.\MacBinaryIII.c
-# PROP Exclude_From_Build 1
+SOURCE=.\lwstr.c
 # End Source File
 # Begin Source File
 
@@ -461,6 +460,10 @@ SOURCE=.\lvapi.h
 # Begin Source File
 
 SOURCE=.\lvutil.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\lwstr.h
 # End Source File
 # Begin Source File
 

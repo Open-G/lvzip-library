@@ -187,9 +187,9 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 #endif
                                            , lvzip_zlibVersion(), lvzip_zlibCompileFlags()
 #ifdef HAVE_BZIP2
-                                           , BZ2_bzlibVersion())
+                                           , BZ2_bzlibVersion()
 #endif
-                                           ;
+                                           );
 	}
 	return version;
 }

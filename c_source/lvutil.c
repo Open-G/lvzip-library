@@ -1,7 +1,7 @@
 /* 
    lvutil.c -- support functions for LabVIEW ZIP library
 
-   Version 1.28, Sep 27, 2019
+   Version 1.29, Oct 27, 2019
 
    Copyright (C) 2002-2019 Rolf Kalbermatter
 
@@ -336,17 +336,20 @@ static MgErr Win32GetLVFileErr(void)
 	return Win32ToLVFileErr(GetLastError());
 }
 
-static uInt16 LVFileFlagsFromWinFlags(DWORD dwAttrs)
+static uInt16 LVFileTypeFromWinFlags(DWORD dwAttrs)
 {
 	uInt16 flags = 0;
-	if (dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT)
-		flags |= kIsLink;
-	if (!(dwAttrs & FILE_ATTRIBUTE_DIRECTORY))
-		flags |= kIsFile;
-	if (dwAttrs & FILE_ATTRIBUTE_HIDDEN)
-        flags |= kFIsInvisible;
-	if (dwAttrs & FILE_ATTRIBUTE_COMPRESSED)
-		flags |= kIsCompressed;
+	if (dwAttrs != INVALID_FILE_ATTRIBUTES)
+	{
+		if (dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT)
+			flags |= kIsLink;
+		if (!(dwAttrs & FILE_ATTRIBUTE_DIRECTORY))
+			flags |= kIsFile;
+		if (dwAttrs & FILE_ATTRIBUTE_HIDDEN)
+		    flags |= kFIsInvisible;
+		if (dwAttrs & FILE_ATTRIBUTE_COMPRESSED)
+			flags |= kIsCompressed;
+	}
 	return flags;
 }
 
@@ -378,7 +381,7 @@ static int Win32CanBeShortCutLink(WCHAR *str, int32 len)
 	return (len >= extLen && !_wcsicmp(str + len - extLen, extStr));
 }
 
-LibAPI(MgErr) Win32ResolveShortCut(WStrPtr wStr, WStrPtr *wTgt, int32 *bufLen, uInt32 flags, DWORD *dwAttrs)
+LibAPI(MgErr) Win32ResolveShortCut(WStrPtr wStr, WStrPtr *wTgt, int32 *bufLen, int32 resolveDepth, int32 *resolveCount, DWORD *dwAttrs)
 {
 	HRESULT err = noErr;
 	IShellLinkW* psl;
@@ -400,7 +403,7 @@ LibAPI(MgErr) Win32ResolveShortCut(WStrPtr wStr, WStrPtr *wTgt, int32 *bufLen, u
 		{
 			// Load the shortcut.
 			err = IPersistFile_Load(ppf, srcPath, STGM_READ);
-			if (SUCCEEDED(err) && flags)
+			if (SUCCEEDED(err) && resolveDepth > 0)
 			{
 				// Resolve the shortcut.
 				err = IShellLinkW_Resolve(psl, NULL, SLR_NO_UI);
@@ -408,17 +411,21 @@ LibAPI(MgErr) Win32ResolveShortCut(WStrPtr wStr, WStrPtr *wTgt, int32 *bufLen, u
 			if (SUCCEEDED(err))
 			{
 				fileData.dwFileAttributes = INVALID_FILE_ATTRIBUTES;
-				err = IShellLinkW_GetPath(psl, tempPath, MAX_PATH * 4, &fileData, flags ? 0 : SLGP_RAWPATH); 
+				err = IShellLinkW_GetPath(psl, tempPath, MAX_PATH * 4, &fileData, resolveDepth > 0 ? 0 : SLGP_RAWPATH); 
 				if (SUCCEEDED(err))
 				{
 					*dwAttrs = fileData.dwFileAttributes;
 					if (err == S_OK)
 					{
 						int32 len = lwslen(tempPath);
-						if (flags & kRecursive && Win32CanBeShortCutLink(tempPath, len))
+						if (resolveCount)
 						{
-							srcPath = tempPath;
-							continue;
+							(*resolveCount)++;
+							if (resolveDepth > *resolveCount && Win32CanBeShortCutLink(tempPath, len))
+							{
+								srcPath = tempPath;
+								continue;
+							}
 						}
 						if (*dwAttrs == INVALID_FILE_ATTRIBUTES)
 							*dwAttrs = GetFileAttributesW(tempPath);
@@ -473,7 +480,7 @@ static BOOL Win32ModifyBackupPrivilege(BOOL fEnable)
 	return success;
 }
 
-LibAPI(MgErr) Win32ResolveSymLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, int32 flags, DWORD *dwAttrs)
+LibAPI(MgErr) Win32ResolveSymLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, int32 resolveDepth, int32 *resolveCount, DWORD *dwAttrs)
 {
 	HANDLE handle;
 	MgErr err = noErr;
@@ -540,6 +547,9 @@ LibAPI(MgErr) Win32ResolveSymLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, in
 			{
 				int32 parentLen = 0, newLen = length,
 					  offset = HasDOSDevicePrefix(start, length);
+
+				if (resolveCount)
+					(*resolveCount)++;
 
 				switch (offset)
 				{
@@ -608,9 +618,9 @@ LibAPI(MgErr) Win32ResolveSymLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, in
 						{
 							err = Win32GetLVFileErr();
 						}
-						else if (!(flags & kRecursive) || !(*dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT))
+						else if (!resolveCount || resolveDepth <= *resolveCount || !(*dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT))
 						{
-							if (relative && !flags)
+							if (relative && resolveDepth <= 0)
 								err = WStrNCat(wIntermediate, 0, intLen, start, length);
 
 							break;
@@ -627,6 +637,7 @@ LibAPI(MgErr) Win32ResolveSymLink(WStrPtr wSrc, WStrPtr *wTgt, int32 *bufLen, in
 		}
 		wSrc = wIntermediate;
 	} while (!err);
+
 	Win32ModifyBackupPrivilege(FALSE);
 	DSDisposePtr((UPtr)buffer);
 	if (!err)
@@ -718,7 +729,7 @@ static MgErr UnixToLVFileErr(void)
     return fIOErr;   /* fIOErr generally signifies some unknown file error */
 }
 
-static uInt16 UnixFileTypeFromStat(struct stat *statbuf)
+static uInt16 LVFileTypeFromStat(struct stat *statbuf)
 {
 	uInt16 flags = 0;
 	switch (statbuf->st_mode & S_IFMT)
@@ -768,14 +779,14 @@ static MgErr MacGetResourceSize(const char *path, uInt64 *size)
 #endif
 
 #if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
-static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, uInt32 flags, uInt32 *fileType);
+static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, int32 resolveDepth, int32 *resolveCount, uInt32 *fileType);
 #endif
 
 /* Internal list directory function
    On Windows the pathName is a wide char Long String pointer and the function returns UTF8 encoded filenames in the name array
    On other platforms it uses whatever is the default encoding for both pathName and the filenames, which could be UTF8 (Linux and Mac)
  */
-static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, uInt32 cp, int32 flags)
+static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, uInt32 cp, int32 resolveDepth)
 {
 	MgErr err;
 	int32 rootLength, index = 0, size = 8;
@@ -807,7 +818,7 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 	if (err)
 		return err;
 
-	err = NumericArrayResize(uQ, 1, (UHandle*)typeArr, size);
+	err = NumericArrayResize(uL, 1, (UHandle*)typeArr, size);
 	if (err)
 		return err;
 
@@ -815,8 +826,8 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 	if (!pathName || !LWStrLen(pathName))
 	{
 		DWORD drives = GetLogicalDrives();
-		int drive = 0;
-	    for (; !err && drive < 26; drive++)
+		uChar drive = 'A';
+	    for (; !err && drive <= 'Z'; drive++)
 		{
             if (drives & 01)
 		    {
@@ -827,18 +838,19 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 					if (err)
 						return err;
 
-					err = NumericArrayResize(uQ, 1, (UHandle*)typeArr, size);
+					err = NumericArrayResize(uL, 1, (UHandle*)typeArr, size);
 					if (err)
 						return err;
 				}
-				(**typeArr)->elm[index].fileFlags = 0;
-				(**typeArr)->elm[index].fileType = 0;
+				(**typeArr)->elm[index] = 0;
 
-				err = NumericArrayResize(uB, 1, (UHandle*)((**nameArr)->elm + index), 1);
+				err = NumericArrayResize(uB, 1, (UHandle*)((**nameArr)->elm + index), 3);
 				if (!err)
 				{
-					*LStrBuf(*((**nameArr)->elm[index])) = (uChar)('A' + drive);
-					LStrLen(*((**nameArr)->elm[index])) = 1;
+					LStrBuf(*((**nameArr)->elm[index]))[0] = drive;
+					LStrBuf(*((**nameArr)->elm[index]))[1] = ':';
+					LStrBuf(*((**nameArr)->elm[index]))[2] = kPathSeperator;
+					LStrLen(*((**nameArr)->elm[index])) = 3;
 				}
 				index++;
 				(**nameArr)->numItems = index;
@@ -857,7 +869,7 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 	if (!(dwAttrs & FILE_ATTRIBUTE_DIRECTORY))
 		return mgArgErr;
 
-	err = LWAppendPathSeparator(pathName, bufLen);
+	err = LWStrAppendPathSeparator(pathName, bufLen);
 	if (err)
 		goto FListDirOut;
 
@@ -874,21 +886,17 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 	dirp = FindFirstFile(pathName, &fileData);
 	if (dirp == INVALID_HANDLE_VALUE)
 	{
-		if (GetLastError() == ERROR_FILE_NOT_FOUND)
-		{
-			(**typeArr)->numItems = 0;
-		}
-		else
-		{
-			err = fNotFound;
-		}
+		DWORD ret = GetLastError();
+		if (ret != ERROR_FILE_NOT_FOUND)
+			err = Win32ToLVFileErr(ret);
+		(**typeArr)->numItems = 0;
 		goto FListDirOut;
 	}
 
 	do
 	{
 		/* Skip the current dir, and parent dir entries */
-		if (fileData.cFileName[0] != '.' || (fileData.cFileName[1] != 0 && (fileData.cFileName[1] != '.' || fileData.cFileName[2] != 0)))
+		if (fileData.cFileName[0] != 0 && (fileData.cFileName[0] != '.' || (fileData.cFileName[1] != 0 && (fileData.cFileName[1] != '.' || fileData.cFileName[2] != 0))))
 		{
 			/* Make sure our arrays are resized to allow the new values */
 			if (index >= size)
@@ -898,13 +906,12 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 				if (err)
 					goto FListDirOut;
 
-				err = NumericArrayResize(uQ, 1, (UHandle*)typeArr, size);
+				err = NumericArrayResize(uL, 1, (UHandle*)typeArr, size);
 				if (err)
 					goto FListDirOut;
 			}
 
-			(**typeArr)->elm[index].fileFlags = 0;
-			(**typeArr)->elm[index].fileType = 0;
+			(**typeArr)->elm[index] = 0;
 			fileName = fileData.cFileName;
 
 			/* Create the path to the file for intermediate operations */
@@ -916,32 +923,15 @@ static MgErr lvFile_ListDirectory(LWStrPtr pathName, int32 bufLen, LStrArrHdl *n
 			if (dwAttrs != INVALID_FILE_ATTRIBUTES)
 			{
 #if Pharlap
-                (**typeArr)->elm[index].fileFlags = LVFileFlagsFromWinFlags(dwAttrs);
+                (**typeArr)->elm[index] = LVFileTypeFromWinFlags(dwAttrs);
 #else
-				lvFile_ReadLink(pathName, &wTgt, &intLen, flags, &((**typeArr)->elm[index].fileFlags));
+				lvFile_ReadLink(pathName, &wTgt, &intLen, resolveDepth, NULL, &((**typeArr)->elm[index]));
 #endif
-				if (!(dwAttrs & FILE_ATTRIBUTE_DIRECTORY))
-				{
-#if !Pharlap
-					if (flags && wTgt && (**typeArr)->elm[index].fileFlags & kIsLink)
-					{
-						LWStrGetFileTypeAndCreator(wTgt, &((**typeArr)->elm[index].fileType),  NULL);
-					}
-					else 
-#endif
-					{
-						LWStrGetFileTypeAndCreator(pathName, &((**typeArr)->elm[index].fileType),  NULL);
-					}
-					if ((**typeArr)->elm[index].fileType && (**typeArr)->elm[index].fileType != kUnknownFileType)
-					{
-						(**typeArr)->elm[index].fileFlags |= kRecognizedType;
-					}
-				}
 			}
 			else
 			{
 				/* can happen if file disappeared since we did FindNextFile */
-				(**typeArr)->elm[index].fileFlags |= kErrGettingType | kIsFile;
+				(**typeArr)->elm[index] |= kErrGettingType | kIsFile;
 			}
 #if Pharlap
 			err = ConvertCString(fileName, -1, CP_ACP, (**nameArr)->elm + index, cp, 0, NULL);
@@ -983,14 +973,14 @@ FListDirOut:
 	if (err)
 		return err;
 
-	err = NumericArrayResize(uQ, 1, (UHandle*)typeArr, size);
+	err = NumericArrayResize(uL, 1, (UHandle*)typeArr, size);
 	if (err)
 		return err;
 
 	if (!(dirp = opendir(path)))
 		return UnixToLVFileErr();
 
-	err = LWAppendPathSeparator(pathName, bufLen);
+	err = LWStrAppendPathSeparator(pathName, bufLen);
 	if (err)
 		goto FListDirOut;
 
@@ -1009,13 +999,12 @@ FListDirOut:
 				if (err)
 			        goto FListDirOut;
 
-				err = NumericArrayResize(uQ, 1, (UHandle*)typeArr, size);
+				err = NumericArrayResize(uL, 1, (UHandle*)typeArr, size);
 				if (err)
 			        goto FListDirOut;
 			}
 
-			(**typeArr)->elm[index].fileFlags = 0;
-			(**typeArr)->elm[index].fileType = 0;
+			(**typeArr)->elm[index] = 0;
 
 			err = ConvertCString((ConstCStr)dp->d_name, -1, CP_ACP, (**nameArr)->elm + index, cp, 0, NULL);
 			if (err)
@@ -1027,24 +1016,21 @@ FListDirOut:
 
 			if (lstat(SStrBuf(pathName), &statbuf))
 			{
-				(**typeArr)->elm[index].fileFlags |= kErrGettingType;
+				(**typeArr)->elm[index] |= kErrGettingType;
 			}
 			else
 			{
 #if !VxWorks    /* VxWorks does not support links */
 				if (S_ISLNK(statbuf.st_mode))
 				{
-					(**typeArr)->elm[index].fileFlags |= kIsLink;
+					(**typeArr)->elm[index] |= kIsLink;
 					if (stat(SStrBuf(pathName), &tmpstatbuf) == 0)	/* If link points to something */
 						statbuf = tmpstatbuf;				        /* return info about it not link. */
 				}
 #endif
 				if (!S_ISDIR(statbuf.st_mode))
 				{
-					(**typeArr)->elm[index].fileFlags |= kIsFile;
-					LWStrGetFileTypeAndCreator(pathName, &((**typeArr)->elm[index].fileType), NULL);
-                    if ((**typeArr)->elm[index].fileType && (**typeArr)->elm[index].fileType != kUnknownFileType)
-						(**typeArr)->elm[index].fileFlags |= kRecognizedType;
+					(**typeArr)->elm[index] |= kIsFile;
 				}
 			}
 			index++;
@@ -1060,7 +1046,7 @@ FListDirOut:
 		if (*nameArr || index > 0)
 			NumericArrayResize(uPtr, 1, (UHandle*)nameArr, index);
 		if (*typeArr || index > 0)
-			NumericArrayResize(uQ, 1, (UHandle*)typeArr, index);
+			NumericArrayResize(uL, 1, (UHandle*)typeArr, index);
 	}
 	return err;
 }
@@ -1323,7 +1309,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 			fileInfo->winFlags = Lo16(fi.dwFileAttributes);
 			fileInfo->unixFlags = UnixFlagsFromWindows(fileInfo->winFlags);
 			fileInfo->macFlags = MacFlagsFromWindows(fileInfo->winFlags);
-			fileInfo->lvFlags = LVFileFlagsFromWinFlags(fi.dwFileAttributes);
+			fileInfo->fileType = LVFileTypeFromWinFlags(fi.dwFileAttributes);
 
 			if (fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 			{
@@ -1349,7 +1335,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 				{
 				    count = 1;
 
-					err = LWAppendPathSeparator(pathName, bufLen);
+					err = LWStrAppendPathSeparator(pathName, bufLen);
 					if (!err)
 				        err = LWStrNCat(pathName, -1, bufLen, strWildcardPattern, 3);
 				    if (!err)
@@ -1371,9 +1357,16 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 			}
 			else
 			{		
+#if !Pharlap
+				err = Win32ResolveShortCut(pathName, NULL, 0, 0, NULL, &fi.dwFileAttributes);
+				if (!err)
+					fileInfo->fileType |= kIsLink;
+				else if (err == cancelError)
+					err = mgNoErr;
+#endif
 				LWStrGetFileTypeAndCreator(pathName, &fileInfo->type, &fileInfo->creator);
 				if (fileInfo->type && fileInfo->type != kUnknownFileType)
-					fileInfo->lvFlags |= kRecognizedType;
+					fileInfo->fileType |= kRecognizedType;
 				fileInfo->size = Quad(fi.nFileSizeHigh, fi.nFileSizeLow);
 			}
 		}
@@ -1446,7 +1439,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 #else
 		fileInfo->macFlags = 0;
 #endif
-		fileInfo->lvFlags = UnixFileTypeFromStat(&statbuf);
+		fileInfo->fileType = LVFileTypeFromStat(&statbuf);
 
 		if (S_ISDIR(statbuf.st_mode))
 		{
@@ -1470,7 +1463,7 @@ static MgErr lvFile_FileInfo(LWStrPtr pathName, int32 bufLen, uInt8 write, LVFil
 			/* Try to determine LabVIEW file types based on file ending? */
 			err = LWStrGetFileTypeAndCreator(pathName, &fileInfo->type, &fileInfo->creator);
 			if (fileInfo->type && fileInfo->type != kUnknownFileType)
-				fileInfo->lvFlags |= kRecognizedType;
+				fileInfo->fileType |= kRecognizedType;
 
 			fileInfo->size = statbuf.st_size;
 #if MacOSX
@@ -1490,7 +1483,7 @@ LibAPI(MgErr) LVFile_FileInfo(LStrHandle filePath, uInt8 write, LVFileInfo *file
     LWStrPtr pathName = NULL;
 	int32 bufLen = 0;
 
-    if (!LStrIsAbsPath(filePath))
+    if (LStrIsAbsPath(filePath) < 0)
         return mgArgErr;
 
 	if (LStrLenH(filePath))
@@ -1808,8 +1801,10 @@ static MgErr lvFile_CreateLink(LWStrPtr src, LWStrPtr tgt, uInt32 flags)
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags)
 {
     MgErr err = mgNotSupported;
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
     LWStrPtr src = NULL;
     LWStrPtr tgt = NULL;
+#endif
 
     if (!FIsAbsPath(path))
         return mgArgErr;
@@ -1833,12 +1828,13 @@ LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags)
 LibAPI(MgErr) LVFile_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags)
 {
     MgErr err = mgNotSupported;
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
     LWStrPtr src = NULL;
     LWStrPtr tgt = NULL;
+#endif
 
-    if (!LStrIsAbsPath(path))
+    if (LStrIsAbsPath(path) < 0)
         return mgArgErr;
-
 #if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
 	err =  UPathToLWStr(path, &src, NULL);
     if (!err)
@@ -1866,33 +1862,38 @@ LibAPI(MgErr) LVFile_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags
    fileType: the file type of the returned location
    Returns: noErr on success resolution, cancelErr if the path is not a symlink, other errors as returned by the used API functions
 */
-static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, uInt32 flags, uInt32 *fileType)
+static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, int32 resolveDepth, int32 *resolveCount, uInt32 *fileType)
 {
 	MgErr err = noErr;
 	LWStrPtr src = wSrc, tmp = NULL;
-	int32 tmpLen = 0; 
+	int32 offset, tmpLen = 0; 
 #if Win32
-	DWORD dwAttr = GetFileAttributes(wSrc);
-	if (dwAttr == INVALID_FILE_ATTRIBUTES)
+	DWORD dwAttrs = GetFileAttributes(wSrc);
+	if (dwAttrs == INVALID_FILE_ATTRIBUTES)
         return Win32GetLVFileErr();
 
-	*fileType = LVFileFlagsFromWinFlags(dwAttr);
+	*fileType = LVFileTypeFromWinFlags(dwAttrs);
 
 	do
 	{
-		if (dwAttr & FILE_ATTRIBUTE_REPARSE_POINT)
+		if (dwAttrs & FILE_ATTRIBUTE_REPARSE_POINT)
 		{
-			err = Win32ResolveSymLink(src, wTgt, tgtLen, flags, &dwAttr);
+			err = Win32ResolveSymLink(src, wTgt, tgtLen, resolveDepth, resolveCount, &dwAttrs);
 		}
-		else if (!(dwAttr & FILE_ATTRIBUTE_DIRECTORY))
+		else if (!(dwAttrs & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			err = Win32ResolveShortCut(src, wTgt, tgtLen, flags, &dwAttr);
+			err = Win32ResolveShortCut(src, wTgt, tgtLen, resolveDepth, resolveCount, &dwAttrs);
 			if (!err)
 				*fileType |= kIsLink;
+			else
+				break;
 		}
-		if (!err && flags)
+		else
+			break;
+
+		if (!err && resolveCount && resolveDepth > *resolveCount)
 		{
-			int32 offset = 0;
+			offset = 0;
 			/* Is the link target a relative path? We allow an empty path to be equivalent to . */
 			if (!LWStrLen(*wTgt) || !LWStrIsAbsPath(*wTgt))
 			{
@@ -1902,31 +1903,37 @@ static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, uInt3
 			}
 			err = LWStrRealloc(&tmp, &tmpLen, offset, offset + LWStrLen(*wTgt));
 			if (!err && offset && src == wSrc)
- 				err = LWStrNCat(tmp, 0, tmpLen, LWStrBuf(src), offset);
+				err = LWStrNCat(tmp, 0, tmpLen, LWStrBuf(src), offset);
 			if (!err && LWStrLen(*wTgt))
- 				err = LWStrNCat(tmp, offset, tmpLen, LWStrBuf(*wTgt), LWStrLen(*wTgt));
+				err = LWStrNCat(tmp, offset, tmpLen, LWStrBuf(*wTgt), LWStrLen(*wTgt));
 
 			/* lstat could fail as the symlink path does not have to point to a valid file or directory */
-			if (!err && (dwAttr = GetFileAttributes(tmp)) == INVALID_FILE_ATTRIBUTES)
-				break;
-
-			src = tmp;
+			if (!err)
+			{
+				dwAttrs = GetFileAttributes(tmp);
+				if (dwAttrs == INVALID_FILE_ATTRIBUTES)
+				    break;
+				
+				src = tmp;
+			}
 		}
-    }
-	while (!err && flags & kRecursive);
-
-	if (err == cancelError)
-		err = noErr;
+		else
+			break;
+	}
+	while (!err);
 
 	if (!err && tmp)
-		*fileType |= LVFileFlagsFromWinFlags(dwAttr) << 16;
+		*fileType |= LVFileTypeFromWinFlags(dwAttrs) << 16;
+
+	if (err == cancelError)
+		err = mgNoErr;
 #else
     struct stat statbuf;
 
     if (lstat(SStrBuf(src), &statbuf))
         return UnixToLVFileErr();
 
-	*fileType = UnixFileTypeFromStat(&statbuf);
+	*fileType = LVFileTypeFromStat(&statbuf);
 
 	if (!S_ISLNK(statbuf.st_mode))
 		/* no symlink, abort */
@@ -1936,7 +1943,7 @@ static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, uInt3
     {
 		do
 		{
-			err = LWStrReallocBuf(wTgt, tgtLen, 0, statbuf.st_size);
+			err = LWStrRealloc(wTgt, tgtLen, 0, statbuf.st_size);
 		    if (!err)
 			{
 				statbuf.st_size = readlink(SStrBuf(src), SStrBuf(*wTgt), *tgtLen);
@@ -1945,58 +1952,60 @@ static MgErr lvFile_ReadLink(LWStrPtr wSrc, LWStrPtr *wTgt, int32 *tgtLen, uInt3
 			}
 		}
 		while (!err && statbuf.st_size >= *tgtLen);
-		if (!err && flags)
+
+		if (err || !resolveCount || resolveDepth <= *resolveCount)
+			break;
+
+		offset = 0;
+		/* Is the link target a relative path? */
+		if (!statbuf.st_size || LWStrBuf(*wTgt)[0] != kPosixPathSeperator)
 		{
-			int32 offset = 0;
-			/* Is the link target a relative path? */
-			if (!statbuf.st_size || LWStrBuf(*wTgt)[0] != kPosixPathSeperator)
-			{
-				offset = LWStrParentPath(src, -1);
-				if (LWStrLen(*wTgt) && LWStrBuf(*wTgt)[0] != kPosixPathSeperator)
-					offset++;
-			}
-			err = LWStrReallocBuf(&tmp, &tmpLen, offset, offset + statbuf.st_size );
-			if (!err && offset && src == wSrc)
- 				err = LWStrNCat(tmp, 0, tmpLen, LWStrBuf(src), offset);
-			if (!err && statbuf.st_size)
- 				err = LWStrNCat(tmp, offset, tmpLen, LWStrBuf(*wTgt), statbuf.st_size);
-
-			/* lstat could fail as the symlink path does not have to point to a valid file or directory */
-			if (!err && lstat(SStrBuf(tmp), &statbuf))
-				break;
-
-			src = tmp;
+			offset = LWStrParentPath(src, -1);
+			if (LWStrLen(*wTgt) && LWStrBuf(*wTgt)[0] != kPosixPathSeperator)
+				offset++;
 		}
+		err = LWStrRealloc(&tmp, &tmpLen, offset, offset + statbuf.st_size );
+		if (!err && offset && src == wSrc)
+			err = LWStrNCat(tmp, 0, tmpLen, LWStrBuf(src), offset);
+		if (!err && statbuf.st_size)
+			err = LWStrNCat(tmp, offset, tmpLen, LWStrBuf(*wTgt), statbuf.st_size);
+
+		/* lstat could fail as the symlink path does not have to point to a valid file or directory */
+		if (!err && lstat(SStrBuf(tmp), &statbuf))
+			break;
+
+		src = tmp;
     }
-	while (!err && flags & kRecursive && S_ISLNK(statbuf.st_mode));
+	while (!err && S_ISLNK(statbuf.st_mode));
 
 	if (!err && tmp)
-		*fileType |= UnixFileTypeFromStat(&statbuf) << 16;
-
+		*fileType |= LVFileTypeFromStat(&statbuf) << 16;
 #endif
 	LWStrDispose(tmp);
 	return err;
 }
 #endif
 
-LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, uInt32 flags, uInt32 *fileType)
+LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileType)
 {
-    MgErr err = mgNoErr;
+    MgErr err = mgNotSupported;
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
     LWStrPtr src = NULL;
 	int32 bufLen = 0;
+#endif
 
 	if (fileType)
 		*fileType = 0;
 
-	if (!LStrIsAbsPath(path))
+	if (LStrIsAbsPath(path) < 0)
         return mgArgErr;
 
-#if !Pharlap && !VxWorks
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
     err = UPathToLWStr(path, &src, NULL);
     if (!err)
     {
 		LWStrPtr wTgt = NULL;
-		err = lvFile_ReadLink(src, &wTgt, &bufLen, flags, fileType);
+		err = lvFile_ReadLink(src, &wTgt, &bufLen, resolveDepth, resolveCount, fileType);
 		if (!err && wTgt)
 		{
 #if usesWinPath
@@ -2013,22 +2022,22 @@ LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, uInt32 flags,
 		LWStrDispose(wTgt);
     }
     LWStrDispose(src);
-    return err;
-#else
-	return mgNotSupported;
 #endif
+    return err;
 }
 
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 flags, uInt32 *fileType)
+LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileType)
 {
-    MgErr err = mgNoErr;
+    MgErr err = mgNotSupported;
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
     LWStrPtr src = NULL;
 	int32 bufLen = 0;
+#endif
 
     if (!FIsAbsPath(path))
         return mgArgErr;
 
-#if !Pharlap && !VxWorks
+#if ((Win32 && !Pharlap) || (Unix && !VxWorks) || MacOSX)
 	if (fileType)
 		*fileType = 0;
 
@@ -2036,7 +2045,7 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 flags, uInt32 *fil
     if (!err)
     {
 		LWStrPtr wTgt = NULL;
-		err = lvFile_ReadLink(src, &wTgt, &bufLen, flags, fileType);
+		err = lvFile_ReadLink(src, &wTgt, &bufLen, resolveDepth, resolveCount, fileType);
 		if (!err && wTgt)
 		{
 			LStrHandle handle = NULL;
@@ -2057,10 +2066,8 @@ LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, uInt32 flags, uInt32 *fil
         LWStrDispose(wTgt);
     }
     LWStrDispose(src);
-    return err;
-#else
- 	return mgNotSupported;
 #endif
+    return err;
 }
 
 /*
@@ -2092,7 +2099,7 @@ static MgErr lvfile_CloseFile(FileRefNum ioRefNum)
 static MgErr lvfile_GetSize(FileRefNum ioRefNum, FileOffset *size)
 {
 #if usesPosixPath || usesWinPath
-	FileOffset tell;
+	FileOffset tell = { 0 };
 #if usesWinPath
     MgErr err;
 #endif
@@ -2123,7 +2130,6 @@ static MgErr lvfile_GetSize(FileRefNum ioRefNum, FileOffset *size)
 		return UnixToLVFileErr();
 	}
 #elif usesWinPath
-	tell.q = 0;
 	tell.l.lo = SetFilePointer(ioRefNum, 0, (PLONG)&tell.l.hi, FILE_CURRENT);
 	if (tell.l.lo == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
 	{
@@ -2155,7 +2161,7 @@ static MgErr lvfile_SetSize(FileRefNum ioRefNum, FileOffset *size)
 #if usesWinPath
 	MgErr err = mgNoErr;
 #endif
-	FileOffset tell;
+	FileOffset tell = { 0 };
 #endif
 	if (0 == ioRefNum)
 		return mgArgErr;
@@ -2183,7 +2189,6 @@ static MgErr lvfile_SetSize(FileRefNum ioRefNum, FileOffset *size)
 		return UnixToLVFileErr();
 	}
 #elif usesWinPath
-    tell.q = 0;
 	tell.l.lo = SetFilePointer(ioRefNum, 0, (PLONG)&tell.l.hi, FILE_CURRENT);
 	if (tell.l.lo == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
 	{
@@ -2455,7 +2460,6 @@ static char *namedResourceFork = "/..namedfork/rsrc";
 static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWStrPtr lwstr, int32 bufLen, uInt32 rsrc, uInt32 openMode, uInt32 denyMode)
 {
     MgErr err = noErr;
-	int32 type;
 #if usesPosixPath
     struct stat statbuf;
     char theMode[4];
@@ -2724,7 +2728,7 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LStrHandle filePath, uInt32 rsrc
 	FileRefNum ioRefNum = NULL;
 	MgErr err;
 
-	if (!LStrIsAbsPath(filePath))
+	if (LStrIsAbsPath(filePath) < 0)
         return mgArgErr;
 
 #if usesWinPath
@@ -2755,7 +2759,6 @@ LibAPI(MgErr) LVPath_OpenFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 o
 #else
 	int32 bufLen = 0;
 #endif
-	int32 type;
 	LWStrPtr pathName = NULL;
 	FileRefNum ioRefNum = NULL;
 	MgErr err;
