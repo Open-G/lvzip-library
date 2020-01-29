@@ -44,21 +44,11 @@
 static MgErr utf8_is_valid(const uInt8 *src, int32 *offset, int32 length);
 static MgErr utf8_replace_invalid(const uInt8 *src, int32 *soff, int32 slen, uInt8 *dest, int32 *doff, int32 dlen, uInt32 replacement);
 static MgErr utf8_advance(const uInt8 *src, int32 *offset, int32 length, int32 distance);
-static MgErr utf8_distance(const uInt8 *src, int32 *offset, int32 length);
-
-static uInt8 utf8_mask(uInt8 oc)
-{
-    return (uInt8)(0xff & oc);
-}
-
-static uInt16 utf16_mask(uInt16 oc)
-{
-    return (uInt16)(0xffff & oc);
-}
+static MgErr utf8_distance(const uInt8 *src, int32 *offset, int32 length, int32 *distance);
 
 static LVBoolean utf8_is_trail(uInt8 oc)
 {
-    return ((utf8_mask(oc) >> 6) == 0x2);
+    return ((oc & 0xC0) == 0x80);
 }
 
 static LVBoolean utf16_is_lead_surrogate(uInt16 cp)
@@ -83,16 +73,15 @@ static LVBoolean utf32_is_code_point_valid(uInt32 cp)
     return (LVBoolean)(cp <= CODE_POINT_MAX && !utf32_is_surrogate(cp));
 }
 
-static int32 utf8_sequence_length(uInt8 oc)
+static int32 utf8_sequence_length(const uInt8 *lead)
 {
-    uInt8 lead = utf8_mask(oc);
-    if (lead < 0x80)
+    if (*lead < 0x80)                       // 0x0xxxxxxx
         return 1;
-    else if ((lead >> 5) == 0x6)
+    else if ((*lead & 0xE0) == 0xC0)        // 0x110xxxxx   
         return 2;
-    else if ((lead >> 4) == 0xe)
+    else if ((*lead & 0xF0) == 0xE0)        // 0x1110xxxx
         return 3;
-    else if ((lead >> 3) == 0x1e)
+    else if ((*lead & 0xF8) == 0xF0)        // 0x11110xxx
         return 4;
     return 0;
 }
@@ -102,19 +91,19 @@ static LVBoolean utf32_is_overlong_sequence(uInt32 cp, int32 length)
     if (cp < 0x80)
     {
         if (length != 1)
-            return 1;
+            return LV_TRUE;
     }
     else if (cp < 0x800)
     {
         if (length != 2)
-            return 1;
+            return LV_TRUE;
     }
     else if (cp < 0x10000)
     {
         if (length != 3)
-            return 1;
+            return LV_TRUE;
     }
-    return 0;
+    return LV_FALSE;
 }
 
 #define NOT_ENOUGH_ROOM     -1
@@ -142,7 +131,7 @@ static MgErr utf8_get_sequence_1(const uInt8 *src, int32 *offset, int32 length, 
     if (*offset >= length)
         return NOT_ENOUGH_ROOM;
 
-    *code_point = utf8_mask(src[*offset]);
+    *code_point = src[*offset];
 	++(*offset);
     return mgNoErr;
 }
@@ -152,7 +141,7 @@ static MgErr utf8_get_sequence_2(const uInt8 *src, int32 *offset, int32 length, 
     if (*offset >= length)
         return NOT_ENOUGH_ROOM;
 
-    *code_point = utf8_mask(src[*offset]);
+    *code_point = src[*offset];
 
     UTF8_INCREASE_AND_RETURN_ON_ERROR(src, offset, length)
 
@@ -166,11 +155,11 @@ static MgErr utf8_get_sequence_3(const uInt8 *src, int32 *offset, int32 length, 
     if (*offset >= length)
         return NOT_ENOUGH_ROOM;
 
-    *code_point = utf8_mask(src[*offset]);
+    *code_point = src[*offset];
 
     UTF8_INCREASE_AND_RETURN_ON_ERROR(src, offset, length)
 
-    *code_point = ((*code_point << 12) & 0xf000) + ((utf8_mask(src[*offset]) << 6) & 0xfc0);
+    *code_point = ((*code_point << 12) & 0xf000) + ((src[*offset] << 6) & 0xfc0);
 
     UTF8_INCREASE_AND_RETURN_ON_ERROR(src, offset, length)
 
@@ -184,15 +173,15 @@ static MgErr utf8_get_sequence_4(const uInt8 *src, int32 *offset, int32 length, 
     if (*offset >= length)
         return NOT_ENOUGH_ROOM;
 
-    *code_point = utf8_mask(src[*offset]);
+    *code_point = src[*offset];
 
     UTF8_INCREASE_AND_RETURN_ON_ERROR(src, offset, length)
 
-    *code_point = ((*code_point << 18) & 0x1c0000) + ((utf8_mask(src[*offset]) << 12) & 0x3f000);
+    *code_point = ((*code_point << 18) & 0x1c0000) + ((src[*offset] << 12) & 0x3f000);
 
     UTF8_INCREASE_AND_RETURN_ON_ERROR(src, offset, length)
 
-    *code_point += (utf8_mask(src[*offset]) << 6) & 0xfc0;
+    *code_point += (src[*offset] << 6) & 0xfc0;
 
     UTF8_INCREASE_AND_RETURN_ON_ERROR(src, offset, length)
 
@@ -211,10 +200,10 @@ static MgErr utf8_append(uInt32 cp, uInt8 *buffer, int32 *offset, int32 length)
     if (cp < 0x80)
     {
         // one octet
+        if (length < *offset + 1)
+            return mgArgErr;
         if (buffer)
         {
-            if (length < *offset + 1)
-                return mgArgErr;
             *(buffer++) = (uInt8)(cp & 0x7F);
         }
         *offset += 1;
@@ -222,10 +211,10 @@ static MgErr utf8_append(uInt32 cp, uInt8 *buffer, int32 *offset, int32 length)
     else if (cp < 0x800)
     {
         // two octets
+        if (length < *offset + 2)
+            return mgArgErr;
         if (buffer)
         {
-            if (length < *offset + 2)
-                return mgArgErr;
             *(buffer++) = (uInt8)((cp >> 6)          | 0xc0);
             *(buffer++) = (uInt8)((cp & 0x3f)        | 0x80);
         }
@@ -234,10 +223,10 @@ static MgErr utf8_append(uInt32 cp, uInt8 *buffer, int32 *offset, int32 length)
     else if (cp < 0x10000)
     {
         // three octets
+        if (length < *offset + 3)
+            return mgArgErr;
         if (buffer)
         {
-            if (length < *offset + 3)
-                return mgArgErr;
             *(buffer++) = (uInt8)((cp >> 12)         | 0xe0);
             *(buffer++) = (uInt8)(((cp >> 6) & 0x3f) | 0x80);
             *(buffer++) = (uInt8)((cp & 0x3f)        | 0x80);
@@ -247,10 +236,10 @@ static MgErr utf8_append(uInt32 cp, uInt8 *buffer, int32 *offset, int32 length)
     else
     {
         // four octets
+        if (length < *offset + 4)
+            return mgArgErr;
         if (buffer)
         {
-            if (length < *offset + 4)
-                return mgArgErr;
             *(buffer++) = (uInt8)((cp >> 18)         | 0xf0);
             *(buffer++) = (uInt8)(((cp >> 12) & 0x3f)| 0x80);
             *(buffer++) = (uInt8)(((cp >> 6) & 0x3f) | 0x80);
@@ -261,15 +250,16 @@ static MgErr utf8_append(uInt32 cp, uInt8 *buffer, int32 *offset, int32 length)
     return mgNoErr;
 }
 
-static MgErr utf8_next(const uInt8 *buffer, int32 *offset, int32 length, uInt32 *cp)
+
+MgErr utf8_next(const uInt8 *buffer, int32 *offset, int32 length, uInt32 *cp)
 {
     if (*buffer && (length < 0 || *offset < length))
     {
         const uInt8 *ptr = buffer + *offset;
-        int32 len = utf8_sequence_length(*ptr);
+        int32 len = utf8_sequence_length(ptr);
         if (len <= 0 || (length >= 0 && *offset + len > length))
             return mgArgErr;
-        *cp = utf8_mask(*ptr++);
+        *cp = *ptr++;
         switch (len)
         {
             case 1:
@@ -278,12 +268,12 @@ static MgErr utf8_next(const uInt8 *buffer, int32 *offset, int32 length, uInt32 
                 *cp = ((*cp << 6) & 0x7ff) + (*ptr++ & 0x3f);
                 break;
             case 3:
-                *cp = ((*cp << 12) & 0xffff) + ((utf8_mask(*ptr++) << 6) & 0xfff);
+                *cp = ((*cp << 12) & 0xffff) + ((*ptr++ << 6) & 0xfff);
                 *cp += (*ptr++ & 0x3f);
                 break;
             case 4:
-                *cp = ((*cp << 18) & 0x1fffff) + ((utf8_mask(*ptr++) << 12) & 0x3ffff);
-                *cp += (utf8_mask(*ptr++) << 6) & 0xfff;
+                *cp = ((*cp << 18) & 0x1fffff) + ((*ptr++ << 12) & 0x3ffff);
+                *cp += (*ptr++ << 6) & 0xfff;
                 *cp += (*ptr++ & 0x3f);
                 break;
         }
@@ -311,21 +301,20 @@ static MgErr utf8_prior(const uInt8 *src, int32 *offset, int32 length, uInt32 *c
 MgErr utf8_advance(const uInt8 *src, int32 *offset, int32 length, int32 distance)
 {
     MgErr err = mgNoErr;
-    int32 i = 0;
+    int32 i;
     uInt32 cp;
-    for (; !err && i < distance; ++i)
+    for (i = 0; !err && i < distance; ++i)
     {
         err = utf8_next(src, offset, length, &cp);
     }
     return err;
 }
 
-MgErr utf8_distance(const uInt8 *src, int32 *offset, int32 length)
+MgErr utf8_distance(const uInt8 *src, int32 *offset, int32 length, int32 *distance)
 {
     MgErr err = mgNoErr;
-    int32 i = 0;
     uInt32 cp;
-    for (; !err && src[*offset] && (length < 0 || *offset < length); i++)
+    for (*distance = 0; !err && src[*offset] && (length < 0 || *offset < length); (*distance)++)
     {
         err = utf8_next(src, offset, length, &cp);
     }
@@ -342,7 +331,7 @@ MgErr utf8_validate_next(const uInt8 *src, int32 *offset, int32 length, uInt32 *
     int32 off = *offset;
 
     // Determine the sequence length based on the lead octet
-    int32 len = utf8_sequence_length(src[*offset]);
+    int32 len = utf8_sequence_length(src + *offset);
 
     // Get trail octets and calculate the code point
     switch (len)
@@ -382,8 +371,9 @@ MgErr utf8_validate_next(const uInt8 *src, int32 *offset, int32 length, uInt32 *
             err = INVALID_CODE_POINT;
     }
 
-    // Restore the original value of the offset
-    *offset = off;
+    if (err)
+		// Restore the original value of the offset
+		*offset = off;
     return err;
 }
 
@@ -437,11 +427,11 @@ MgErr utf16to8(const uInt16 *src, int32 slen, uInt8 *dest, int32 *offset, int32 
     uInt32 cp = 0;
     while (!err && src[soff] && (slen < 0 || soff < slen))
     {
-        cp = utf16_mask(src[soff++]);
+        cp = src[soff++];
         // Take care of surrogate pairs first
         if (utf16_is_lead_surrogate((uInt16)cp) && (slen < 0 || soff < slen))
         {
-            uInt32 trail_surrogate = utf16_mask(src[soff++]);
+            uInt32 trail_surrogate = src[soff++];
             cp = (cp << 10) + trail_surrogate + SURROGATE_OFFSET;
         }
         err = utf8_append(cp, dest, &doff, length);

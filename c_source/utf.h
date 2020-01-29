@@ -49,6 +49,8 @@ MgErr utf8_validate_next(const uInt8 *src, int32 *offset, int32 length, uInt32 *
 LibAPI(MgErr) utf8towchar(const uInt8 *src, int32 slen, wchar_t *dest, int32 *offset, int32 length);
 LibAPI(MgErr) wchartoutf8(const wchar_t *src, int32 slen, uInt8 *dest, int32 *offset, int32 length);
 
+MgErr utf8_next(const uInt8 *buffer, int32 *offset, int32 length, uInt32 *cp);
+
 MgErr utf16to8(const uInt16 *src, int32 slen, uInt8 *dest, int32 *offset, int32 length);
 MgErr utf8to16(const uInt8 *src, int32 slen, uInt16 *dest, int32 *offset, int32 length);
 MgErr utf32to8(const uInt32 *src, int32 slen, uInt8 *dest, int32 *offset, int32 length);

@@ -35,16 +35,6 @@ extern "C" {
 #include "lvutil.h"
 #include <string.h>
 
-typedef struct
-{
-	int32 cnt;
-	uInt16 str[1];
-} WStrRec, *WStrPtr, **WStrHandle;
-
-#define WStrLen(s)			(int32)(LStrLen(s) * sizeof(uInt16) / sizeof(wchar_t))
-#define WStrLenSet(s, l)    LStrLen(s) = l * sizeof(wchar_t) / sizeof(uInt16)
-#define WStrBuf(s)			((wchar_t*)(LStrBuf(s)))
-
 /* The LWStr datatype is a special construct to represent platform specific path strings that is never
    meant to be passed to LabVIEW since its inherent data size is not the same across platforms!
    It consists of a UTF16 string for Windows platforms except Pharlap to directly match the format
@@ -52,63 +42,118 @@ typedef struct
    current platform encoding scheme, which could be UTF8 on newer Linux and MacOSX platforms.
 */
 #if Win32 && !Pharlap
-#define LWStrPtr          WStrPtr
-#define LWStrLen(p)       WStrLen(p)
-#define LWStrBuf(p)       WStrBuf(p)
-#define LWStrLenSet(p, s) WStrLenSet(p, s)
-
-#define LWStrNCat         WStrNCat
-#define lwslen            (int32)wcslen
-#define lwsrchr           wcsrchr
+typedef wchar_t LWChar;
+#define lwslen               (int32)wcslen
+#define lwsncpy              wcsncpy
+#define lwsrchr              wcsrchr
 #else
-#define LWStrPtr          LStrPtr
-#define LWStrLen(p)       LStrLen(p)
-#define LWStrBuf(p)       LStrBuf(p)
-#define LWStrLenSet(p, s) LStrLen(p) = s
+typedef char LWChar;
+static LWChar *nullPtr = NULL;
 
-#define LWStrNCat         LStrNCat
-#define lwslen            (int32)strlen
-#define lwsrchr           strrchr
+#define lwslen               (int32)strlen
+#define lwsncpy              strncpy
+#define lwsrchr              strrchr
 #endif
-#define SStrBuf(s)        (char*)LStrBuf(s)
+#define LWPathSize(h)        (DSGetHandleSize((UHandle)h) - (2 * sizeof(int32))) / sizeof(LWChar)
 
-LibAPI(int32) LStrRootPathLen(LStrHandle pathName);
-#define LStrIsAbsPath(pathName) LStrRootPathLen(pathName) >= 0  
-#define LStrIsRelPath(pathName) LStrRootPathLen(pathName) == -1 
-LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath);
-LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName);
+#define LWPathLen(h)         ((h) && *(h)) ? (int32)(((*(h))->byteCnt - sizeof(int32)) / sizeof(LWChar)) : 0
+#define LWPathLenSet(h, l)   (*(h))->byteCnt = (int32)(((l) * sizeof(LWChar)) + sizeof(int32)), (*(h))->str[l] = 0
 
-LibAPI(int32) LWStrRootPathLen(LWStrPtr pathName);
-#define LWStrIsAbsPath(pathName) LWStrRootPathLen(pathName) >= 0  
-#define LWStrIsRelPath(pathName) LWStrRootPathLen(pathName) == -1 
-int32 LWStrPathDepth(LWStrPtr pathName, int32 end);
-int32 LWStrParentPath(LWStrPtr pathName, int32 end);
-MgErr LWStrAppendPath(LWStrPtr *pathName, int32 end, int32 *bufLen, LWStrPtr relPath);
+#define LWPathCntGet(h)      ((h) && *(h)) ? (*(h))->pathCnt : 0
+#define LWPathCntSet(h, c)   ((h) && *(h)) ? (*(h))->pathCnt = (uInt16)(c) : 0
 
-MgErr LWStrRealloc(LWStrPtr *buf, int32 *bufLen, int32 retain, size_t numChar);
-MgErr LWStrDispose(LWStrPtr buf);
+#define LWPathTypeGet(h)     ((h) && *(h)) ? ((*(h))->type) : fNotAPath
+#define LWPathTypeSet(h, t)  ((h) && *(h)) ? (*(h))->type = (uInt8)(t) : fNotAPath
+
+#define LWPathFlagsGet(h)    ((h) && *(h)) ? ((*(h))->flags) : 0
+#define LWPathFlagsSet(h, f) ((h) && *(h)) ? (*(h))->flags = (uInt8)(f) : 0
+
+#define LWPathBuf(h)         (*h)->str
+#define SStrBuf(h)           (char*)LWPathBuf(h)
+
+#if MSWin && (ProcessorType == kX86)
+	/* Windows x86 targets use 1-byte structure packing. */
+	#pragma pack(push, 1)
+#elif Mac
+	/* Use natural alignment on the Mac. */
+	#if (Compiler == kGCC) || (Compiler == kMetroWerks)
+		#pragma options align=natural
+	#else
+		#error "Unsupported compiler. Figure out how to set alignment to native/natural"
+	#endif
+#else
+	/* Use default (or build's) alignment */
+#endif /* struct alignment set */
+
+typedef struct LWSTRREC
+{
+	int32 byteCnt;         /* In order to be able to pass this as a byte array/string handle we always use size in bytes */ 
+	int8 flags;            /* If highest significant bit is set we have a Unicode path */
+	int8 type;             /* LabVIEW path structure uses an int16 for path type stored in big endian format in the flattened stream */
+	int16 pathCnt;         /* Number of path segemetns in the path */
+	LWChar str[1];         /* actual path, widechar in windows, 8 byte in all other platforms */
+} LWStrRec, *LWStrPtr, **LWStrHandle;
+
+typedef struct WSTRREC
+{
+	int32 cnt;             /* In order to be able to pass this as a byte array/string handle we always use size in bytes */ 
+	wchar_t wstr[1];
+} WStrRec, *WStrPtr, **WStrHandle;
+
+#if MSWin && (ProcessorType == kX86)
+	#pragma pack(pop)
+#elif Mac
+	#pragma options align=reset
+#endif /* struct alignment restore */
+
+#define WStrLen(h)			((h) && *(h)) ? (int32)((*(h))->cnt / sizeof(wchar_t)) : 0
+#define WStrLenSet(h, l)    ((h) && *(h)) ? (*(h))->cnt = (int32)(l * sizeof(wchar_t)) : 0
+#define WStrBuf(h)			((h) && *(h)) ? (*(h))->wstr : NULL
 
 #if Win32 && !Pharlap
-MgErr LWStrNCat(LWStrPtr lstr, int32 off, int32 bufLen, const wchar_t *str, int32 strLen);
-
 #define HasDOSDevicePrefix(str, len)                                                                                                       \
  ((len >= 4 && str[0] == kPathSeperator && str[1] == kPathSeperator && (str[2] == '?' || str[2] == '.') && str[3] == kPathSeperator) ?     \
-  ((len >= 8 && (str[4] == 'u' || str[4] == 'U') && (str[5] == 'n' || str[5] == 'N') && (str[6] == 'c' || str[6] == 'C') && str[7] == kPathSeperator) ? 6 : 4) : 0)
+  ((len >= 8 && (str[4] == 'u' || str[4] == 'U') && (str[5] == 'n' || str[5] == 'N') && (str[6] == 'c' || str[6] == 'C') && str[7] == kPathSeperator) ? 8 : 4) : 0)
 #else
 #define HasDOSDevicePrefix(str, len)   0
-MgErr LWStrNCat(LWStrPtr lstr, int32 off, int32 bufLen, const char *str, int32 strLen);
 #endif
 
-MgErr LWNormalizePath(LWStrPtr pathName);
-MgErr LWStrAppendPathSeparator(LWStrPtr pathName, int32 bufLen);
-MgErr LWStrGetFileTypeAndCreator(LWStrPtr pathName, FMFileType *fType, FMFileType *fCreator);
+int32 LWStrRootPathLen(LWStrHandle pathName, int32 offset, uInt8 *type);
+Bool32 LWStrIsAPathOfType(LWStrHandle pathName, int32 offset, uInt8 type);
+MgErr LWStrAppendPathSeparator(LWStrHandle pathName);
+int32 LWStrPathDepth(LWStrHandle pathName, int32 end);
+int32 LWStrParentPathInternal(LWStrHandle filePath, int32 rootLen, int32 end);
+int32 LWStrNextPathSegment(LWStrHandle filePath, int32 start, int32 end);
+int32 LWStrParentPath(LWStrHandle pathName, int32 end);
+MgErr LWStrAppendPath(LWStrHandle pathName, int32 end, LWStrHandle *newPath, LWStrHandle relPath);
+MgErr LWStrGetFileTypeAndCreator(LWStrHandle pathName, FMFileType *fType, FMFileType *fCreator);
+MgErr LWNormalizePath(LWStrHandle pathName);
 
-MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrPtr *lwstr, int32 *reserve);
-MgErr UPathToLWStr(LStrHandle pathName, LWStrPtr *lwstr, int32 *reserve);
-MgErr LPathToLWStr(Path pathName, LWStrPtr *lwstr, int32 *reserve);
+MgErr LWStrResize(LWStrHandle *buf, size_t numChar);
+MgErr LWStrDispose(LWStrHandle buf);
+MgErr LWStrNCat(LWStrHandle *lwstr, int32 off, const LWChar *str, int32 strLen);
+
+typedef enum
+{
+	kCvtHFSToPosix = 1,
+	kCvtKeepDOSDevice = 2
+} CvtFlags;
+
+MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrHandle *lwstr, uInt32 flags, int32 reserve);
+MgErr LStrFromLWStr(LStrHandle *pathName, uInt32 codePage, LWStrHandle lwstr, int32 offset, uInt32 flags);
+Bool32 LStrIsAPathOfType(LStrHandle pathName, int32 offset, uInt8 type);
+
+LibAPI(MgErr) UPathToLWStr(LStrHandle pathName, LWStrHandle *lwstr, uInt32 flags);
+LibAPI(MgErr) LPathToLWStr(Path pathName, LWStrHandle *lwstr, uInt32 flags, int32 reserve);
+LibAPI(MgErr) UPathFromLWStr(LStrHandle *pathName, LWStrHandle *lwstr, uInt32 flags);
+LibAPI(MgErr) LPathFromLWStr(Path *pathName, LWStrHandle *lwstr, uInt32 flags);
+LibAPI(int32) LStrRootPathLen(LStrHandle pathName, int32 offset, uInt8 *type);
+LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath);
+LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName, LVBoolean *empty);
+LibAPI(MgErr) LRefAppendPath(LWStrHandle *pathName, LStrHandle relPath);
+LibAPI(MgErr) LRefParentPath(LWStrHandle *pathName, LStrHandle *fileName, LVBoolean *empty);
 
 /* Different conversion functions between various codepages */
-
 #define CP_ACP                    0           // default to ANSI code page
 #define CP_OEMCP                  1           // default to OEM  code page
 #define CP_UTF8                   65001       // UTF-8 translation

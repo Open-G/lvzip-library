@@ -68,6 +68,7 @@ extern "C" {
   #define ProcessorType	kPPC
  #elif defined(_M_IX86)
   #define ProcessorType	kX86
+  #define PackedStruct  1
  #elif defined(_M_X64)
   #define ProcessorType	kX64
  #elif defined(_M_ALPHA)
@@ -523,6 +524,7 @@ MgErr DSSetHandleSize(UHandle, size_t);
 int32 DSGetHandleSize(UHandle);
 MgErr DSDisposeHandle(UHandle);
 MgErr DSCopyHandle(UHandle *ph, const UHandle hsrc);
+MgErr DSSetHandleFromPtr(void *ph, const void *psrc, size_t n);
 
 UHandle AZNewHandle(size_t size);
 UHandle AZNewHClr(size_t size);
@@ -530,8 +532,10 @@ MgErr AZSetHandleSize(UHandle, size_t);
 int32 AZGetHandleSize(UHandle);
 MgErr AZDisposeHandle(UHandle);
 MgErr AZCopyHandle(void *ph, const void *hsrc);
+MgErr AZSetHandleFromPtr(void *ph, const void *psrc, size_t n);
 
 void MoveBlock(ConstUPtr ps, UPtr pd, size_t size);
+void ClearMem(UPtr pd, size_t size);
 
 MgErr NumericArrayResize(int32, int32, UHandle*, size_t);
 
@@ -668,6 +672,7 @@ typedef CPStr FDirEntRec, *FDirEntPtr, **FDirEntHandle;
     
 enum { openReadWrite, openReadOnly, openWriteOnly, openWriteOnlyTruncate }; /* open modes */
 enum { denyReadWrite, denyWriteOnly, denyNeither}; /* deny modes */
+enum { createNone, createNormal, createAlways}; /* create modes */
 
 enum { fStart = 1, fEnd, fCurrent };	/* seek modes */
 /*
@@ -729,7 +734,6 @@ Path FMakePath(Path path, int32 type, ...);
 Path FEmptyPath(Path);
 Path FNotAPath(Path);
 Bool32 FIsAPath(Path path);
-Bool32 FIsAbsPath(Path path);
 Bool32 FIsEmptyPath(Path path);
 MgErr FTextToPath(UPtr str, int32 len, Path* path);
 MgErr FPathToText(Path path, LStrPtr lstr);
@@ -738,9 +742,6 @@ Bool32 FIsAPathOfType(Path path, int32 ofType);
 MgErr FGetPathType(Path, int32*);
 int32 FDepth(Path path);
 MgErr FDisposePath(Path p);
-
-#define FIsAbsPath(path) FIsAPathOfType(path, fAbsPath)
-#define FIsRelPath(path) FIsAPathOfType(path, fRelPath)
 
 MgErr FNewRefNum(Path path, File fd, LVRefNum* refnum);
 Bool32 FIsARefNum(LVRefNum);
@@ -776,6 +777,7 @@ typedef struct
 
 /* Our exported functions */
 /**************************/
+typedef struct LWSTRREC **LWStrHandle;
 
 LibAPI(MgErr) InitializeFileFuncs(LStrHandle filefunc_def);
 LibAPI(MgErr) InitializeStreamFuncs(LStrHandle  filefunc_def, LStrHandle *memory);
@@ -785,16 +787,29 @@ LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 /* Version string of the zlib library */
 LibAPI(void) DLLVersion(uChar*  Version);
 
-/* Convert the path into a string representation for the current platform */
-LibAPI(MgErr) LVPath_ToText(Path path, LStrHandle *str);
+/* Convert the path from and into a string representation for the current platform */
+LibAPI(MgErr) LVPath_ToText(Path path, LVBoolean utf8, LStrHandle *str);
 LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir);
 
 /* Check if the file path points to has a resource fork */
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh);
 
 /* List the directory contents with an additional array with flags and file type for each file in the names array */
+LibAPI(MgErr) LVFile_ListDirectory(LWStrHandle *folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
 LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoArrHdl *fileInfo, int32 resolveDepth);
-LibAPI(MgErr) LVFile_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
+LibAPI(MgErr) LVString_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
+
+LibAPI(MgErr) LVFile_Delete(LWStrHandle *path, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVString_Delete(LStrHandle path, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVFile_Rename(LWStrHandle *pathFrom, LWStrHandle *pathTo, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVString_Rename(LStrHandle pathFrom, LStrHandle pathTo, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVFile_Copy(LWStrHandle *pathFrom, LWStrHandle *pathTo, uInt32 replaceMode);
+LibAPI(MgErr) LVString_Copy(LStrHandle pathFrom, LStrHandle pathTo, uInt32 replaceMode);
+LibAPI(MgErr) LVFile_MoveToTrash(LWStrHandle *path);
+LibAPI(MgErr) LVString_MoveToTrash(LStrHandle path);
+LibAPI(MgErr) LVFile_CreateDirectories(LWStrHandle *path, int16 permissions);
+LibAPI(MgErr) LVPath_CreateDirectories(Path path, int16 permissions);
+LibAPI(MgErr) LVString_CreateDirectories(LStrHandle path, int16 permissions);
 
 /* Windows portion of the flags parameter */
 #define kWinFileInfoReadOnly             0x00000001  
@@ -839,8 +854,9 @@ typedef struct {        /* off */
 } LVFileInfo;           /* 92: Total length */
 
 /* Retrieve file information from the path */
+LibAPI(MgErr) LVFile_FileInfo(LWStrHandle *path, uInt8 write, LVFileInfo *fileInfo);
 LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo);
-LibAPI(MgErr) LVFile_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileInfo);
+LibAPI(MgErr) LVString_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileInfo);
 
 /* Creation flags */
 #define kLinkSoft       0x00
@@ -852,11 +868,13 @@ LibAPI(MgErr) LVFile_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileInfo
 #define kRecursive		0x02
 
 /* Create and read a link */
+LibAPI(MgErr) LVFile_CreateLink(LWStrHandle *path, LWStrHandle *target, uInt32 flags);
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
-LibAPI(MgErr) LVFile_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags);
+LibAPI(MgErr) LVString_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags);
 
+LibAPI(MgErr) LVFile_ReadLink(LWStrHandle *path, LWStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
-LibAPI(MgErr) LVFile_ReadLink(LStrHandle path, LStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
+LibAPI(MgErr) LString_ReadLink(LStrHandle path, LStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 
 typedef union
 {
@@ -885,8 +903,13 @@ enum { /* values for rsrc parameter */
 	kOpenFileRsrcComment
 };
 
+LibAPI(MgErr) LVFile_CreateFile(LVRefNum *refnum, LWStrHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
+LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWStrHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
+LibAPI(MgErr) LVPath_CreateFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
 LibAPI(MgErr) LVPath_OpenFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
-LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LStrHandle path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
+LibAPI(MgErr) LVString_CreateFile(LVRefNum *refnum, LStrHandle path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
+LibAPI(MgErr) LVString_OpenFile(LVRefNum *refnum, LStrHandle path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
+
 LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum);
 LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, FileOffset *size);
 LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size);
@@ -894,6 +917,9 @@ LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *offs);
 LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *offs, uInt16 mode);
 LibAPI(MgErr) LVFile_Read(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
+
+/* For the refnum auto cleanup */
+MgErr lvfile_CloseFile(void *refnum);
 
 #ifdef __cplusplus
 }
