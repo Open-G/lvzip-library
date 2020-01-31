@@ -1070,7 +1070,7 @@ FListDirOut:
 			if (err)
 			    goto FListDirOut;
 	
-			err = LWStrNCat(pathName, rootLength, dp->d_name, -1);
+			err = LWStrNCat(&pathName, rootLength, dp->d_name, -1);
 			if (err)
 			    goto FListDirOut;
 
@@ -1454,7 +1454,7 @@ LibAPI(MgErr) LVFile_FileInfo(LWStrHandle *pathName, uInt8 write, LVFileInfo *fi
 		VxWorksConvertFromATime(&fileInfo->aDate, &times.actime);
 		VxWorksConvertFromATime(&fileInfo->mDate, &times.modtime);
         VxWorksConvertFromATime(&fileInfo->cDate, &statbuf.st_ctime);
-		if (utime(SStrBuf(pathName), &times))
+		if (utime(SStrBuf(*pathName), &times))
 #else
 		UnixConvertFromATime(&fileInfo->aDate, &times[0]);
 		UnixConvertFromATime(&fileInfo->mDate, &times[1]);
@@ -2202,7 +2202,7 @@ LibAPI(MgErr) LVFile_Delete(LWStrHandle *path, LVBoolean ignoreReadOnly)
 					err = Win32GetLVFileErr();
 			}
 #else
-			if (chmod(SStrBuf(*path), fileRights | 0222)) && errno != ENOTSUP)
+			if (chmod(SStrBuf(*path), fileRights | 0222) && errno != ENOTSUP)
 				err = UnixToLVFileErr();
 		}
 		if (!err)
@@ -2314,20 +2314,19 @@ LibAPI(MgErr) LVFile_Rename(LWStrHandle *pathFrom, LWStrHandle *pathTo, LVBoolea
 						err = LVFile_Delete(pathFrom, ignoreReadOnly);
 				}
 #else
-				if (chmod(SStrBuf(*pathFrom), fileRights | 0222)) && errno != ENOTSUP)
+				if (chmod(SStrBuf(*pathFrom), fileRights | 0222) && errno != ENOTSUP)
 					err = UnixToLVFileErr();
 			}
 			if (!err)
 			{
-				struct statbuf stat;
-				if (!lstat(SStrBuf(*pathTo), &stat))
-				(
+				struct stat statbuf;
+				if (!lstat(SStrBuf(*pathTo), &statbuf))
+				{
 					/* If it is a link then resolve it and use the result as real target */
-					if (S_ISLINK(stat.st_mode))
+					if (S_ISLNK(statbuf.st_mode))
 					{
-						LWStrPtr lwstrLink = NULL;
-						int32 buflen = 0;
-						err = LVFile_ReadLink(pathTo, &lwStrLink, &buflen, -1, NULL, NULL);
+						LWStrHandle lwStrLink = NULL;
+						err = LVFile_ReadLink(pathTo, &lwStrLink, -1, NULL, NULL);
 						if (!err)
 						{
 							int32 rootLen = LWStrRootPathLen(lwStrLink, -1, NULL);
@@ -2339,8 +2338,8 @@ LibAPI(MgErr) LVFile_Rename(LWStrHandle *pathFrom, LWStrHandle *pathTo, LVBoolea
 							else
 							{
 								int32 len = LWStrParentPath(*pathTo, -1);
-								err = LWStrAppendPath(pathTo, len, &len, lwstrLink);  
-								LWStrDispose(lwstrLink);
+								err = LWStrAppendPath(*pathTo, len, NULL, lwStrLink);  
+								LWStrDispose(lwStrLink);
 							}
 						}
 					}
@@ -2350,13 +2349,24 @@ LibAPI(MgErr) LVFile_Rename(LWStrHandle *pathFrom, LWStrHandle *pathTo, LVBoolea
 					err = UnixToLVFileErr();
 				}
 			}
+#if !VxWorks
 			if (!err && !access(SStrBuf(*pathTo), F_OK))
 			{
-				err = fDupErr;
+				err = fDupPath;
 			}
+#else
 			if (!err)
 			{
-				if (rename(SStrBuf(*pathFrom), SStrBuf(*pathTo))
+				int fd = open(SStrBuf(*pathTo), O_RDONLY, 0);
+				if (fd < 0)
+					err = fDupPath;
+				else
+					close(fd);
+			}
+#endif
+			if (!err)
+			{
+				if (rename(SStrBuf(*pathFrom), SStrBuf(*pathTo)))
 				{
 					/* rename failed, try a real copy */
 					err = LVFile_Copy(pathFrom, pathTo, 0);
@@ -2365,7 +2375,7 @@ LibAPI(MgErr) LVFile_Rename(LWStrHandle *pathFrom, LWStrHandle *pathTo, LVBoolea
 				}
 				if (!err)
 				{
-					if (chmod(SStrBuf(*pathTo), fileRights);
+					if (chmod(SStrBuf(*pathTo), fileRights));
 						err = UnixToLVFileErr();
 				}
 #endif	
@@ -2468,7 +2478,11 @@ static MgErr lvFile_CreateDirectory(LWStrHandle lwstr, int32 end, int16 permissi
 	if (!CreateDirectory(lwstr, NULL))
 		err = Win32GetLVFileErr();
 #else
+#if VxWorks
+	if (mkdir(SStrBuf(lwstr)) ||
+#else
 	if (mkdir(SStrBuf(lwstr), (permissions & 0777)) ||
+#endif
 		chmod(SStrBuf(lwstr), (permissions & 0777))) /* ignore umask */
 		err = UnixToLVFileErr();
 #endif
@@ -2878,7 +2892,6 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWStrHandle lwstr, uInt32 rsr
 {
     MgErr err = noErr;
 #if usesPosixPath
-    struct stat statbuf;
     char theMode[4];
 #elif usesWinPath
     DWORD shareAcc, openAcc;
@@ -3049,8 +3062,8 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWStrHandle lwstr, uInt32 rsr
 	/* Test for file existence first to avoid creating file with mode "w". */
 	if (openMode == openWriteOnlyTruncate)
 	{
-		uIn16 fileType;
-		err = lvFile_Status(lwstr, &fileType);
+		uInt16 fileType;
+		err = lvFile_Status(lwstr, -1, &fileType, NULL);
 		if (err || fileType != kIsFile)
 			return fNotFound;
 	}

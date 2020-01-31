@@ -972,6 +972,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\lvtypes.h"
+				>
+			</File>
+			<File
 				RelativePath="..\lvutil.h"
 				>
 			</File>

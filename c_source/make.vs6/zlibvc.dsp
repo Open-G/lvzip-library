@@ -383,6 +383,10 @@ SOURCE=..\mztools.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\refnum.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\trees.c
 # End Source File
 # Begin Source File
@@ -459,6 +463,10 @@ SOURCE=..\lvapi.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\lvtypes.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\lvutil.h
 # End Source File
 # Begin Source File
@@ -472,6 +480,10 @@ SOURCE=..\MacBinaryIII.h
 # Begin Source File
 
 SOURCE=..\mztools.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\refnum.h
 # End Source File
 # Begin Source File
 

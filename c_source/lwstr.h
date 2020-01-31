@@ -32,7 +32,7 @@
 extern "C" {
 #endif
 
-#include "lvutil.h"
+#include "lvtypes.h"
 #include <string.h>
 
 /* The LWStr datatype is a special construct to represent platform specific path strings that is never
@@ -48,7 +48,6 @@ typedef wchar_t LWChar;
 #define lwsrchr              wcsrchr
 #else
 typedef char LWChar;
-static LWChar *nullPtr = NULL;
 
 #define lwslen               (int32)strlen
 #define lwsncpy              strncpy
