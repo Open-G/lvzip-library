@@ -40,7 +40,7 @@
  #endif
 #endif
 
-MgErr LWStrResize(LWStrHandle *lwstr, size_t numChar)
+MgErr LWPathResize(LWPathHandle *lwstr, size_t numChar)
 {
 	int32 len = (int32)(2 * sizeof(int32) + (numChar + 1) * sizeof(LWChar));
 	if (*lwstr)
@@ -50,7 +50,7 @@ MgErr LWStrResize(LWStrHandle *lwstr, size_t numChar)
 	}
 	else
 	{
-		*lwstr = (LWStrHandle)DSNewHandle(len);
+		*lwstr = (LWPathHandle)DSNewHandle(len);
 		if (!*lwstr)
 			return mFullErr;
 		ClearMem((UPtr)(**lwstr), 8);
@@ -58,7 +58,7 @@ MgErr LWStrResize(LWStrHandle *lwstr, size_t numChar)
 	return mgNoErr;
 }
 
-MgErr LWStrDispose(LWStrHandle lwstr)
+MgErr LWPathDispose(LWPathHandle lwstr)
 {
 	if (lwstr)
 		return DSDisposeHandle((UHandle)lwstr);
@@ -66,10 +66,10 @@ MgErr LWStrDispose(LWStrHandle lwstr)
 }
 
 #if Win32
-MgErr LWNormalizePath(LWStrHandle lwstr)
+MgErr LWPathNormalize(LWPathHandle lwstr)
 {
 	LWChar *a, *s, *e, *t = LWPathBuf(lwstr);
-	int32 unc = FALSE, len = LWPathLen(lwstr);
+	int32 unc = FALSE, len = LWPathLenGet(lwstr);
 
 	a = s = t;
 	e = s + len;
@@ -184,10 +184,10 @@ MgErr LWNormalizePath(LWStrHandle lwstr)
 	return mgNoErr;
 }
 #elif Unix || MacOSX
-MgErr LWNormalizePath(LWStrHandle lwstr)
+MgErr LWPathNormalize(LWPathHandle lwstr)
 {
 	char *a, *s, *e, *t;
-	int32 len = LWPathLen(lwstr);
+	int32 len = LWPathLenGet(lwstr);
 
 	a = s = t = (char*)LWPathBuf(lwstr);
 	e = s + len;
@@ -241,15 +241,15 @@ MgErr LWNormalizePath(LWStrHandle lwstr)
 }
 #endif
 
-MgErr LWStrNCat(LWStrHandle *lwstr, int32 off, const LWChar *str, int32 strLen)
+MgErr LWPathNCat(LWPathHandle *lwstr, int32 off, const LWChar *str, int32 strLen)
 {
 	MgErr err;
 	if (strLen == -1)
 	    strLen = lwslen(str);
 	if (off == -1)
-		off = LWPathLen(*lwstr);
+		off = LWPathLenGet(*lwstr);
 
-	err = LWStrResize(lwstr, off + strLen);
+	err = LWPathResize(lwstr, off + strLen);
 	if (!err)
 	{
 		lwsncpy(LWPathBuf(*lwstr) + off, str, strLen);
@@ -258,13 +258,13 @@ MgErr LWStrNCat(LWStrHandle *lwstr, int32 off, const LWChar *str, int32 strLen)
 	return err;
 }
 
-MgErr LWStrAppendPathSeparator(LWStrHandle lwstr)
+MgErr LWPathAppendSeparator(LWPathHandle lwstr)
 {
 	MgErr err = mgNoErr;
-	int32 len = LWPathLen(lwstr);
+	int32 len = LWPathLenGet(lwstr);
 	if (LWPathBuf(lwstr)[len - 1] != kNativePathSeperator)
 	{
-		err =  LWStrResize(&lwstr, len + 1);
+		err =  LWPathResize(&lwstr, len + 1);
 		if (!err)
 		{
 			LWPathBuf(lwstr)[len] = kNativePathSeperator;
@@ -505,14 +505,14 @@ LibAPI(MgErr) LStrAppendPath(LStrHandle *filePath, LStrHandle relPath)
 	return err;
 }
 
-LibAPI(MgErr) LRefParentPath(LWStrHandle *filePath, LStrHandle *fileName, LVBoolean *empty)
+LibAPI(MgErr) LRefParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVBoolean *empty)
 {
 	MgErr err = mgNoErr;
 	LWChar *srcPtr = LWPathBuf(*filePath);
 	uInt8 srcType = fNotAPath;
-	int32 srcLen = LWPathLen(*filePath),
+	int32 srcLen = LWPathLenGet(*filePath),
 		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
-	      srcRoot = LWStrRootPathLen(*filePath, srcOff, &srcType);
+	      srcRoot = LWPathRootLen(*filePath, srcOff, &srcType);
 
 	if (LStrLenH(*fileName))
 		LStrLen(**fileName) = 0;
@@ -525,7 +525,7 @@ LibAPI(MgErr) LRefParentPath(LWStrHandle *filePath, LStrHandle *fileName, LVBool
 
 	if (srcRoot < srcLen)
 	{
-		srcRoot = LWStrParentPathInternal(*filePath, srcRoot, srcLen); 
+		srcRoot = LWPathParentInternal(*filePath, srcRoot, srcLen); 
 		if (empty)
 			*empty = (LVBoolean)(srcRoot <= srcOff);
 		srcOff = srcRoot;
@@ -555,12 +555,12 @@ LibAPI(MgErr) LRefParentPath(LWStrHandle *filePath, LStrHandle *fileName, LVBool
 	return err;
 }
 
-LibAPI(MgErr) LRefAppendPath(LWStrHandle *filePath, LStrHandle relString)
+LibAPI(MgErr) LRefAppendPath(LWPathHandle *filePath, LStrHandle relString)
 {
 	MgErr err = mgNoErr;
-	LWStrHandle relPath = NULL;
+	LWPathHandle relPath = NULL;
 	uInt8 relType = fNotAPath;
-	int32 srcLen = LWPathLen(*filePath),
+	int32 srcLen = LWPathLenGet(*filePath),
 		  srcOff = HasDOSDevicePrefix(LWPathBuf(*filePath), srcLen),
 		  relLen = LStrLen(*relString),
 		  relOff = HasDOSDevicePrefix(LStrBuf(*relString), relLen);
@@ -578,8 +578,8 @@ LibAPI(MgErr) LRefAppendPath(LWStrHandle *filePath, LStrHandle relString)
 	err = LStrPathToLWStr(relString, CP_UTF8, &relPath, LV_FALSE, 0);
 	if (!err)
 	{
-		err = LWStrAppendPath(*filePath, srcLen, filePath, relPath);
-		LWStrDispose(relPath);
+		err = LWPathAppend(*filePath, srcLen, filePath, relPath);
+		LWPathDispose(relPath);
 	}
 	return err;
 }
@@ -628,9 +628,9 @@ static int32 LStrNextPathSegment(LStrHandle filePath, int32 start, int32 end)
 	return start;
 }
 
-static int32 LWStrUNCOffset(LWStrHandle lwstr, int32 offset)
+static int32 LWStrUNCOffset(LWPathHandle lwstr, int32 offset)
 {
-	int32 sep = 0, len = LWPathLen(lwstr);
+	int32 sep = 0, len = LWPathLenGet(lwstr);
 	const LWChar *ptr = LWPathBuf(lwstr);
 
 	for (ptr += offset; offset < len; offset++)
@@ -653,9 +653,9 @@ static int32 LWStrUNCOffset(LWStrHandle lwstr, int32 offset)
    -1 for a relative path
    -2 when there is an invalid path
  */
-int32 LWStrRootPathLen(LWStrHandle lwstr, int32 offset, uInt8 *type)
+int32 LWPathRootLen(LWPathHandle lwstr, int32 offset, uInt8 *type)
 {
-	int32 len = LWPathLen(lwstr);
+	int32 len = LWPathLenGet(lwstr);
 	if (len)
 	{
 		LWChar *ptr = LWPathBuf(lwstr);
@@ -731,59 +731,59 @@ int32 LWStrRootPathLen(LWStrHandle lwstr, int32 offset, uInt8 *type)
 	return offset;
 }
 
-Bool32 LWStrIsAPathOfType(LWStrHandle pathName, int32 offset, uInt8 isType)
+Bool32 LWPathIsOfType(LWPathHandle pathName, int32 offset, uInt8 isType)
 {
 	uInt8 type = fNotAPath;
 
 	if (offset < 0)
-		offset = HasDOSDevicePrefix(LWPathBuf(pathName), LWPathLen(pathName));
+		offset = HasDOSDevicePrefix(LWPathBuf(pathName), LWPathLenGet(pathName));
 	
-	LWStrRootPathLen(pathName, offset, &type);
+	LWPathRootLen(pathName, offset, &type);
 	return (type == isType) || (isType == fAbsPath && type == fUNCPath);
 }
 
-int32 LWStrParentPathInternal(LWStrHandle lwstr, int32 rootLen, int32 end)
+int32 LWPathParentInternal(LWPathHandle lwstr, int32 rootLen, int32 end)
 {
 	if (end < 0)
-		end = LWPathLen(lwstr);
+		end = LWPathLenGet(lwstr);
 	while (end && end > rootLen && LWPathBuf(lwstr)[--end] != kNativePathSeperator);
 	return end;
 }
 
-int32 LWStrParentPath(LWStrHandle lwstr, int32 end)
+int32 LWPathParent(LWPathHandle lwstr, int32 end)
 {
-	int32 rootLen = LWStrRootPathLen(lwstr, -1, NULL);
+	int32 rootLen = LWPathRootLen(lwstr, -1, NULL);
 	if (rootLen >= -1)
-		return LWStrParentPathInternal(lwstr, rootLen, end);
+		return LWPathParentInternal(lwstr, rootLen, end);
 	return -1;
 }
 
-int32 LWStrPathDepth(LWStrHandle lwstr, int32 end)
+int32 LWPathDepth(LWPathHandle lwstr, int32 end)
 {
 	int32 i = 0, 
-		  offset = HasDOSDevicePrefix(LWPathBuf(lwstr), LWPathLen(lwstr)),
-		  rootLen = LWStrRootPathLen(lwstr, offset, NULL);
+		  offset = HasDOSDevicePrefix(LWPathBuf(lwstr), LWPathLenGet(lwstr)),
+		  rootLen = LWPathRootLen(lwstr, offset, NULL);
 	if (end < 0)
-		end = LWPathLen(lwstr);
+		end = LWPathLenGet(lwstr);
 	while (end && end > rootLen)
 	{
-		end = LWStrParentPathInternal(lwstr, rootLen, end);
+		end = LWPathParentInternal(lwstr, rootLen, end);
 		i++;
 	}
 	return end > offset ? i + 1 : i;
 }
 
-MgErr LWStrAppendPath(LWStrHandle srcPath, int32 end, LWStrHandle *newPath, LWStrHandle relPath)
+MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPathHandle relPath)
 {
 	MgErr err = mgNoErr;
-	LWStrHandle tmpPath = newPath ? *newPath : srcPath;
+	LWPathHandle tmpPath = newPath ? *newPath : srcPath;
 	uInt8 relType = fNotAPath;
 	LWChar *srcPtr = LWPathBuf(srcPath), *relPtr = LWPathBuf(relPath);
-	int32 srcLen = end < 0 ? LWPathLen(srcPath) : end,
+	int32 srcLen = end < 0 ? LWPathLenGet(srcPath) : end,
 		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
-		  relLen = LWPathLen(relPath),
+		  relLen = LWPathLenGet(relPath),
 		  relOff = HasDOSDevicePrefix(relPtr, relLen),
-		  relRoot = LWStrRootPathLen(relPath, relOff, &relType);
+		  relRoot = LWPathRootLen(relPath, relOff, &relType);
 
 	/* If empty relative path, there is nothing to append */
 	if (relLen <= relOff)
@@ -794,7 +794,7 @@ MgErr LWStrAppendPath(LWStrHandle srcPath, int32 end, LWStrHandle *newPath, LWSt
 		return mgArgErr;
 	
 	/* Remove trailing path seperator */
-	if (srcLen > LWStrRootPathLen(srcPath, srcOff, NULL) && srcPtr[srcLen - 1] == kNativePathSeperator)
+	if (srcLen > LWPathRootLen(srcPath, srcOff, NULL) && srcPtr[srcLen - 1] == kNativePathSeperator)
 		srcLen--;
 
 	if (relLen > relRoot && relPtr[relLen - 1] == kNativePathSeperator)
@@ -802,14 +802,14 @@ MgErr LWStrAppendPath(LWStrHandle srcPath, int32 end, LWStrHandle *newPath, LWSt
 
 	if (srcPath != tmpPath)
 	{
-		err = LWStrNCat(&tmpPath, 0, srcPtr, srcLen);
+		err = LWPathNCat(&tmpPath, 0, srcPtr, srcLen);
 	}
 	if (!err)
 	{
 		if (relPtr[0] != kNativePathSeperator)
-			err = LWStrAppendPathSeparator(tmpPath);
+			err = LWPathAppendSeparator(tmpPath);
 		if (!err)
-			err = LWStrNCat(&tmpPath, -1, relPtr, relLen);
+			err = LWPathNCat(&tmpPath, -1, relPtr, relLen);
 		if (!err && newPath && *newPath != tmpPath)
 		{
 			*newPath = tmpPath;
@@ -824,14 +824,14 @@ MgErr LWStrAppendPath(LWStrHandle srcPath, int32 end, LWStrHandle *newPath, LWSt
     0: empty path, canonical root
    1..: next segment offset
  */
-int32 LWStrNextPathSegment(LWStrHandle lwstr, int32 start, int32 end)
+int32 LWPathNextElement(LWPathHandle lwstr, int32 start, int32 end)
 {
 	LWChar *ptr = LWPathBuf(lwstr);
 
 	if (start <= 0)
 	{
 		uInt8 type = fNotAPath;
-		int32 rootLen = LWStrRootPathLen(lwstr, -1, &type);
+		int32 rootLen = LWPathRootLen(lwstr, -1, &type);
 		if (type == fNotAPath)
 			return -2;
 		if (type == fRelPath)
@@ -841,7 +841,7 @@ int32 LWStrNextPathSegment(LWStrHandle lwstr, int32 start, int32 end)
 	}
 
 	if (end < 0)
-		end = LWPathLen(lwstr);
+		end = LWPathLenGet(lwstr);
 
 	if (ptr[start] == kNativePathSeperator)
 		start++;
@@ -857,25 +857,25 @@ int32 LWStrNextPathSegment(LWStrHandle lwstr, int32 start, int32 end)
 	return start;
 }
 
-MgErr LWStrRelativePath(LWStrHandle startPath, LWStrHandle endPath, LWStrHandle *relPath)
+MgErr LWStrRelativePath(LWPathHandle startPath, LWPathHandle endPath, LWPathHandle *relPath)
 {
 	int32 startCount, endCount, level, notchesUp;
 	int16 length, totalLength, remainingEndCount, i, err;
 	uInt8 startType = fNotAPath, endType = fNotAPath;
 	LWChar *startp = LWPathBuf(startPath),
 		   *endp = LWPathBuf(endPath);
-	int32 startLen = LWPathLen(startPath),
+	int32 startLen = LWPathLenGet(startPath),
 		  startOff = HasDOSDevicePrefix(startp, startLen),
-		  startRoot = LWStrRootPathLen(startPath, startOff, &startType),
-		  endLen = LWPathLen(endPath),
+		  startRoot = LWPathRootLen(startPath, startOff, &startType),
+		  endLen = LWPathLenGet(endPath),
 		  endOff = HasDOSDevicePrefix(endp, endLen),
-		  endRoot = LWStrRootPathLen(endPath, endOff, &endType); 
+		  endRoot = LWPathRootLen(endPath, endOff, &endType); 
 
 	if (startType != fAbsPath && endType != fAbsPath && relPath)
 		return mgArgErr;
 
-	startCount = LWStrPathDepth(startPath, -1);
-	endCount = LWStrPathDepth(endPath, -1);
+	startCount = LWPathDepth(startPath, -1);
+	endCount = LWPathDepth(endPath, -1);
 	for (level = startCount; level > 0; level--)
 	{
 
@@ -929,9 +929,9 @@ TH_REENTRANT MgErr FRelPath(Path start, Path end, Path relPath)
 	}
 */
 
-static FMFileType LWStrFileTypeFromExt(LWStrHandle lwstr)
+static FMFileType LWStrFileTypeFromExt(LWPathHandle lwstr)
 {
-	int32 len = LWPathLen(lwstr), k = 1;
+	int32 len = LWPathLenGet(lwstr), k = 1;
     LWChar *ptr = LWPathBuf(lwstr);
 
 	/* look backwards	*/
@@ -949,7 +949,7 @@ static FMFileType LWStrFileTypeFromExt(LWStrHandle lwstr)
 	return 0;
 }
 
-MgErr LWStrGetFileTypeAndCreator(LWStrHandle lwstr, FMFileType *fType, FMFileType *fCreator)
+MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, FMFileType *fType, FMFileType *fCreator)
 {
 	/* Try to determine LabVIEW file types based on file ending? */
 	uInt32 creator = kUnknownCreator,
@@ -992,7 +992,7 @@ MgErr LWStrGetFileTypeAndCreator(LWStrHandle lwstr, FMFileType *fType, FMFileTyp
 	return noErr;
 }
 
-MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrHandle *lwstr, uInt32 flags, int32 reserve)
+MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
 {
 	MgErr err = noErr;
 	uChar *srcPtr = LStrBufH(string);
@@ -1028,7 +1028,7 @@ MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrHandle *lwstr, uI
 		dstLen = 1;
 	}
 #endif
-	err = LWStrResize(lwstr, dstLen + reserve);
+	err = LWPathResize(lwstr, dstLen + reserve);
 	if (!err)
 	{
 		if (LStrLenH(temp))
@@ -1066,17 +1066,17 @@ MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrHandle *lwstr, uI
 	if (dstLen <= 0)
 		return mgArgErr;
 	
-	err = LWStrResize(lwstr, rlen + dstLen + reserve);
+	err = LWPathResize(lwstr, rlen + dstLen + reserve);
 	if (err)
 		return err;
 
 	switch (rlen)
 	{
 		case 4:
-			LWStrNCat(lwstr, 0, L"\\\\?\\", rlen);
+			LWPathNCat(lwstr, 0, L"\\\\?\\", rlen);
 			break;
 		case 7:
-			LWStrNCat(lwstr, 0, L"\\\\?\\UNC", rlen);
+			LWPathNCat(lwstr, 0, L"\\\\?\\UNC", rlen);
 			break;
 	}
 	dstLen = MultiByteToWideChar(codePage, 0, (LPCSTR)srcPtr + (rlen == 7), srcLen - (rlen == 7), LWPathBuf(*lwstr) + rlen, dstLen + reserve);
@@ -1087,13 +1087,13 @@ MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWStrHandle *lwstr, uI
 	LWPathLenSet(*lwstr, dstLen);
 	LWPathTypeSet(*lwstr, srcType);
 	LWPathCntSet(*lwstr, PathDepth(srcPtr, srcOff, srcRoot, srcLen));
-	return LWNormalizePath(*lwstr);
+	return LWPathNormalize(*lwstr);
 }
 
 /* Windows: path is an UTF8 encoded path string and lwstr is filled with a Windows UTF16LE string from the path
    MacOSX, Unix, VxWorks, Pharlap: path is an UTF8 encoded path string and lwstr is filled with a local encoded SBC or
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-LibAPI(MgErr) UPathToLWStr(LStrHandle path, LWStrHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) UPathToLWStr(LStrHandle path, LWPathHandle *lwstr, uInt32 flags)
 {
 	return LStrPathToLWStr(path, CP_UTF8, lwstr, flags, 0);
 }
@@ -1101,7 +1101,7 @@ LibAPI(MgErr) UPathToLWStr(LStrHandle path, LWStrHandle *lwstr, uInt32 flags)
 /* Windows: path is a LabVIEW path and lwstr is filled with a Windows UTF16LE string from this path
    MacOSX, Unix, VxWorks, Pharlap: path is a LabVIEW path and lwstr is filled with a local encoded SBC or MBC
    string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-LibAPI(MgErr) LPathToLWStr(Path path, LWStrHandle *lwstr, uInt32 flags, int32 reserve)
+LibAPI(MgErr) LPathToLWStr(Path path, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
 {
 	LStrPtr lstr;
     int32 bufLen = -1;
@@ -1122,10 +1122,10 @@ LibAPI(MgErr) LPathToLWStr(Path path, LWStrHandle *lwstr, uInt32 flags, int32 re
     return err;
 }
 
-MgErr LStrFromLWStr(LStrHandle *pathName, uInt32 codePage, LWStrHandle lwstr, int32 offset, uInt32 flags)
+MgErr LStrFromLWStr(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, int32 offset, uInt32 flags)
 {
 	MgErr err = noErr;
-	int32 len = LWPathLen(lwstr);
+	int32 len = LWPathLenGet(lwstr);
 	if (len)
 	{
 		LWChar *ptr = LWPathBuf(lwstr);
@@ -1157,12 +1157,12 @@ MgErr LStrFromLWStr(LStrHandle *pathName, uInt32 codePage, LWStrHandle lwstr, in
 	return err;
 }
 
-LibAPI(MgErr) UPathFromLWStr(LStrHandle *pathName, LWStrHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) UPathFromLWStr(LStrHandle *pathName, LWPathHandle *lwstr, uInt32 flags)
 {
 	return LStrFromLWStr(pathName, CP_UTF8, *lwstr, 0, flags);
 }
 
-LibAPI(MgErr) LPathFromLWStr(Path *pathName, LWStrHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) LPathFromLWStr(Path *pathName, LWPathHandle *lwstr, uInt32 flags)
 {
 	LStrHandle dest = NULL;
 	MgErr err = LStrFromLWStr(&dest, CP_ACP, *lwstr, 0, flags);
@@ -1495,13 +1495,14 @@ static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uI
 		err = NumericArrayResize(uB, 1, (UHandle*)dest, len * sizeof(wchar_t));
 		if (!err)
 		{
-			char *inbuf = (char*)src, *outbuf = (char*)LStrBuf(**dest);
+			char *inbuf = (char*)src, 
+				 *outbuf = (char*)WStrBuf(*dest);
 			size_t retval, inleft = len, outleft = len * sizeof(wchar_t);
 			retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
 			if (retval == (size_t)-1)
 				err = UnixToLVFileErr();
 			else
-			    WStrLenSet(**dest, (len * sizeof(wchar_t) - outleft) / sizeof(uInt16));
+			    WStrLenSet(*dest, (len * sizeof(wchar_t) - outleft) / sizeof(uInt16));
 		}
 		if (iconv_close(cd) != 0 && !err)
 			err = UnixToLVFileErr();

@@ -54,19 +54,19 @@ LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir);
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh);
 
 /* List the directory contents with an additional array with flags and file type for each file in the names array */
-LibAPI(MgErr) LVFile_ListDirectory(LWStrHandle *folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
+LibAPI(MgErr) LVFile_ListDirectory(LWPathHandle *folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
 LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoArrHdl *fileInfo, int32 resolveDepth);
 LibAPI(MgErr) LVString_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
 
-LibAPI(MgErr) LVFile_Delete(LWStrHandle *path, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVFile_Delete(LWPathHandle *path, LVBoolean ignoreReadOnly);
 LibAPI(MgErr) LVString_Delete(LStrHandle path, LVBoolean ignoreReadOnly);
-LibAPI(MgErr) LVFile_Rename(LWStrHandle *pathFrom, LWStrHandle *pathTo, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVFile_Rename(LWPathHandle *pathFrom, LWPathHandle *pathTo, LVBoolean ignoreReadOnly);
 LibAPI(MgErr) LVString_Rename(LStrHandle pathFrom, LStrHandle pathTo, LVBoolean ignoreReadOnly);
-LibAPI(MgErr) LVFile_Copy(LWStrHandle *pathFrom, LWStrHandle *pathTo, uInt32 replaceMode);
+LibAPI(MgErr) LVFile_Copy(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32 replaceMode);
 LibAPI(MgErr) LVString_Copy(LStrHandle pathFrom, LStrHandle pathTo, uInt32 replaceMode);
-LibAPI(MgErr) LVFile_MoveToTrash(LWStrHandle *path);
+LibAPI(MgErr) LVFile_MoveToTrash(LWPathHandle *path);
 LibAPI(MgErr) LVString_MoveToTrash(LStrHandle path);
-LibAPI(MgErr) LVFile_CreateDirectories(LWStrHandle *path, int16 permissions);
+LibAPI(MgErr) LVFile_CreateDirectories(LWPathHandle *path, int16 permissions);
 LibAPI(MgErr) LVPath_CreateDirectories(Path path, int16 permissions);
 LibAPI(MgErr) LVString_CreateDirectories(LStrHandle path, int16 permissions);
 
@@ -113,7 +113,7 @@ typedef struct {        /* off */
 } LVFileInfo;           /* 92: Total length */
 
 /* Retrieve file information from the path */
-LibAPI(MgErr) LVFile_FileInfo(LWStrHandle *path, uInt8 write, LVFileInfo *fileInfo);
+LibAPI(MgErr) LVFile_FileInfo(LWPathHandle *path, uInt8 write, LVFileInfo *fileInfo);
 LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo);
 LibAPI(MgErr) LVString_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileInfo);
 
@@ -127,11 +127,11 @@ LibAPI(MgErr) LVString_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileIn
 #define kRecursive		0x02
 
 /* Create and read a link */
-LibAPI(MgErr) LVFile_CreateLink(LWStrHandle *path, LWStrHandle *target, uInt32 flags);
+LibAPI(MgErr) LVFile_CreateLink(LWPathHandle *path, LWPathHandle *target, uInt32 flags);
 LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
 LibAPI(MgErr) LVString_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags);
 
-LibAPI(MgErr) LVFile_ReadLink(LWStrHandle *path, LWStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
+LibAPI(MgErr) LVFile_ReadLink(LWPathHandle *path, LWPathHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 LibAPI(MgErr) LString_ReadLink(LStrHandle path, LStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 
@@ -162,8 +162,8 @@ enum { /* values for rsrc parameter */
 	kOpenFileRsrcComment
 };
 
-LibAPI(MgErr) LVFile_CreateFile(LVRefNum *refnum, LWStrHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
-LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWStrHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
+LibAPI(MgErr) LVFile_CreateFile(LVRefNum *refnum, LWPathHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
+LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWPathHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
 LibAPI(MgErr) LVPath_CreateFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
 LibAPI(MgErr) LVPath_OpenFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
 LibAPI(MgErr) LVString_CreateFile(LVRefNum *refnum, LStrHandle path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
