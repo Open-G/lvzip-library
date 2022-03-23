@@ -42,27 +42,27 @@ extern "C" {
    current platform encoding scheme, which could be UTF8 on newer Linux and MacOSX platforms.
 */
 #if Win32 && !Pharlap
-typedef wchar_t LWChar;
-#define lwslen               (int32)wcslen
-#define lwsncpy              wcsncpy
-#define lwsrchr              wcsrchr
+typedef wchar_t			LWChar;
+#define lwslen			(int32)wcslen
+#define lwsncpy			wcsncpy
+#define lwsrchr			wcsrchr
 #else
-typedef char LWChar;
+typedef char			LWChar;
 
-#define lwslen               (int32)strlen
-#define lwsncpy              strncpy
-#define lwsrchr              strrchr
+#define lwslen			(int32)strlen
+#define lwsncpy			strncpy
+#define lwsrchr			strrchr
 #endif
 #define LWPathSize(h)        (DSGetHandleSize((UHandle)h) - (2 * sizeof(int32))) / sizeof(LWChar)
 
-#define LWPathLenGet(h)         (((h) && *(h)) ? (int32)(((*(h))->byteCnt - sizeof(int32)) / sizeof(LWChar)) : 0)
+#define LWPathLenGet(h)      (((h) && *(h)) ? (int32)(((*(h))->byteCnt - sizeof(int32)) / sizeof(LWChar)) : 0)
 #define LWPathLenSet(h, l)   ((*(h))->byteCnt = (int32)(((l) * sizeof(LWChar)) + sizeof(int32)), (*(h))->str[l] = 0)
 
 #define LWPathCntGet(h)      (((h) && *(h)) ? (*(h))->pathCnt : 0)
 #define LWPathCntSet(h, c)   (((h) && *(h)) ? (*(h))->pathCnt = (uInt16)(c) : 0)
 
-#define LWPathTypeGet(h)     (((h) && *(h)) ? ((*(h))->type) : fNotAPath)
-#define LWPathTypeSet(h, t)  (((h) && *(h)) ? (*(h))->type = (uInt8)(t) : fNotAPath)
+#define LWPathTypeGet(h)     (((h) && *(h)) ? ((*(h))->type) : fAbsPath)
+#define LWPathTypeSet(h, t)  (((h) && *(h)) ? (*(h))->type = (uInt8)(t) : fAbsPath)
 
 #define LWPathFlagsGet(h)    (((h) && *(h)) ? ((*(h))->flags) : 0)
 #define LWPathFlagsSet(h, f) (((h) && *(h)) ? (*(h))->flags = (uInt8)(f) : 0)
@@ -127,6 +127,7 @@ int32 LWPathParent(LWPathHandle pathName, int32 end);
 MgErr LWPathAppend(LWPathHandle pathName, int32 end, LWPathHandle *newPath, LWPathHandle relPath);
 MgErr LWPathGetFileTypeAndCreator(LWPathHandle pathName, FMFileType *fType, FMFileType *fCreator);
 MgErr LWPathNormalize(LWPathHandle pathName);
+MgErr LWPathZeroTerminate(LWPathHandle pathName, LWChar *end);
 
 MgErr LWPathResize(LWPathHandle *buf, size_t numChar);
 MgErr LWPathDispose(LWPathHandle buf);
@@ -134,18 +135,20 @@ MgErr LWPathNCat(LWPathHandle *lwstr, int32 off, const LWChar *str, int32 strLen
 
 typedef enum
 {
-	kCvtHFSToPosix = 1,
+	kDefaultPath = 0,
+	kLeaveHFSPath = 1,
 	kCvtKeepDOSDevice = 2
 } CvtFlags;
 
-MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
-MgErr LStrFromLWStr(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, int32 offset, uInt32 flags);
+MgErr LStrToLWPath(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
+MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, int32 offset, uInt32 flags);
 Bool32 LStrIsAPathOfType(LStrHandle pathName, int32 offset, uInt8 type);
+Bool32 LStrIsAbsPath(LStrHandle pathName, int32 offset);
 
-LibAPI(MgErr) UPathToLWStr(LStrHandle pathName, LWPathHandle *lwstr, uInt32 flags);
-LibAPI(MgErr) LPathToLWStr(Path pathName, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
-LibAPI(MgErr) UPathFromLWStr(LStrHandle *pathName, LWPathHandle *lwstr, uInt32 flags);
-LibAPI(MgErr) LPathFromLWStr(Path *pathName, LWPathHandle *lwstr, uInt32 flags);
+LibAPI(MgErr) UPathToLWPath(LStrHandle pathName, LWPathHandle *lwstr, uInt32 flags);
+LibAPI(MgErr) LPathToLWPath(Path pathName, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
+LibAPI(MgErr) UPathFromLWPath(LStrHandle *pathName, LWPathHandle *lwstr, uInt32 flags);
+LibAPI(MgErr) LPathFromLWPath(Path *pathName, LWPathHandle *lwstr, uInt32 flags);
 LibAPI(int32) LStrRootPathLen(LStrHandle pathName, int32 offset, uInt8 *type);
 LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath);
 LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName, LVBoolean *empty);

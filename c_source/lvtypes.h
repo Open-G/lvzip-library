@@ -86,7 +86,7 @@ extern "C" {
  #if EMBEDDED
   #define Pharlap 1
  #endif
- #define _WIN32_WINNT 0x0501
+// #define _WIN32_WINNT 0x0501
 #elif defined(linux) || defined(__linux) || defined(__linux__)
  #if defined(i386)
   #define ProcessorType	kX86

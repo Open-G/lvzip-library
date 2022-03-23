@@ -362,7 +362,7 @@ static unzFile unzOpenInternal(const void *path, zlib_filefunc64_32_def *pzlib_f
 
     if (pzlib_filefunc64_32_def == NULL)
 #if WIN32
-		fill_win32_filefunc64A(&us.z_filefunc.zfile_func64);
+		fill_win32_filefunc64W(&us.z_filefunc.zfile_func64);
 #else
 		fill_fopen64_filefunc(&us.z_filefunc.zfile_func64);
 #endif

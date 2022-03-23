@@ -43,15 +43,30 @@ LibAPI(MgErr) InitializeStreamFuncs(LStrHandle  filefunc_def, LStrHandle *memory
 
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
-/* Version string of the zlib library */
-LibAPI(void) DLLVersion(uChar*  Version);
-
 /* Convert the path from and into a string representation for the current platform */
 LibAPI(MgErr) LVPath_ToText(Path path, LVBoolean utf8, LStrHandle *str);
 LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir);
 
+typedef union
+{
+	int64 q;
+#if BigEndian
+	struct
+	{
+		int32 hi;
+		uInt32 lo;
+	} l;
+#else
+	struct
+	{
+		uInt32 lo;
+		int32 hi;
+	} l;
+#endif
+} FileOffset;
+
 /* Check if the file path points to has a resource fork */
-LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, uInt32 *sizeLow, uInt32 *sizeHigh);
+LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, FileOffset *size);
 
 /* List the directory contents with an additional array with flags and file type for each file in the names array */
 LibAPI(MgErr) LVFile_ListDirectory(LWPathHandle *folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
@@ -59,12 +74,16 @@ LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoA
 LibAPI(MgErr) LVString_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
 
 LibAPI(MgErr) LVFile_Delete(LWPathHandle *path, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVPath_Delete(Path pathName, LVBoolean ignoreReadOnly);
 LibAPI(MgErr) LVString_Delete(LStrHandle path, LVBoolean ignoreReadOnly);
 LibAPI(MgErr) LVFile_Rename(LWPathHandle *pathFrom, LWPathHandle *pathTo, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVPath_Rename(Path pathFrom, Path pathTo, LVBoolean ignoreReadOnly);
 LibAPI(MgErr) LVString_Rename(LStrHandle pathFrom, LStrHandle pathTo, LVBoolean ignoreReadOnly);
 LibAPI(MgErr) LVFile_Copy(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32 replaceMode);
+LibAPI(MgErr) LVPath_Copy(Path pathFrom, Path pathTo, uInt32 replaceMode);
 LibAPI(MgErr) LVString_Copy(LStrHandle pathFrom, LStrHandle pathTo, uInt32 replaceMode);
 LibAPI(MgErr) LVFile_MoveToTrash(LWPathHandle *path);
+LibAPI(MgErr) LVPath_MoveToTrash(Path pathName);
 LibAPI(MgErr) LVString_MoveToTrash(LStrHandle path);
 LibAPI(MgErr) LVFile_CreateDirectories(LWPathHandle *path, int16 permissions);
 LibAPI(MgErr) LVPath_CreateDirectories(Path path, int16 permissions);
@@ -134,24 +153,6 @@ LibAPI(MgErr) LVString_CreateLink(LStrHandle path, LStrHandle target, uInt32 fla
 LibAPI(MgErr) LVFile_ReadLink(LWPathHandle *path, LWPathHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 LibAPI(MgErr) LString_ReadLink(LStrHandle path, LStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
-
-typedef union
-{
-	int64 q;
-#if BigEndian
-	struct
-	{
-		int32 hi;
-		uInt32 lo;
-	} l;
-#else
-	struct
-	{
-		uInt32 lo;
-		int32 hi;
-	} l;
-#endif
-} FileOffset;
 
 enum { /* values for rsrc parameter */
 	kOpenFileRsrcData,

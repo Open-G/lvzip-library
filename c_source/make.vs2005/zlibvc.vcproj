@@ -55,6 +55,7 @@
 				ProgramDataBaseFileName="$(IntDir)\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -125,6 +126,7 @@
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -203,6 +205,7 @@
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="4"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -304,6 +307,7 @@
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -397,6 +401,7 @@
 				AdditionalIncludeDirectories="bzip2"
 				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
+				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				PrecompiledHeaderFile=""
@@ -405,6 +410,7 @@
 				ProgramDataBaseFileName="$(IntDir)\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -495,6 +501,7 @@
 				AdditionalIncludeDirectories="bzip2"
 				PreprocessorDefinitions="WIN32;NDEBUG;NO_vsnprintf;HAVE_AES;HAVE_BZIP2;BZ_NO_STDIO;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
+				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				PrecompiledHeaderFile=""
@@ -503,6 +510,7 @@
 				ProgramDataBaseFileName="$(IntDir)\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -600,6 +608,7 @@
 				ProgramDataBaseFileName="$(IntDir)\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -698,6 +707,7 @@
 				ProgramDataBaseFileName="$(IntDir)\"
 				WarningLevel="3"
 				SuppressStartupBanner="true"
+				CompileAs="1"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -996,6 +1006,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\Resource.h"
+				>
+			</File>
+			<File
 				RelativePath="..\trees.h"
 				>
 			</File>
@@ -1005,6 +1019,10 @@
 			</File>
 			<File
 				RelativePath="..\utf.h"
+				>
+			</File>
+			<File
+				RelativePath="..\versionhelper.h"
 				>
 			</File>
 			<File

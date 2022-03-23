@@ -1,9 +1,9 @@
 /*
    lwstr.c -- widechar/shortchar unicode string support functions for LabVIEW integration
 
-   Version 1.1, Sept 27th, 2019
+   Version 1.2, March 22th, 2022
 
-   Copyright (C) 2017-2019 Rolf Kalbermatter
+   Copyright (C) 2017-2022 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -30,7 +30,7 @@
 #include "utf.h"
 #include "refnum.h"
 #if Win32
-#include <windows.h>
+ #include <windows.h>
 #elif MacOSX
  #include <sys/xattr.h>
 #elif Unix
@@ -65,181 +65,179 @@ MgErr LWPathDispose(LWPathHandle lwstr)
 	return mgNoErr;
 }
 
-#if Win32
+MgErr LWPathZeroTerminate(LWPathHandle pathName, LWChar *end)
+{
+	int32 newLen = end ? (end - LWPathBuf(pathName)) : LWPathLenGet(pathName);
+	MgErr err = LWPathResize(&pathName, newLen);
+	if (!err)
+	{
+		LWPathLenSet(pathName, newLen);
+	}
+	return err;
+}
+
 MgErr LWPathNormalize(LWPathHandle lwstr)
 {
-	LWChar *a, *s, *e, *t = LWPathBuf(lwstr);
-	int32 unc = FALSE, len = LWPathLenGet(lwstr);
+	int32 len = LWPathLenGet(lwstr);
+	LWChar *a, *s, *t; 
+	a = s = t = LWPathBuf(lwstr);
 
-	a = s = t;
-	e = s + len;
-	if (!*s || !len)
+	if (*s && len)
 	{
-		*s = '\0';
-		return noErr;
-	}
+		LWChar *e = s + len;
+#if Win32
+		int32 unc = FALSE;
 /*
-	\\?\UNC\server\share
-	\\?\C:\
-	\\.\UNC\server\share
-	\\.\C:\
-	\\server\share
-	C:\
+		\\?\UNC\server\share
+		\\?\C:\
+		\\.\UNC\server\share
+		\\.\C:\
+		\\server\share
+		C:\
 */
 
-	if (s[0] == kPathSeperator)
-	{
-		int32 n = 1;
-		s++;
 		if (s[0] == kPathSeperator)
 		{
-			n++;
+			int32 n = 1;
 			s++;
-			if ((s[0] == '?' || s[0] == '.') && s[1] == kPathSeperator)
+			if (s[0] == kPathSeperator)
 			{
-				n += 2;
-				s += 2;
-				if ((s[0] == 'U' || s[0] == 'u') && (s[1] == 'N' || s[1] == 'n') && (s[2] == 'C' || s[2] == 'C') && s[3] == kPathSeperator)
+				n++;
+				s++;
+				if ((s[0] == '?' || s[0] == '.') && s[1] == kPathSeperator)
+				{
+					n += 2;
+					s += 2;
+					if ((s[0] == 'U' || s[0] == 'u') && (s[1] == 'N' || s[1] == 'n') && (s[2] == 'C' || s[2] == 'C') && s[3] == kPathSeperator)
+					{
+						unc = TRUE;
+						n += 4;
+						s += 4;
+					}
+				}
+				else if (isalpha(s[0]))
 				{
 					unc = TRUE;
-					n += 4;
-					s += 4;
-				}
-			}
-			else if (isalpha(s[0]))
-			{
-				unc = TRUE;
-			}
-			else
-			{
-				return mgArgErr;
-			}
-		}
-		t += n;
-		a = s;
-	}
-	if (isalpha(s[0]) && s[1] == ':')
-	{
-		/* X:\ */
-		s += 2;
-		t += 2;
-		if (s[0] == kPathSeperator)
-		{
-			s++; t++;
-		}
-	}
-
-	/* Canonicalize the rest of the path */
-	while (s < e)
-	{
-		if (s[0] == '.')
-		{
-			if (s[1] == kPathSeperator && (s == a || s[-1] == kPathSeperator || s[-1] == ':'))
-			{
-				s += 2; /* Skip .\ */
-			}
-			else if (s[1] == '.' && (t == a || t[-1] == kPathSeperator))
-			{
-				/* \.. backs up a directory, over the root if it has no \ following X:.
-				 * .. is ignored if it would remove a UNC server name or initial \\
-				 */
-				if (t != a)
-				{
-					if (t > a + 1 && t[-1] == kPathSeperator &&
-					    (t[-2] != kPathSeperator || t > a + 2))
-					{
-						if (t[-2] == ':' && (t > a + 3 || t[-3] == ':'))
-						{
-							t -= 2;
-							while (t > a && *t != kPathSeperator)
-								t--;
-							if (*t == kPathSeperator)
-								t++; /* Reset to last '\' */
-							else
-								t = a; /* Start path again from new root */
-						}
-						else if (t[-2] != ':' && !unc)
-							t -= 2;
-					}
-					while (t > a && *t != kPathSeperator)
-						t--;
-					if (t == a)
-					{
-						*t = kPathSeperator;
-						s++;
-					}
-				}
-				s += 2; /* Skip .. in src path */
-			}
-			else
-				*t++ = *s++;
-		}
-		else
-			*t++ = *s++;
-	}
-	/* Append \ to naked drive spec */
-	if (t - a == 2 && t[-1] == ':')
-		*t++ = kPathSeperator;
-	*t++ = '\0';
-	return mgNoErr;
-}
-#elif Unix || MacOSX
-MgErr LWPathNormalize(LWPathHandle lwstr)
-{
-	char *a, *s, *e, *t;
-	int32 len = LWPathLenGet(lwstr);
-
-	a = s = t = (char*)LWPathBuf(lwstr);
-	e = s + len;
-	if (!*s || !len)
-		return noErr;
-  
-	/* Canonicalize the path */
-	while (s < e)
-	{
-		if (s[0] == kPosixPathSeperator && s[1] == kPosixPathSeperator)
-		{
-				s++; /* Reduce // to / */ 
-		}
-		else if (s[0] == '.')
-		{
-			if (s[1] == kPosixPathSeperator && (s == a && s[-1] == kPosixPathSeperator))
-			{
-				s += 2; /* Skip ./ */
-			}
-			else if (s[1] == '.')
-			{
-				/* .. backs up a directory but only if it is not at the root of the path
-				 */
-				if (t == a || (t > a + 2 && t[-1] == kPosixPathSeperator && t[-2] == '.'))
-				{
-					*t++ = *s++;
-					*t++ = *s++;
-				}
-				else if (t > a + 2 && t[-1] == kPosixPathSeperator && (t[-2] != kPosixPathSeperator))
-				{
-					t -= 2;
-					while (t > a && *t != kPosixPathSeperator)
-						t--;
-					if (*t == kPosixPathSeperator)
-						t++; /* Reset to last '\' */
-					s += 3; /* Skip ../ in src path */
 				}
 				else
+				{
 					return mgArgErr;
+				}
+			}
+			t += n;
+			a = s;
+		}
+		if (isalpha(s[0]) && s[1] == ':')
+		{
+			/* X:\ */
+			s += 2;
+			t += 2;
+			if (s[0] == kPathSeperator)
+			{
+				s++; t++;
+			}
+		}
+
+		/* Canonicalize the rest of the path */
+		while (s < e)
+		{
+			if (s[0] == '.')
+			{
+				if (s[1] == kPathSeperator && (s == a || s[-1] == kPathSeperator || s[-1] == ':'))
+				{
+					s += 2; /* Skip .\ */
+				}
+				else if (s[1] == '.' && (t == a || t[-1] == kPathSeperator))
+				{
+					/* \.. backs up a directory, over the root if it has no \ following X:.
+					* .. is ignored if it would remove a UNC server name or initial \\
+					*/
+					if (t != a)
+					{
+						if (t > a + 1 && t[-1] == kPathSeperator &&
+							(t[-2] != kPathSeperator || t > a + 2))
+						{
+							if (t[-2] == ':' && (t > a + 3 || t[-3] == ':'))
+							{
+								t -= 2;
+								while (t > a && *t != kPathSeperator)
+									t--;
+								if (*t == kPathSeperator)
+									t++; /* Reset to last '\' */
+								else
+									t = a; /* Start path again from new root */
+							}
+							else if (t[-2] != ':' && !unc)
+								t -= 2;
+						}
+
+						while (t > a && *t != kPathSeperator)
+							t--;
+						if (t == a)
+						{
+							*t = kPathSeperator;
+							s++;
+						}
+					}
+					s += 2; /* Skip .. in src path */
+				}
+				else
+					*t++ = *s++;
 			}
 			else
 				*t++ = *s++;
 		}
-		else
-			*t++ = *s++;
-	}
-	if (*t == kPosixPathSeperator && t > a + 1)
-		t--;
-	*t = '\0';
-	return noErr;
-}
+		/* Append \ to naked drive spec */
+		if (len == 2 && t[-1] == ':')
+		{
+			return LWPathAppendSeparator(lwstr);
+		}
+#elif Unix || MacOSX
+		/* Canonicalize the path */
+		while (s < e)
+		{
+			if (s[0] == kPosixPathSeperator && s[1] == kPosixPathSeperator)
+			{
+				s++; /* Reduce // to / */ 
+			}
+			else if (s[0] == '.')
+			{
+				if (s[1] == kPosixPathSeperator && (s == a && s[-1] == kPosixPathSeperator))
+				{
+					s += 2; /* Skip ./ */
+				}
+				else if (s[1] == '.')
+				{
+					/* .. backs up a directory but only if it is not at the root of the path */
+					if (t == a || (t > a + 2 && t[-1] == kPosixPathSeperator && t[-2] == '.'))
+					{
+						*t++ = *s++;
+						*t++ = *s++;
+					}
+					else if (t > a + 2 && t[-1] == kPosixPathSeperator && (t[-2] != kPosixPathSeperator))
+					{
+						t -= 2;
+						while (t > a && *t != kPosixPathSeperator)
+							t--;
+						if (*t == kPosixPathSeperator)
+							t++; /* Reset to last '\' */
+						s += 3; /* Skip ../ in src path */
+					}
+					else
+						return mgArgErr;
+				}
+				else
+					*t++ = *s++;
+			}
+			else
+				*t++ = *s++;
+		}
+		if (*t == kPosixPathSeperator && t > a + 1)
+			t--;
 #endif
+	}
+	return LWPathZeroTerminate(lwstr, t);
+}
 
 MgErr LWPathNCat(LWPathHandle *lwstr, int32 off, const LWChar *str, int32 strLen)
 {
@@ -379,7 +377,16 @@ Bool32 LStrIsAPathOfType(LStrHandle pathName, int32 offset, uInt8 isType)
 	int32 off = offset < 0 ? HasDOSDevicePrefix(LStrBufH(pathName), LStrLenH(pathName)) : offset;
 	
 	LStrRootPathLen(pathName, off, &type);
-	return (type == isType) || (isType == fAbsPath && type == fUNCPath);
+	return (type == isType);
+}
+
+Bool32 LStrIsAbsPath(LStrHandle pathName, int32 offset)
+{
+	uInt8 type = fNotAPath;
+	int32 off = offset < 0 ? HasDOSDevicePrefix(LStrBufH(pathName), LStrLenH(pathName)) : offset;
+	
+	LStrRootPathLen(pathName, off, &type);
+	return ((type == fAbsPath) || (type == fUNCPath));
 }
 
 static int32 ParentPathInternal(uChar *string, int32 rootLen, int32 end)
@@ -543,7 +550,7 @@ LibAPI(MgErr) LRefParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVBoo
 			LWPathLenSet(*filePath, srcOff + 1);
 		srcLen = 0;
 	}
-	err = LStrFromLWStr(fileName, CP_UTF8, *filePath, srcOff, LV_TRUE);
+	err = LStrFromLWPath(fileName, CP_UTF8, *filePath, srcOff, LV_TRUE);
 	if (!err)
 	{
 #if usesWinPath && !Pharlap
@@ -575,7 +582,7 @@ LibAPI(MgErr) LRefAppendPath(LWPathHandle *filePath, LStrHandle relString)
 	if (srcLen > srcOff && relType != fRelPath)
 		return mgArgErr;
 
-	err = LStrPathToLWStr(relString, CP_UTF8, &relPath, LV_FALSE, 0);
+	err = LStrToLWPath(relString, CP_UTF8, &relPath, kDefaultPath, 0);
 	if (!err)
 	{
 		err = LWPathAppend(*filePath, srcLen, filePath, relPath);
@@ -992,7 +999,7 @@ MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, FMFileType *fType, FMFileT
 	return noErr;
 }
 
-MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
+MgErr LStrToLWPath(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
 {
 	MgErr err = noErr;
 	uChar *srcPtr = LStrBufH(string);
@@ -1006,7 +1013,7 @@ MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, u
 	if (srcLen)
 	{
 #if usesHFSPath
-		if (flags & kCvtHFSToPosix)
+		if (!(flags & kLeaveHFSPath))
 			err = ConvertToPosixPath(string, codePage, &temp, CP_UTF8, '?', NULL, FALSE);
 		else
 #endif
@@ -1093,15 +1100,15 @@ MgErr LStrPathToLWStr(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, u
 /* Windows: path is an UTF8 encoded path string and lwstr is filled with a Windows UTF16LE string from the path
    MacOSX, Unix, VxWorks, Pharlap: path is an UTF8 encoded path string and lwstr is filled with a local encoded SBC or
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-LibAPI(MgErr) UPathToLWStr(LStrHandle path, LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) UPathToLWPath(LStrHandle path, LWPathHandle *lwstr, uInt32 flags)
 {
-	return LStrPathToLWStr(path, CP_UTF8, lwstr, flags, 0);
+	return LStrToLWPath(path, CP_UTF8, lwstr, flags, 0);
 }
 
 /* Windows: path is a LabVIEW path and lwstr is filled with a Windows UTF16LE string from this path
    MacOSX, Unix, VxWorks, Pharlap: path is a LabVIEW path and lwstr is filled with a local encoded SBC or MBC
    string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-LibAPI(MgErr) LPathToLWStr(Path path, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
+LibAPI(MgErr) LPathToLWPath(Path path, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
 {
 	LStrPtr lstr;
     int32 bufLen = -1;
@@ -1115,14 +1122,14 @@ LibAPI(MgErr) LPathToLWStr(Path path, LWPathHandle *lwstr, uInt32 flags, int32 r
         LStrLen(lstr) = bufLen;
         err = FPathToText(path, lstr);
         if (!err)
-			err = LStrPathToLWStr(&lstr, CP_ACP, lwstr, flags, reserve);
+			err = LStrToLWPath(&lstr, CP_ACP, lwstr, flags, reserve);
 
 		DSDisposePtr((UPtr)lstr);
     }
     return err;
 }
 
-MgErr LStrFromLWStr(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, int32 offset, uInt32 flags)
+MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, int32 offset, uInt32 flags)
 {
 	MgErr err = noErr;
 	int32 len = LWPathLenGet(lwstr);
@@ -1131,7 +1138,7 @@ MgErr LStrFromLWStr(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, i
 		LWChar *ptr = LWPathBuf(lwstr);
 #if Unix || MacOSX || Pharlap
 #if usesHFSPath
-		if (flags & kCvtHFSToPosix)
+		if (!(flags & kLeaveHFSPath))
 			err = ConvertFromPosixPath(ptr + offset, len - offset, CP_UTF8, pathName, codePage, '?', FALSE);
 		else
 #endif
@@ -1157,15 +1164,15 @@ MgErr LStrFromLWStr(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, i
 	return err;
 }
 
-LibAPI(MgErr) UPathFromLWStr(LStrHandle *pathName, LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) UPathFromLWPath(LStrHandle *pathName, LWPathHandle *lwstr, uInt32 flags)
 {
-	return LStrFromLWStr(pathName, CP_UTF8, *lwstr, 0, flags);
+	return LStrFromLWPath(pathName, CP_UTF8, *lwstr, 0, flags);
 }
 
-LibAPI(MgErr) LPathFromLWStr(Path *pathName, LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) LPathFromLWPath(Path *pathName, LWPathHandle *lwstr, uInt32 flags)
 {
 	LStrHandle dest = NULL;
-	MgErr err = LStrFromLWStr(&dest, CP_ACP, *lwstr, 0, flags);
+	MgErr err = LStrFromLWPath(&dest, CP_ACP, *lwstr, 0, flags);
 	if (!err)
 	{
 		err = FTextToPath(LStrBuf(*dest), LStrLen(*dest), pathName);
@@ -1834,11 +1841,12 @@ LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *
 		int32 numBytes = WideCharToMultiByte(codePage, 0, src, srclen, NULL, 0, NULL, NULL);
 		if (numBytes > 0)
 		{ 
-			BOOL defUsed;
+			BOOL defUsed = FALSE;
+			BOOL utfCp = ((codePage == CP_UTF8) || (codePage == CP_UTF7));
 			err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
 			if (!err)
 			{
-				numBytes = WideCharToMultiByte(codePage, 0, src, srclen, (LPSTR)LStrBuf(**dest), numBytes, &defaultChar, &defUsed);
+				numBytes = WideCharToMultiByte(codePage, 0, src, srclen, (LPSTR)LStrBuf(**dest), numBytes, utfCp ? NULL : &defaultChar, utfCp ? NULL : &defUsed);
 				TerminateLStr(dest, numBytes);
 				if (defaultCharWasUsed)
 					*defaultCharWasUsed = (LVBoolean)(defUsed != FALSE);

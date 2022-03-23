@@ -32,6 +32,7 @@
 #include "unzip.h"
 #include "lvapi.h"
 #include "refnum.h"
+#include "Resource.h"
 
 #ifdef HAVE_BZIP2
 #include "bzip2/bzlib.h"
@@ -51,7 +52,7 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 {
 	if (!version[0])
 	{
-		snprintf(version, sizeof(version), "LabVIEW ZIP library, version: 4.2, Dec 2018\n"
+		snprintf(version, sizeof(version), ABOUT_PRODUCTTITLE "\n"
 		                                   "zlib version: %s, build flags: 0x%lX\n"
 										   "minizip version: 1.2.0, September 16th, 2017\n"
 										   "aes version: 2013\n"
