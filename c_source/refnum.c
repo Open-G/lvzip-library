@@ -53,7 +53,7 @@ static int32 lvzlipCleanup(UPtr ptr)
 				err = LibToMgErr(zipClose(pNode->u.node, NULL));
 				break;
 			case FileMagic:
-				err = lvfile_CloseFile(pNode->u.node);
+				err = lvFile_CloseFile(pNode->u.node);
 				break;
 		}
 	}

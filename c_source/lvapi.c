@@ -116,19 +116,18 @@ LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size)
  *  refnum: An archive file reference
  *
  ****************************************************************************************************/
-LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment,
-                             zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+static MgErr lvzlib_zipOpen(const LWPathHandle pathName, int append, LStrHandle *globalcomment,
+                            zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
+	MgErr err = fNotFound;
 	const char *comment;
-	zipFile node = zipOpen3_64(pathname, append, 0, &comment, filefuncs);
-
-	*refnum = kNotARefNum;
+	zipFile node = zipOpen3_64(LWPathBuf(pathName), append, 0, &comment, filefuncs);
 	if (*globalcomment)
 		LStrLen(**globalcomment) = 0;
-
+	*refnum = kNotARefNum;
 	if (node)
 	{
-		MgErr err = lvzlibCreateRefnum(node, refnum, ZipMagic, LV_FALSE);
+		err = lvzlibCreateRefnum(node, refnum, ZipMagic, LV_FALSE);
 		if (!err && comment)
 		{
 			int32 len = (int32)StrLen((ConstCStr)comment);
@@ -150,9 +149,32 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 		{
 			zipClose(node, NULL);
 		}
-		return err;
 	}
-	return fNotFound;
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathName, int append, LStrHandle *globalcomment,
+                               zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+{
+	MgErr err = LWPathZeroTerminate(*pathName, NULL);
+	if (!err)
+	{
+		err = lvzlib_zipOpen(*pathName, append, globalcomment, filefuncs, refnum);
+	}
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_zipOpenL(const LStrHandle pathName, int append, LStrHandle *globalcomment,
+                             zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+{
+	LWPathHandle lwstr = NULL;
+	MgErr err = LStrToLWPath(pathName, CP_ACP, &lwstr, kDefaultPath, 0);
+	if (!err)
+	{
+		err = lvzlib_zipOpen(lwstr, append, globalcomment, filefuncs, refnum);
+		LWPathDispose(lwstr);
+	}
+	return err;
 }
 
 /****************************************************************************************************
@@ -279,20 +301,41 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const char *globalComment, LStrH
  *  refnum: An archive extraction file reference
  *
  ****************************************************************************************************/
-LibAPI(MgErr) lvzlib_unzOpen(const void *pathname, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+static MgErr lvzlib_unzOpen(const LWPathHandle pathName, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
-	unzFile node = unzOpen2_64(pathname, filefuncs);
+	MgErr err = fNotFound;
+	unzFile node = unzOpen2_64(LWPathBuf(pathName), filefuncs);
 	*refnum = kNotARefNum;
 	if (node)
 	{
-		MgErr err = lvzlibCreateRefnum(node, refnum, UnzMagic, LV_FALSE);
+		err = lvzlibCreateRefnum(node, refnum, UnzMagic, LV_FALSE);
 		if (err)
 		{
 			unzClose(node);
 		}
-		return err;
 	}
-	return fNotFound;
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_unzOpenLW(LWPathHandle *pathName, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+{
+	MgErr err = LWPathZeroTerminate(*pathName, NULL);
+	if (!err)
+	{
+		err = lvzlib_unzOpen(*pathName, filefuncs, refnum);
+	}
+	return err;
+}
+LibAPI(MgErr) lvzlib_unzOpenL(const LStrHandle pathName, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+{
+	LWPathHandle lwstr = NULL;
+	MgErr err = LStrToLWPath(pathName, CP_ACP, &lwstr, kDefaultPath, 0);
+	if (!err)
+	{
+		err = lvzlib_unzOpen(lwstr, filefuncs, refnum);
+		LWPathDispose(lwstr);
+	}
+	return err;
 }
 
 /****************************************************************************************************

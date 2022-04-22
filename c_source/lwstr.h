@@ -51,7 +51,7 @@ typedef char			LWChar;
 
 #define lwslen			(int32)strlen
 #define lwsncpy			strncpy
-#define lwsrchr			strrchr
+#define lwsrchr			strrchr       
 #endif
 #define LWPathSize(h)        (DSGetHandleSize((UHandle)h) - (2 * sizeof(int32))) / sizeof(LWChar)
 
@@ -125,7 +125,7 @@ int32 LWPathParentInternal(LWPathHandle filePath, int32 rootLen, int32 end);
 int32 LWPathNextElement(LWPathHandle filePath, int32 start, int32 end);
 int32 LWPathParent(LWPathHandle pathName, int32 end);
 MgErr LWPathAppend(LWPathHandle pathName, int32 end, LWPathHandle *newPath, LWPathHandle relPath);
-MgErr LWPathGetFileTypeAndCreator(LWPathHandle pathName, FMFileType *fType, FMFileType *fCreator);
+MgErr LWPathGetFileTypeAndCreator(LWPathHandle pathName, ResType *fType, ResType *fCreator);
 MgErr LWPathNormalize(LWPathHandle pathName);
 MgErr LWPathZeroTerminate(LWPathHandle pathName, LWChar *end);
 
@@ -140,16 +140,17 @@ typedef enum
 	kCvtKeepDOSDevice = 2
 } CvtFlags;
 
-MgErr LStrToLWPath(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
-MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, int32 offset, uInt32 flags);
-Bool32 LStrIsAPathOfType(LStrHandle pathName, int32 offset, uInt8 type);
-Bool32 LStrIsAbsPath(LStrHandle pathName, int32 offset);
+MgErr LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
+MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle lwstr, int32 offset, uInt32 flags);
+Bool32 LStrIsAPathOfType(const LStrHandle pathName, int32 offset, uInt8 type);
+Bool32 LStrIsAbsPath(const LStrHandle pathName, int32 offset);
 
-LibAPI(MgErr) UPathToLWPath(LStrHandle pathName, LWPathHandle *lwstr, uInt32 flags);
-LibAPI(MgErr) LPathToLWPath(Path pathName, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
-LibAPI(MgErr) UPathFromLWPath(LStrHandle *pathName, LWPathHandle *lwstr, uInt32 flags);
-LibAPI(MgErr) LPathFromLWPath(Path *pathName, LWPathHandle *lwstr, uInt32 flags);
-LibAPI(int32) LStrRootPathLen(LStrHandle pathName, int32 offset, uInt8 *type);
+LibAPI(MgErr) UPathToLWPath(const LStrHandle pathName, LWPathHandle *lwstr, uInt32 flags);
+LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
+LibAPI(MgErr) UPathFromLWPath(LStrHandle *pathName, const LWPathHandle *lwstr, uInt32 flags);
+LibAPI(MgErr) LPathFromLWPath(Path *pathName, const LWPathHandle *lwstr, uInt32 flags);
+LibAPI(int32) LStrRootPathLen(const LStrHandle pathName, int32 offset, uInt8 *type);
+
 LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath);
 LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName, LVBoolean *empty);
 LibAPI(MgErr) LRefAppendPath(LWPathHandle *pathName, LStrHandle relPath);

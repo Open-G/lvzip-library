@@ -292,7 +292,7 @@ static int32 StrUNCOffset(const char *ptr, int32 offset)
 	return -1;  
 }
 
-LibAPI(int32) LStrRootPathLen(LStrHandle filePath, int32 offset, uInt8 *type)
+LibAPI(int32) LStrRootPathLen(const LStrHandle filePath, int32 offset, uInt8 *type)
 {
 	int32 len = LStrLenH(filePath);
 	if (len)
@@ -371,7 +371,7 @@ LibAPI(int32) LStrRootPathLen(LStrHandle filePath, int32 offset, uInt8 *type)
 	return offset;
 }
 
-Bool32 LStrIsAPathOfType(LStrHandle pathName, int32 offset, uInt8 isType)
+Bool32 LStrIsAPathOfType(const LStrHandle pathName, int32 offset, uInt8 isType)
 {
 	uInt8 type = fNotAPath;
 	int32 off = offset < 0 ? HasDOSDevicePrefix(LStrBufH(pathName), LStrLenH(pathName)) : offset;
@@ -380,7 +380,7 @@ Bool32 LStrIsAPathOfType(LStrHandle pathName, int32 offset, uInt8 isType)
 	return (type == isType);
 }
 
-Bool32 LStrIsAbsPath(LStrHandle pathName, int32 offset)
+Bool32 LStrIsAbsPath(const LStrHandle pathName, int32 offset)
 {
 	uInt8 type = fNotAPath;
 	int32 off = offset < 0 ? HasDOSDevicePrefix(LStrBufH(pathName), LStrLenH(pathName)) : offset;
@@ -936,60 +936,35 @@ TH_REENTRANT MgErr FRelPath(Path start, Path end, Path relPath)
 	}
 */
 
-static FMFileType LWStrFileTypeFromExt(LWPathHandle lwstr)
+static ResType LWStrFileTypeFromExt(LWPathHandle lwstr)
 {
-	int32 len = LWPathLenGet(lwstr), k = 1;
+	int32 len = LWPathLenGet(lwstr), k = 0;
     LWChar *ptr = LWPathBuf(lwstr);
 
 	/* look backwards	*/
-	for (ptr += len; k < len && k < kMaxFileExtLength; --ptr, k++)
+	for (ptr += len - 1; k < len && k < kMaxFileExtLength; --ptr, k++)
 	{
 		if (*ptr == '.')
 		{
-			uChar str[16];
-            PStrLen(str) = (uChar)k - 1;
+			uChar str[kMaxFileExtLength + 1];
+            PStrLen(str) = (uChar)k;
             for (len = 1; k; k--)
 				str[len++] = (uChar)*ptr++;
 			return PStrHasRezExt(str);
 		}
 	}
-	return 0;
+	return kUnknownFileType;
 }
 
-MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, FMFileType *fType, FMFileType *fCreator)
+MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, ResType *fType, ResType *fCreator)
 {
 	/* Try to determine LabVIEW file types based on file ending? */
 	uInt32 creator = kUnknownCreator,
 		   type = LWStrFileTypeFromExt(lwstr);
-	if (!type)
+	if (type != kUnknownFileType)
 	{
-#if MacOSX
-		struct attrlist alist;
-		fileinfobuf finfo;
-		finderinfo *finder = (finderinfo*)(&finfo.data);
-
-		bzero(&alist, sizeof(struct attrlist));
-		alist.bitmapcount = ATTR_BIT_MAP_COUNT;
-		if (objIndex == MACOSX_RSRCLENGTH_ATTRIBUTE)
-		{
-			alist.fileattr = ATTR_FILE_RSRCLENGTH;
-		}
-		else
-		{
-			alist.commonattr = ATTR_CMN_FNDRINFO;
-		}
-	    if (!getattrlist(SStrBuf(lwstr), &alist, &finfo, sizeof(fileinfobuf), FSOPT_NOFOLLOW))
-		{
-			type = ConvertBE32(finder.type);
-			creator = ConvertBE32(finder.creator);
-		}
-		else
-#else
-			type = kUnknownFileType;
-#endif
-	}
-	else
 		creator = kLVCreatorType;
+	}
 
 	if (fType)
 		*fType = type;
@@ -999,7 +974,7 @@ MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, FMFileType *fType, FMFileT
 	return noErr;
 }
 
-MgErr LStrToLWPath(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
+MgErr LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
 {
 	MgErr err = noErr;
 	uChar *srcPtr = LStrBufH(string);
@@ -1100,7 +1075,7 @@ MgErr LStrToLWPath(LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt
 /* Windows: path is an UTF8 encoded path string and lwstr is filled with a Windows UTF16LE string from the path
    MacOSX, Unix, VxWorks, Pharlap: path is an UTF8 encoded path string and lwstr is filled with a local encoded SBC or
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-LibAPI(MgErr) UPathToLWPath(LStrHandle path, LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) UPathToLWPath(const LStrHandle path, LWPathHandle *lwstr, uInt32 flags)
 {
 	return LStrToLWPath(path, CP_UTF8, lwstr, flags, 0);
 }
@@ -1108,7 +1083,7 @@ LibAPI(MgErr) UPathToLWPath(LStrHandle path, LWPathHandle *lwstr, uInt32 flags)
 /* Windows: path is a LabVIEW path and lwstr is filled with a Windows UTF16LE string from this path
    MacOSX, Unix, VxWorks, Pharlap: path is a LabVIEW path and lwstr is filled with a local encoded SBC or MBC
    string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-LibAPI(MgErr) LPathToLWPath(Path path, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
+LibAPI(MgErr) LPathToLWPath(const Path path, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
 {
 	LStrPtr lstr;
     int32 bufLen = -1;
@@ -1129,7 +1104,7 @@ LibAPI(MgErr) LPathToLWPath(Path path, LWPathHandle *lwstr, uInt32 flags, int32 
     return err;
 }
 
-MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, int32 offset, uInt32 flags)
+MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle lwstr, int32 offset, uInt32 flags)
 {
 	MgErr err = noErr;
 	int32 len = LWPathLenGet(lwstr);
@@ -1164,12 +1139,12 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, LWPathHandle lwstr, 
 	return err;
 }
 
-LibAPI(MgErr) UPathFromLWPath(LStrHandle *pathName, LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) UPathFromLWPath(LStrHandle *pathName, const LWPathHandle *lwstr, uInt32 flags)
 {
 	return LStrFromLWPath(pathName, CP_UTF8, *lwstr, 0, flags);
 }
 
-LibAPI(MgErr) LPathFromLWPath(Path *pathName, LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) LPathFromLWPath(Path *pathName, const LWPathHandle *lwstr, uInt32 flags)
 {
 	LStrHandle dest = NULL;
 	MgErr err = LStrFromLWPath(&dest, CP_ACP, *lwstr, 0, flags);
