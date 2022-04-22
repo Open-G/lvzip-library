@@ -3,20 +3,20 @@ File Version=1.0.0
 
 [Package Name]
 Name=oglib_lvzip
-Version=4.2.0
+Version=4.3.0
 Release=1
-Display Name="OpenG ZIP Library"
+Display Name="OpenG LabVIEW ZIP Library"
 
 [Description]
 Description="The lvzip package contains several routines for operating on zip files.\0D\0A"
 Summary="OpenG Zip Tools"
 License="BSD (VIs), LGPL (Shared Library)"
-Copyright="1995-2018 Mark Adler, Jean-loup Gailly\0A1998-2014 Gilles Vollant\0A2002 - 2009 Christophe Salzmann, Jim Kring\0A2002 - 2019 Rolf Kalbermatter"
+Copyright="1995-2017 Mark Adler, Jean-loup Gailly\0A1998-2014 Gilles Vollant\0A2002 - 2009 Christophe Salzmann, Jim Kring\0A2002 - 2019 Rolf Kalbermatter"
 Distribution="OpenG Toolkit"
 Vendor=OpenG.org
 URL=http://wiki.openg.org/oglib_lvzip
 Packager="Jim Kring <jim@jimkring.com>"
-Release Notes="Version 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
+Release Notes="Version 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
 Demo=FALSE
 System Package=FALSE
 Sub Package=FALSE
