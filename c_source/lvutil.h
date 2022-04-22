@@ -65,20 +65,25 @@ typedef union
 #endif
 } FileOffset;
 
-/* Check if the file path points to has a resource fork */
+#define kFileOpIgnoreReadOnly	1
+#define kFileOpReplaceExisting  2
+
+/* Check if the file pathName points to has a resource fork, only on Mac */
+LibAPI(MgErr) LVFile_HasResourceFork(LWPathHandle *pathName, LVBoolean *hasResFork, FileOffset *size);
 LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, FileOffset *size);
+LibAPI(MgErr) LVString_HasResourceFork(LStrHandle pathName, LVBoolean *hasResFork, FileOffset *size);
 
 /* List the directory contents with an additional array with flags and file type for each file in the names array */
-LibAPI(MgErr) LVFile_ListDirectory(LWPathHandle *folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
-LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoArrHdl *fileInfo, int32 resolveDepth);
-LibAPI(MgErr) LVString_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, int32 resolveDepth);
+LibAPI(MgErr) LVFile_ListDirectory(LWPathHandle *folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, uInt32 mode, int32 resolveDepth);
+LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoArrHdl *fileInfo, uInt32 mode, int32 resolveDepth);
+LibAPI(MgErr) LVString_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, uInt32 mode, int32 resolveDepth);
 
 LibAPI(MgErr) LVFile_Delete(LWPathHandle *path, LVBoolean ignoreReadOnly);
 LibAPI(MgErr) LVPath_Delete(Path pathName, LVBoolean ignoreReadOnly);
 LibAPI(MgErr) LVString_Delete(LStrHandle path, LVBoolean ignoreReadOnly);
-LibAPI(MgErr) LVFile_Rename(LWPathHandle *pathFrom, LWPathHandle *pathTo, LVBoolean ignoreReadOnly);
-LibAPI(MgErr) LVPath_Rename(Path pathFrom, Path pathTo, LVBoolean ignoreReadOnly);
-LibAPI(MgErr) LVString_Rename(LStrHandle pathFrom, LStrHandle pathTo, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVFile_Rename(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32 flags);
+LibAPI(MgErr) LVPath_Rename(Path pathFrom, Path pathTo, uInt32 flags);
+LibAPI(MgErr) LVString_Rename(LStrHandle pathFrom, LStrHandle pathTo, uInt32 flags);
 LibAPI(MgErr) LVFile_Copy(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32 replaceMode);
 LibAPI(MgErr) LVPath_Copy(Path pathFrom, Path pathTo, uInt32 replaceMode);
 LibAPI(MgErr) LVString_Copy(LStrHandle pathFrom, LStrHandle pathTo, uInt32 replaceMode);
@@ -110,14 +115,14 @@ LibAPI(MgErr) LVString_CreateDirectories(LStrHandle path, int16 permissions);
 #define	kMacFileInfoImmutable		     0x00000002	   /* file may not be changed */
 #define kMacFileInfoCompressed           0x00000020    /* file is hfs-compressed (Mac OS X 10.6+) */
 //#define kMacFileInfoSystem             0x00000080    /* Windows system file bit */
-//#define kMacFileInfoSparse             0x00000100    /* sparse file */
+//#define kMacFileInfoSparseFile         0x00000100    /* sparse file */
 //#define kMacFileInfoOffline	         0x00000200    /* file is offline */
 //#define kMacFileInfoArchive            0x00000800    /* file needs to be archived */
 #define kMacFileInfoHidden               0x00008000    /* hint that this item should not be displayed in a GUI (Mac OS X 10.5+) */
 
 typedef struct {        /* off */
-	FMFileType type;    /*  0: handled by LabVIEW Type & Creator */
-	FMFileType creator; /*  4: handled by LabVIEW Type & Creator */
+	ResType type;       /*  0: handled by LabVIEW Type & Creator */
+	ResType creator;    /*  4: handled by LabVIEW Type & Creator */
 	uInt32 uid;         /*  8: Unix user id */
 	uInt32 gid;         /* 12: Unix group id */
 	uInt64 size;        /* 16: file size or file count for directories */
@@ -179,7 +184,7 @@ LibAPI(MgErr) LVFile_Read(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UP
 LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 
 /* For the refnum auto cleanup */
-MgErr lvfile_CloseFile(FileRefNum refnum);
+MgErr lvFile_CloseFile(FileRefNum refnum);
 
 #ifdef __cplusplus
 }

@@ -32,13 +32,16 @@
 #define lvzip_lvapi_h
 LibAPI(const char *) lvzlib_zlibVersion(void);
 LibAPI(uInt32) lvzlib_isLittleEndian(void);
+
 /* exported zlib deflate and inflate functions */
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen, int level);
 LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen);
 LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len);
 LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size);
+
 /* exported zip functions */
-LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathname, int append, LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_zipOpenL(const LStrHandle pathname, int append, LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
 						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
 						   LStrHandle comment, int method, int level, int raw, int windowBits,
@@ -47,8 +50,10 @@ LibAPI(MgErr) lvzlib_zipWriteInFileInZip(LVRefNum *refnum, const LStrHandle buff
 LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw32(LVRefNum *refnum, uInt32 uncompressedSize, uInt32 crc32);
 LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw64(LVRefNum *refnum, uInt64 uncompressedSize, uInt32 crc32);
 LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const char *globalComment, LStrHandle *stream);
+
 /* exported unzip functions */
-LibAPI(MgErr) lvzlib_unzOpen(const void *pathname, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_unzOpenLW(LWPathHandle *pathname, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_unzOpenL(const LStrHandle pathname, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
 LibAPI(MgErr) lvzlib_unzClose(LVRefNum *refnum, LStrHandle *stream);
 LibAPI(MgErr) lvzlib_unzGetGlobalInfo32(LVRefNum *refnum, LStrHandle *comment, uInt32 *nEntry);
 LibAPI(MgErr) lvzlib_unzGetGlobalInfo64(LVRefNum *refnum, LStrHandle *comment, uInt64 *nEntry);

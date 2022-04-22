@@ -231,6 +231,9 @@ typedef int32           Bool32;
 #define uPtr uL
 #endif
 
+typedef uChar        Str255[256], *PStr, *CStr, *UPtr, **UHandle, **PStrHandle;
+typedef const uChar  *ConstCStr, *ConstPStr, *ConstUPtr, ConstStr255[256];
+
 /*** The Support Manager ***/
 
 #define HiNibble(x)		(uInt8)(((x) >> 4) & 0x0F)
@@ -251,9 +254,17 @@ typedef int32           Bool32;
 #define Swap16(x)       (uInt16)(((x & 0xff) >> 8) | (x << 8))
 #define Swap32(x)       (uInt32)(((x & 0xff000000) >> 24) | ((x & 0x00ff0000) >> 8) | ((x & 0x0000ff00) << 8) | (x << 24))
 
+void		SwapWL(UPtr p);
+void		SwapBW(UPtr p);
+void		RevBL(UPtr p);
+void		RevBQ(UPtr p);
+
 #if BigEndian
 #define RTToL(c1,c2,c3,c4)  Cat4Chrs(c1,c2,c3,c4)
 #define RTToW(c1,c2)        Cat2Chrs(c1,c2)
+#define StdToW(x)			
+#define StdToL(x			
+#define StdToQ(x)			
 #define ConvertBE16(x)		x
 #define ConvertBE32(x)		x
 #define ConvertLE16(x)		Swap16(x)
@@ -261,10 +272,17 @@ typedef int32           Bool32;
 #else
 #define RTToL(c1,c2,c3,c4)  Cat4Chrs(c4,c3,c2,c1)
 #define RTToW(c1,c2)        Cat2Chrs(c2,c1)
+#define StdToW(x)			SwapBW((UPtr)(x))
+#define StdToL(x)			RevBL((UPtr)(x))
+#define StdToQ(x)			RevBQ((UPtr)(x))
 #define ConvertBE16(x)		Swap16(x)
 #define ConvertBE32(x)		Swap32(x)
 #define ConvertLE16(x)		x
 #define ConvertLE32(x)		x
+#endif
+
+#if !Mac
+typedef uInt32		ResType;
 #endif
 
 enum {                  /* Manager Error Codes */
@@ -448,9 +466,6 @@ typedef struct
     int16 h;
 } LVPoint;
 
-typedef uChar        Str255[256], *PStr, *CStr, *UPtr, **UHandle, **PStrHandle;
-typedef const uChar  *ConstCStr, *ConstPStr, *ConstUPtr, ConstStr255[256];
-
 #define PStrBuf(b)  (&((PStr)(b))[1])
 #define PStrLen(b)  (((PStr)(b))[0])    /* # of chars in string */
 #define PStrSize(b) (PStrLen(b)+1)      /* # of bytes including length */
@@ -577,27 +592,46 @@ int32 RTSetCleanupProc(CleanupProcPtr, UPtr, int32);
 /* File Manager */
 typedef enum _FMFileType {
 
-	kInvalidType	= 0,
-	kUnknownFileType= RTToL('?','?','?','?'),
-    kTextFileType	= RTToL('T','E','X','T'),
-    kLinkFileType	= RTToL('s','l','n','k'),
+	kInvalidType			= 0,
+	kUnknownFileType		= RTToL('?','?','?','?'),
+    kTextFileType			= RTToL('T','E','X','T'),
+    kLinkFileType			= RTToL('s','l','n','k'),
+    kInstrFileType			= RTToL('L','V','I','N'),
+    kDataLogType			= RTToL('L','V','D','L'),
+    kResFileType			= RTToL('L','V','R','S'),
+    kArcFileType			= RTToL('L','V','A','R'),
+    kCustCtlFileType		= RTToL('L','V','C','C'),
+
+    kMenuFileType			= RTToL('L','M','N','U'),
+    kAnyInstrType			= RTToL('V','I','*',' '),	/* fake file type for LVIN or LVCC */
+    kWizRegFileType			= RTToL('L','V','W','Z'),
+
+    kExeFileType			= RTToL('E','X','E',' '),
+    kComFileType			= RTToL('C','O','M',' '),
+    kBatFileType			= RTToL('B','A','T',' '),
+    kPifFileType			= RTToL('P','I','F',' '),
+
+    kTempVIFileType			= RTToL('s','V','I','N'),
+    kTempCustCtlFileType	= RTToL('s','V','C','C'),
+    kRtmFileType			= RTToL('R','M','N','U'),
+
 	/** Typical directory types */
-	kHardDiskDirType= RTToL('h','d','s','k'),
-	kFloppyDirType	= RTToL('f','l','p','y'),
-	kNetDriveDirType= RTToL('s','r','v','r')
+	kHardDiskDirType		= RTToL('h','d','s','k'),
+	kFloppyDirType			= RTToL('f','l','p','y'),
+	kNetDriveDirType		= RTToL('s','r','v','r')
 } FMFileType;
 
 typedef enum  {
-	kInvalidCreator	= 0,
-	kUnknownCreator = RTToL('?','?','?','?'),
+	kInvalidCreator			= 0,
+	kUnknownCreator			= RTToL('?','?','?','?'),
 	/** LabVIEW creator type */
-	kLVCreatorType	= RTToL('L','B','V','W')
+	kLVCreatorType			= RTToL('L','B','V','W')
 } FMFileCreator;
 
 /** Used for FGetInfo */
 typedef struct {			/**< file/directory information record */
-	FMFileType type;		/**< system specific file type-- 0 for directories */
-	FMFileCreator creator;	/**< system specific file creator-- 0 for directories */
+	ResType type;			/**< system specific file type, kUnknownFileType for directories */
+	ResType creator;		/**< system specific file creator, kUnknownFileType for directories */
 	int32	permissions;	/**< system specific file access rights */
 	int32	size;			/**< file size in bytes (data fork on Mac) or entries in folder */
 	int32	rfSize;			/**< resource fork size (on Mac only) */
@@ -628,8 +662,8 @@ enum {
 	kFGetInfoAll			= 0xEFFFFFFFL
 };
 typedef struct {			/**< file/directory information record */
-	FMFileType type;		/**< system specific file type-- 0 for directories */
-	FMFileCreator creator;	/**< system specific file creator-- 0 for directories */
+	ResType type;			/**< system specific file type-- 0 for directories */
+	ResType creator;		/**< system specific file creator-- 0 for directories */
 	int32	permissions;	/**< system specific file access rights */
 	int64	size;			/**< file size in bytes (data fork on Mac) or entries in folder */
 	int64	rfSize;			/**< resource fork size (on Mac only) */
@@ -652,23 +686,24 @@ typedef struct {
 /** Used with FListDir2 */
 typedef struct {
 	uInt32 fileFlags;
-	FMFileType fileType;
+	ResType fileType;
 } FMListDetails;
 
 /** @brief Data types used to describe a list of entries from a directory. */
 typedef CPStr FDirEntRec, *FDirEntPtr, **FDirEntHandle;
 
 /** Type Flags used with FMListDetails */
-#define kIsFile				0x01
-#define kRecognizedType		0x02
-#define kIsLink				0x04
-#define kFIsInvisible		0x08
-#define kIsTopLevelVI		0x10	/* Used only for VIs in archives */
-#define kErrGettingType		0x20	/* error occurred getting type info */
+#define kIsFile				0x0001
+#define kRecognizedType		0x0002
+#define kIsLink				0x0004
+#define kFIsInvisible		0x0008
+#define kIsTopLevelVI		0x0010	/* Used only for VIs in archives */
+#define kErrGettingType		0x0020	/* error occurred getting type info */
 #if Mac
-#define kFIsStationery		0x40
+#define kFIsStationery		0x0040
 #endif
-#define kIsCompressed		0x80
+#define kIsCompressed		0x0080
+#define kIsArchive		    0x0100  /* kIsFile and kRecognizedType should also be set */
     
 enum { openReadWrite, openReadOnly, openWriteOnly, openWriteOnlyTruncate }; /* open modes */
 enum { denyReadWrite, denyWriteOnly, denyNeither}; /* deny modes */
