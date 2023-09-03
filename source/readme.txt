@@ -1,7 +1,7 @@
-LabVIEW ZIP library, version 4.2.0
+LabVIEW ZIP library, version 5.0.0
 ----------------------------------
 
-Copyright 2002-2018 Rolf Kalbermatter
+Copyright 2002-2023 Rolf Kalbermatter
 
 
 Please read this document before you upgrade from a version of LVZIP
@@ -11,6 +11,18 @@ Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
 
+
+Release 5.0.0, Released: ???. ??, 2023
+======================================
+
+New features:
+-------------
+1) Uses its own file handling routines to allow for full Unicode and long file names support
+2) Massive internal rewrite but the outside interface should still be compatible with the previous versions
+
+Upgrades:
+----------
+1) Updated the zlib core code to version 1.2.13 from the zlib site
 
 
 Release 4.2.0, Released: Dec. 08, 2018
@@ -29,7 +41,7 @@ Bug Fixes:
 
 Upgrades:
 ----------
-1) Upgraded to zlib 1.2.1 and minizip 1.2.0 from Nathan Moinvaziri
+1) Upgraded to zlib 1.2.11 and minizip 1.2.0 from Nathan Moinvaziri
 
 
 Release 4.1.0, Released: Mar. 05, 2015
