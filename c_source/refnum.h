@@ -1,9 +1,7 @@
 /*
    refnum.h -- module to handle refnums for our library objects
 
-   Version 1.1, Oct 22th, 2019
-
-   Copyright (C) 2017-2019 Rolf Kalbermatter
+   Copyright (C) 2017-2023 Rolf Kalbermatter
 
    All rights reserved.
 

@@ -50,7 +50,9 @@
 #define deflateBound                lvzip_deflateBound
 #define deflateCopy                 lvzip_deflateCopy
 #define deflateEnd                  lvzip_deflateEnd
+#define deflateInit                 z_deflateInit
 #define deflateInit_                lvzip_deflateInit
+#define deflateInit2                z_deflateInit2
 #define deflateInit2_               lvzip_deflateInit2
 #define deflateParams               lvzip_deflateParams
 #define deflatePrime                lvzip_deflatePrime
@@ -69,7 +71,9 @@
 #define inflateEnd                  lvzip_inflateEnd
 #define inflateGetHeader            lvzip_inflateGetHeader
 #define inflate_fast                lvzip_inflate_fast
+#define inflateInit                 z_inflateInit
 #define inflateInit_                lvzip_inflateInit
+#define inflateInit2                z_inflateInit2
 #define inflateInit2_               lvzip_inflateInit2
 #define inflateMark                 lvzip_inflateMark
 #define inflatePrime                lvzip_inflatePrime
@@ -80,7 +84,7 @@
 #define inflateSyncPoint            lvzip_inflateSyncPoint
 #define inflateUndermine            lvzip_inflateUndermine
 #define uncompress                  lvzip_uncompress
-#define z_errmsg                    z_z_errmsg
+#define z_errmsg                    lvzip_z_errmsg
 #define zcalloc                     lvzip_zcalloc
 #define zcfree                      lvzip_zcfree
 #define zError                      lvzip_zError

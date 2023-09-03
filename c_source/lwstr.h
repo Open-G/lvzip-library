@@ -1,9 +1,7 @@
 /*
    lwstr.h -- widechar/shortchar unicode string support functions for LabVIEW integration
 
-   Version 1.1, Sept 27th, 2019
-
-   Copyright (C) 2017-2019 Rolf Kalbermatter
+   Copyright (C) 2017-2023 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -46,20 +44,26 @@ typedef wchar_t			LWChar;
 #define lwslen			(int32)wcslen
 #define lwsncpy			wcsncpy
 #define lwsrchr			wcsrchr
+#define __LW(quote)		L##quote
 #else
 typedef char			LWChar;
-
 #define lwslen			(int32)strlen
 #define lwsncpy			strncpy
 #define lwsrchr			strrchr       
+#define __LW(quote)		quote
 #endif
-#define LWPathSize(h)        (DSGetHandleSize((UHandle)h) - (2 * sizeof(int32))) / sizeof(LWChar)
+#define	LW(quote)		__LW(quote)
 
-#define LWPathLenGet(h)      (((h) && *(h)) ? (int32)(((*(h))->byteCnt - sizeof(int32)) / sizeof(LWChar)) : 0)
-#define LWPathLenSet(h, l)   ((*(h))->byteCnt = (int32)(((l) * sizeof(LWChar)) + sizeof(int32)), (*(h))->str[l] = 0)
+
+#define LWPathSize(h)        (((h) && *(h)) ? (DSGetHandleSize((UHandle)h) - offsetof(LWPathRec, str)) / sizeof(LWChar) : 0)
+
+#define LWPathLenGet(h)      (((h) && *(h) && (*(h))->size) ? (int32)(((*(h))->size - offsetof(LWPathRec, str) + sizeof(int32)) / sizeof(LWChar)) : 0)
+#define LWPathLenSet(h, l)   ((*(h))->size = (int32)(((l) * sizeof(LWChar)) + offsetof(LWPathRec, str) - sizeof(int32)), (*(h))->str[l] = 0)
 
 #define LWPathCntGet(h)      (((h) && *(h)) ? (*(h))->pathCnt : 0)
 #define LWPathCntSet(h, c)   (((h) && *(h)) ? (*(h))->pathCnt = (uInt16)(c) : 0)
+#define LWPathCntInc(h)      (((h) && *(h)) ? ++((*(h))->pathCnt) : 0)
+#define LWPathCntDec(h)		 (((h) && *(h)) ? --((*(h))->pathCnt) : 0)
 
 #define LWPathTypeGet(h)     (((h) && *(h)) ? ((*(h))->type) : fAbsPath)
 #define LWPathTypeSet(h, t)  (((h) && *(h)) ? (*(h))->type = (uInt8)(t) : fAbsPath)
@@ -86,17 +90,18 @@ typedef char			LWChar;
 
 typedef struct LWPATHREC
 {
-	int32 byteCnt;         /* In order to be able to pass this as a byte array/string handle we always use size in bytes */ 
-	int8 flags;            /* If highest significant bit is set we have a Unicode path */
-	int8 type;             /* LabVIEW path structure uses an int16 for path type stored in big endian format in the flattened stream */
-	int16 pathCnt;         /* Number of path segemetns in the path */
-	LWChar str[1];         /* actual path, widechar in windows, 8 byte in all other platforms */
+	int32 size;			/* In order to be able to pass this as a byte array/string handle we always use size in bytes */
+						/* The real buffer is at least one character (1 or 2 bytes) longer for the terminating NULL character */
+	int8 flags;			/* If highest significant bit is set we have a Unicode path */
+	int8 type;			/* LabVIEW path structure uses an int16 for path type stored in big endian format in the flattened stream */
+	int16 pathCnt;		/* Number of path segements in the path */
+	LWChar str[1];		/* actual path, widechar in windows, 8 bits in all other platforms */
 } LWPathRec, *LWPathPtr, **LWPathHandle;
 
 typedef struct WSTRREC
 {
 	int32 cnt;             /* In order to be able to pass this as a byte array/string handle we always use size in bytes */ 
-	wchar_t wstr[1];
+	wchar_t str[1];
 } WStrRec, *WStrPtr, **WStrHandle;
 
 #if MSWin && (ProcessorType == kX86)
@@ -107,7 +112,26 @@ typedef struct WSTRREC
 
 #define WStrLen(h)			((h) && *(h)) ? (int32)((*(h))->cnt / sizeof(wchar_t)) : 0
 #define WStrLenSet(h, l)    ((h) && *(h)) ? (*(h))->cnt = (int32)(l * sizeof(wchar_t)) : 0
-#define WStrBuf(h)			((h) && *(h)) ? (*(h))->wstr : NULL
+#define WStrBuf(h)			((h) && *(h)) ? (*(h))->str : NULL
+#define WStrBufSet(h, w)	((h) && *(h)) ? (*(h))->str = w : NULL
+
+typedef struct LWSTRREC
+{
+	int32 cnt;
+	LWChar str[1];
+} LWStrRec, *LWStrPtr, **LWStrHandle;
+
+#if Win32 && !Pharlap
+ #define LWStrLen(h)		WStrLen(h)
+ #define LWStrLenSet(h, l)	WStrLenSet(h, l) 
+ #define LWStrBuf(h)		WStrBuf(h)
+ #define LWStrBufSet(h, w)	WStrBufSet(h, w)
+#else
+ #define LWStrLen(h)		LStrLenH(h)
+ #define LWStrLenSet(h, l)	((h) && *(h)) ? (*(h))->cnt = (int32)(l) : 0
+ #define LWStrBuf(h)		LStrBufH(h)
+ #define LWStrBufSet(h, s)	((h) && *(h)) ? (*(h))->str = s : NULL
+#endif
 
 #if Win32 && !Pharlap
 #define HasDOSDevicePrefix(str, len)                                                                                                       \
@@ -117,44 +141,47 @@ typedef struct WSTRREC
 #define HasDOSDevicePrefix(str, len)   0
 #endif
 
-int32 LWPathRootLen(LWPathHandle pathName, int32 offset, uInt8 *type);
-Bool32 LWPathIsOfType(LWPathHandle pathName, int32 offset, uInt8 type);
-MgErr LWPathAppendSeparator(LWPathHandle pathName);
-int32 LWPathDepth(LWPathHandle pathName, int32 end);
-int32 LWPathParentInternal(LWPathHandle filePath, int32 rootLen, int32 end);
-int32 LWPathNextElement(LWPathHandle filePath, int32 start, int32 end);
-int32 LWPathParent(LWPathHandle pathName, int32 end);
-MgErr LWPathAppend(LWPathHandle pathName, int32 end, LWPathHandle *newPath, LWPathHandle relPath);
-MgErr LWPathGetFileTypeAndCreator(LWPathHandle pathName, ResType *fType, ResType *fCreator);
-MgErr LWPathNormalize(LWPathHandle pathName);
-MgErr LWPathZeroTerminate(LWPathHandle pathName, LWChar *end);
+DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *type);
+DebugAPI(int32) LWPtrParentInternal(const LWChar *ptr, int32 len, int32 rootLen);
+DebugAPI(int32) LWPtrParent(const LWChar *ptr, int32 len);
+DebugAPI(int32) LWPtrDepth(const LWChar *ptr, int32 len, int32 offset, int32 rootLen);
+DebugAPI(int32) LWPtrNextElement(const LWChar *ptr, int32 len, int32 start);
+DebugAPI(Bool32) LWPtrIsOfType(const LWChar *ptr, int32 len, int32 offset, uInt8 isType);
+DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot, LWPathHandle *pathName, int32 tgtOff, uInt8 type);
 
-MgErr LWPathResize(LWPathHandle *buf, size_t numChar);
-MgErr LWPathDispose(LWPathHandle buf);
-MgErr LWPathNCat(LWPathHandle *lwstr, int32 off, const LWChar *str, int32 strLen);
+DebugAPI(MgErr) LWPathAppendSeperator(LWPathHandle pathName, int32 len);
+DebugAPI(MgErr) LWPathAppend(LWPathHandle pathName, int32 end, LWPathHandle *newPath, LWPathHandle relPath);
+DebugAPI(MgErr) LWPathGetFileTypeAndCreator(LWPathHandle pathName, ResType *fType, ResType *fCreator);
+DebugAPI(MgErr) LWPathZeroTerminate(LWPathHandle *pathName, int32 len);
+
+DebugAPI(MgErr) LWPathResize(LWPathHandle *buf, size_t numChar);
+DebugAPI(MgErr) LWPathDispose(LWPathHandle buf);
+DebugAPI(MgErr) LWPathNCat(LWPathHandle *lwstr, int32 off, const LWChar *str, int32 strLen);
 
 typedef enum
 {
 	kDefaultPath = 0,
-	kLeaveHFSPath = 1,
-	kCvtKeepDOSDevice = 2
+	kKeepDOSDevice = 1
 } CvtFlags;
 
-MgErr LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
-MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle lwstr, int32 offset, uInt32 flags);
-Bool32 LStrIsAPathOfType(const LStrHandle pathName, int32 offset, uInt8 type);
-Bool32 LStrIsAbsPath(const LStrHandle pathName, int32 offset);
+DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *lwstr, int32 reserve);
 
-LibAPI(MgErr) UPathToLWPath(const LStrHandle pathName, LWPathHandle *lwstr, uInt32 flags);
-LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, uInt32 flags, int32 reserve);
-LibAPI(MgErr) UPathFromLWPath(LStrHandle *pathName, const LWPathHandle *lwstr, uInt32 flags);
-LibAPI(MgErr) LPathFromLWPath(Path *pathName, const LWPathHandle *lwstr, uInt32 flags);
-LibAPI(int32) LStrRootPathLen(const LStrHandle pathName, int32 offset, uInt8 *type);
+DebugAPI(MgErr) LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, int32 reserve);
+DebugAPI(MgErr) LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *lwstr, int32 offset, uInt32 flags);
 
-LibAPI(MgErr) LStrAppendPath(LStrHandle *pathName, LStrHandle relPath);
-LibAPI(MgErr) LStrParentPath(LStrHandle pathName, LStrHandle *fileName, LVBoolean *empty);
-LibAPI(MgErr) LRefAppendPath(LWPathHandle *pathName, LStrHandle relPath);
-LibAPI(MgErr) LRefParentPath(LWPathHandle *pathName, LStrHandle *fileName, LVBoolean *empty);
+LibAPI(MgErr) UStrToLWPath(const LStrHandle pathName, LWPathHandle *lwstr, int32 reserve);
+LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, int32 reserve);
+LibAPI(MgErr) UStrFromLWPath(LStrHandle *pathName, const LWPathHandle *lwstr, uInt32 flags);
+LibAPI(MgErr) LPathFromLWPath(Path *pathName, const LWPathHandle *lwstr);
+
+LibAPI(MgErr) LPathToText(Path path, LVBoolean isUtf8, LStrHandle *str);
+LibAPI(MgErr) LPathFromText(CStr str, int32 len, Path *path, LVBoolean isDir);
+
+LibAPI(MgErr) LWPathGetPathType(LWPathHandle *pathName, int32 *type, int32 *depth);
+LibAPI(MgErr) LWPathParentPath(LWPathHandle *pathName, LStrHandle *fileName, LVBoolean *empty);
+LibAPI(MgErr) LWPathAppendLWPath(LWPathHandle *pathName, const LWPathHandle *relPath);
+LibAPI(MgErr) LWPathAppendUStr(LWPathHandle *pathName, int32 end, const LStrHandle relString);
+LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath, LWPathHandle *relPath);
 
 /* Different conversion functions between various codepages */
 #define CP_ACP                    0           // default to ANSI code page

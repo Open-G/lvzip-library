@@ -1,9 +1,7 @@
 /*
    lvtypes.h -- LabVIEW type definition
 
-   Version 1.25, Jan 29th, 2020
-
-   Copyright (C) 2002-2020 Rolf Kalbermatter
+   Copyright (C) 2002-2023 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -60,6 +58,8 @@ extern "C" {
  #endif
  #define MacOS 1
  #define Win32 0
+ #define Unix 0
+ #define Pharlap 0
  #ifdef __APPLE_CC__
   #define MacOSX 1
  #endif
@@ -79,6 +79,10 @@ extern "C" {
   #error "We don't know the ProcessorType architecture"
  #endif
  #define Win32 1
+ #define MacOS 0
+ #define MacOSX 0
+ #define Unix 0
+ #define Pharlap 0
  #if defined(_DEBUG) || defined(_CVI_DEBUG_)
   #define DEBUG 1
  #endif
@@ -114,6 +118,9 @@ extern "C" {
  #endif
  #define Unix 1
  #define Win32 0
+ #define MacOS 0
+ #define MacOSX 0
+ #define Pharlap 0
  #define HAVE_FCNTL
  #define HAVE_ICONV
 // #define HAVE_WCRTOMB
@@ -122,6 +129,9 @@ extern "C" {
  #define Unix 1
  #define VxWorks 1
  #define Win32 0
+ #define MacOS 0
+ #define MacOSX 0
+ #define Pharlap 0
  #if defined (__ppc)
   #define ProcessorType	kPPC
   #define BigEndian 1
@@ -133,7 +143,7 @@ extern "C" {
  #error No target defined
 #endif
 
-#define usesHFSPath      MacOSX && ProcessorType != kX64
+#define usesHFSPath      MacOS && ProcessorType != kX64
 #define usesPosixPath    Unix || (MacOSX && ProcessorType == kX64)
 #define usesWinPath      Win32
 
@@ -152,6 +162,7 @@ extern "C" {
 #endif
 
 #if defined(DEBUG)
+ #define DebugAPI(retval) LibAPI(retval)
  #if Win32
   #if defined(_CVI_DEBUG_)
    #define DoDebugger()
@@ -167,6 +178,7 @@ extern "C" {
  #endif
  #define DEBUGPRINTF(args)      DbgPrintf args
 #else
+ #define DebugAPI(retval) retval
  #define DoDebugger()
  #define DEBUGPRINTF(args)
 /* long DebugPrintf(char* fmt, ...);
@@ -220,6 +232,9 @@ typedef uInt8				LVBoolean;
 #define PrivateH(T)  struct T##_t; typedef struct T##_t **T
 
 typedef enum {  iB=1, iW, iL, iQ, uB, uW, uL, uQ, fS, fD, fX, cS, cD, cX } NumType;
+
+#define stringCode		0x30
+#define clustCode		0x50
 
 typedef int32           MgErr;
 
@@ -460,6 +475,17 @@ enum {                  /* Manager Error Codes */
 	kAppErrorLast = 1399	/* Last allocated in Error DB */
 };
 
+#define Rtm64(x)	(((int32)(x)) + 63	& 0xFFFFFFc0)	/* round up to mod 64 */
+#define Rtm16(x)	(((int32)(x)) + 15	& 0xFFFFFFF0)	/* round up to mod 16 */
+#define Rtm8(x)		(((int32)(x)) + 7	& 0xFFFFFFF8)	/* round up to mod 8 */
+#define Rtm4(x)		(((int32)(x)) + 3	& 0xFFFFFFFc)	/* round up to mod 4 */
+#define Rtm2(x)		(((int32)(x)) + 1	& 0xFFFFFFFe)	/* round up to mod 2 */
+#if Is64Bit
+#define RtmPtr(x)	Rtm8(x)								/* round up to mod pointer size */
+#else
+#define RtmPtr(x)	Rtm4(x)								/* round up to mod pointer size */
+#endif
+
 typedef struct
 {
     int16 v;
@@ -495,8 +521,8 @@ typedef LStr const*const* ConstLStrH;
 #define LStrLen(p)  ((p)->cnt)
 #define LStrBuf(p)  ((p)->str)
 
-#define LStrLenH(h) ((h) ? (*(h))->cnt : 0)
-#define LStrBufH(h) ((h) ? (*(h))->str : NULL)
+#define LStrLenH(h) ((h && *h) ? (*(h))->cnt : 0)
+#define LStrBufH(h) ((h && *h) ? (*(h))->str : NULL)
 
 /*** Concatenated Pascal String Support Functions ***/
 #define CPStrLen		LStrLen			/* concatenated Pascal vs. LabVIEW strings */
@@ -536,6 +562,7 @@ MgErr DSDisposePtr(UPtr);
 UHandle DSNewHandle(size_t size);
 UHandle DSNewHClr(size_t size);
 MgErr DSSetHandleSize(UHandle, size_t);
+MgErr DSSetHSzClr(UHandle, size_t);
 int32 DSGetHandleSize(UHandle);
 MgErr DSDisposeHandle(UHandle);
 MgErr DSCopyHandle(UHandle *ph, const UHandle hsrc);
@@ -549,10 +576,15 @@ MgErr AZDisposeHandle(UHandle);
 MgErr AZCopyHandle(void *ph, const void *hsrc);
 MgErr AZSetHandleFromPtr(void *ph, const void *psrc, size_t n);
 
-void MoveBlock(ConstUPtr ps, UPtr pd, size_t size);
-void ClearMem(UPtr pd, size_t size);
+void MoveBlock(const void *ps, void *pd, size_t size);
+void ClearMem(void *pd, size_t size);
+
+typedef		int32 (*CompareProcPtr)(const void*, const void*);
+void QSort(UPtr, int32, int32, CompareProcPtr);
+int32 BinSearch(ConstUPtr, int32, int32, UPtr, CompareProcPtr);
 
 MgErr NumericArrayResize(int32, int32, UHandle*, size_t);
+MgErr SetArraySize(int16 **tdp, int32 off, int32 dims, UHandle *p, int32 size);
 
 /* Magic Cookies */
 typedef uInt32 MagicCookie;
@@ -731,23 +763,18 @@ SEEK_START
 */
 enum { fAbsPath, fRelPath, fNotAPath, fUNCPath, nPathTypes};                            /* path type codes */
 
-#define kMaxFileExtLength   10
+#define kMaxFileExtLength		12				/* can handle .framework */
 
-#define kPosixPathSeperator  '/'
-
-#if usesHFSPath
- #define kPathSeperator ':'
- #define kNativePathSeperator  kPosixPathSeperator
- typedef FSIORefNum FileRefNum;
-#elif usesPosixPath
- #define kPathSeperator '/'
- #define kNativePathSeperator  kPosixPathSeperator
- typedef FILE* FileRefNum;
-#elif usesWinPath
- #define kPathSeperator '\\'
- #define kNativePathSeperator  kPathSeperator
- typedef HANDLE FileRefNum;
+#if usesWinPath
+ #define kPathSeperator			'\\'
+ typedef HANDLE					FileRefNum;
+#else
+ // We always use posix APIs on non-Windows platforms
+ #define kPathSeperator			'/'
+ typedef FILE*					FileRefNum;
 #endif
+#define kRelativePathPrefix		'.'
+#define kPosixPathSeperator		'/'
 
 Private(File);
 typedef struct PATHREF PathRef;
@@ -806,9 +833,58 @@ typedef struct
 
 typedef struct
 {
+	uInt32 flags;
+	ResType type;
+} FileTypeRec, *FileTypePtr;
+
+typedef struct
+{
 	int32 numItems;
-	uInt32 elm[1];
-} FileInfoArrRec, *FileInfoArrPtr, **FileInfoArrHdl;
+	FileTypeRec elm[1];
+} FileTypeArrRec, *FileTypeArrPtr, **FileTypeArrHdl;
+
+/*
+Resource types
+*/
+#define dataResource		RTToL('D','A','T','A')
+#define flagResource		RTToL('F','L','A','G')
+#define initResource		RTToL('I','N','I','T')
+#define lblResource			RTToL('L','B','L',' ')
+#define controlType			RTToL('L','V','C','T')
+#define nodeTypeLV			RTToL('L','V','N','D')
+#define LabVIEWConfigResource RTToL('L','V','C','F')
+#define docType				instrFileType
+#define idType				RTToL('R','S','I','D')	/* int32 resource id		*/
+#define codeVIType			RTToL('L','V','S','B')
+#define rectResource		RTToL('R','E','C','T')
+#define specResource		RTToL('S','P','E','C')
+#define serialNoResource	RTToL('S','R','N','O')	/* uncoded serialNo */
+#define hidSerialNoResource RTToL('F','L','A','G')	/* this is where the coded serialNo is hid */
+#define stringResource		RTToL('S','T','R',' ')
+#define strgResource		RTToL('S','T','R','G')
+#define stringListResource	RTToL('S','T','R','#')
+#define lStrListResource	RTToL('L','S','T','#')
+#define mappedStrResource	RTToL('S','T','R','M')
+#define versionResource		RTToL('v','e','r','s')
+#define paletteMenuResource RTToL('P','A','L','M')
+#define aDirResource		RTToL('A','D','i','r')
+#define compFileResource	RTToL('C','P','R','F')
+#define uncompFileResource	RTToL('U','C','R','F')
+#define printResource		RTToL('P','R','T',' ')
+#define printJobResource	RTToL('P','J','O','B')
+#define printMarginResource RTToL('P','M','A','R')
+#define platformResource	RTToL('P','L','A','T')
+#define extListResource		RTToL('E','X','T','L')
+#define hObjListResource	RTToL('H','O','B','J')
+#define cPStrHandResource	RTToL('C','P','S','T')
+#define filterListResource	RTToL('F','D','F','L')
+
+#define paletteMenu2Resource	RTToL('P','L','M','2')
+#define pathListResource	RTToL('L','P','T','H')
+#define pathResource		RTToL('P','A','T','H')
+#define icl4ResType			RTToL('i', 'c', 'l', '4')
+#define icl8ResType			RTToL('i', 'c', 'l', '8')
+#define iconResType			RTToL('I', 'C', 'O', 'N')
 
 #ifdef __cplusplus
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="8,00"
 	Name="zlibvc"
 	ProjectGUID="{FF990D80-DB65-4107-B10C-5F7ACEF6F01B}"
 	RootNamespace="zlibvc"
@@ -15,6 +15,9 @@
 		/>
 	</Platforms>
 	<ToolFiles>
+		<DefaultToolFile
+			FileName="masm.rules"
+		/>
 	</ToolFiles>
 	<Configurations>
 		<Configuration
@@ -31,6 +34,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -107,6 +113,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="MASM"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -175,6 +184,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -260,6 +272,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copying shared library"
+				CommandLine="copy /Y /B &quot;$(TargetDir)$(TargetFileName)&quot; &quot;C:\Program Files (x86)\National Instruments\LabVIEW 7.1\user.lib\_OpenG.lib\lvzip&#x0D;&#x0A;copy /Y /B &quot;$(TargetDir)$(TargetFileName)&quot; $(InputDir)..\..\source&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -276,6 +290,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -380,6 +397,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="MASM"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -478,6 +498,9 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="MASM"
 			/>
 			<Tool
 				Name="VCXMLDataGeneratorTool"
@@ -579,6 +602,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="MASM"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -678,6 +704,9 @@
 				Name="VCCustomBuildTool"
 			/>
 			<Tool
+				Name="MASM"
+			/>
+			<Tool
 				Name="VCXMLDataGeneratorTool"
 			/>
 			<Tool
@@ -769,54 +798,6 @@
 			Filter="cpp;c;cxx;rc;def;r;odl;hpj;bat;for;f90"
 			>
 			<File
-				RelativePath="..\adler32.c"
-				>
-			</File>
-			<File
-				RelativePath="..\compress.c"
-				>
-			</File>
-			<File
-				RelativePath="..\crc32.c"
-				>
-			</File>
-			<File
-				RelativePath="..\crypt.c"
-				>
-			</File>
-			<File
-				RelativePath="..\deflate.c"
-				>
-			</File>
-			<File
-				RelativePath="..\infback.c"
-				>
-			</File>
-			<File
-				RelativePath="..\inffast.c"
-				>
-			</File>
-			<File
-				RelativePath="..\inflate.c"
-				>
-			</File>
-			<File
-				RelativePath="..\inftrees.c"
-				>
-			</File>
-			<File
-				RelativePath="..\ioapi.c"
-				>
-			</File>
-			<File
-				RelativePath="..\iomem.c"
-				>
-			</File>
-			<File
-				RelativePath="..\iowin.c"
-				>
-			</File>
-			<File
 				RelativePath="..\lvapi.c"
 				>
 			</File>
@@ -829,154 +810,178 @@
 				>
 			</File>
 			<File
-				RelativePath="MacBinaryIII.c"
-				>
-				<FileConfiguration
-					Name="static Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="static Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Debug|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\mztools.c"
-				>
-			</File>
-			<File
 				RelativePath="..\refnum.c"
-				>
-			</File>
-			<File
-				RelativePath="..\trees.c"
-				>
-			</File>
-			<File
-				RelativePath="..\uncompr.c"
-				>
-			</File>
-			<File
-				RelativePath="..\unzip.c"
 				>
 			</File>
 			<File
 				RelativePath="..\utf.c"
 				>
 			</File>
-			<File
-				RelativePath="..\zip.c"
+			<Filter
+				Name="aes"
 				>
-			</File>
-			<File
-				RelativePath="..\zlib.rc"
+				<File
+					RelativePath="..\aes\aes_ni.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\aescrypt.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\aeskey.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\aestab.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\entropy.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\fileenc.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\hmac.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\prng.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\pwd2key.c"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\sha1.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="bzip"
 				>
-			</File>
-			<File
-				RelativePath="..\zutil.c"
+				<File
+					RelativePath="..\bzip2\blocksort.c"
+					>
+				</File>
+				<File
+					RelativePath="..\bzip2\bzcompress.c"
+					>
+				</File>
+				<File
+					RelativePath="..\bzip2\bzlib.c"
+					>
+				</File>
+				<File
+					RelativePath="..\bzip2\crctable.c"
+					>
+				</File>
+				<File
+					RelativePath="..\bzip2\decompress.c"
+					>
+				</File>
+				<File
+					RelativePath="..\bzip2\huffman.c"
+					>
+				</File>
+				<File
+					RelativePath="..\bzip2\randtable.c"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="zlib"
 				>
-			</File>
+				<File
+					RelativePath="..\adler32.c"
+					>
+				</File>
+				<File
+					RelativePath="..\compress.c"
+					>
+				</File>
+				<File
+					RelativePath="..\crc32.c"
+					>
+				</File>
+				<File
+					RelativePath="..\crypt.c"
+					>
+				</File>
+				<File
+					RelativePath="..\deflate.c"
+					>
+				</File>
+				<File
+					RelativePath="..\gvmat32c.c"
+					>
+				</File>
+				<File
+					RelativePath="..\infback.c"
+					>
+				</File>
+				<File
+					RelativePath="..\inffas8664.c"
+					>
+				</File>
+				<File
+					RelativePath="..\inffast.c"
+					>
+				</File>
+				<File
+					RelativePath="..\inflate.c"
+					>
+				</File>
+				<File
+					RelativePath="..\inftrees.c"
+					>
+				</File>
+				<File
+					RelativePath="..\ioapi.c"
+					>
+				</File>
+				<File
+					RelativePath="..\iomem.c"
+					>
+				</File>
+				<File
+					RelativePath="..\iowin.c"
+					>
+				</File>
+				<File
+					RelativePath="..\mztools.c"
+					>
+				</File>
+				<File
+					RelativePath="..\trees.c"
+					>
+				</File>
+				<File
+					RelativePath="..\uncompr.c"
+					>
+				</File>
+				<File
+					RelativePath="..\unzip.c"
+					>
+				</File>
+				<File
+					RelativePath="..\zip.c"
+					>
+				</File>
+				<File
+					RelativePath="..\zutil.c"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;fi;fd"
 			>
-			<File
-				RelativePath="..\crc32.h"
-				>
-			</File>
-			<File
-				RelativePath="..\crypt.h"
-				>
-			</File>
-			<File
-				RelativePath="..\deflate.h"
-				>
-			</File>
-			<File
-				RelativePath="..\inffast.h"
-				>
-			</File>
-			<File
-				RelativePath="..\inffixed.h"
-				>
-			</File>
-			<File
-				RelativePath="..\inflate.h"
-				>
-			</File>
-			<File
-				RelativePath="..\inftrees.h"
-				>
-			</File>
-			<File
-				RelativePath="..\ioapi.h"
-				>
-			</File>
-			<File
-				RelativePath="..\iomem.h"
-				>
-			</File>
-			<File
-				RelativePath="..\iowin.h"
-				>
-			</File>
 			<File
 				RelativePath="..\lvapi.h"
 				>
@@ -994,64 +999,172 @@
 				>
 			</File>
 			<File
-				RelativePath="..\MacBinaryIII.h"
-				>
-			</File>
-			<File
-				RelativePath="..\mztools.h"
-				>
-			</File>
-			<File
 				RelativePath="..\refnum.h"
-				>
-			</File>
-			<File
-				RelativePath="..\Resource.h"
-				>
-			</File>
-			<File
-				RelativePath="..\trees.h"
-				>
-			</File>
-			<File
-				RelativePath="..\unzip.h"
 				>
 			</File>
 			<File
 				RelativePath="..\utf.h"
 				>
 			</File>
-			<File
-				RelativePath="..\versionhelper.h"
+			<Filter
+				Name="bzip2"
 				>
-			</File>
-			<File
-				RelativePath="..\zalias.h"
+				<File
+					RelativePath="..\bzip2\bzlib.h"
+					>
+				</File>
+				<File
+					RelativePath="..\bzip2\bzlib_private.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="aes"
 				>
-			</File>
-			<File
-				RelativePath="..\zconf.h"
+				<File
+					RelativePath="..\aes\aes.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\aes_ni.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\aes_via_ace.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\aesopt.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\aestab.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\brg_endian.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\brg_types.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\entropy.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\fileenc.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\hmac.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\prng.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\pwd2key.h"
+					>
+				</File>
+				<File
+					RelativePath="..\aes\sha1.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="zlib"
 				>
-			</File>
-			<File
-				RelativePath="..\zip.h"
-				>
-			</File>
-			<File
-				RelativePath="..\zlib.h"
-				>
-			</File>
-			<File
-				RelativePath="..\zutil.h"
-				>
-			</File>
+				<File
+					RelativePath="..\crc32.h"
+					>
+				</File>
+				<File
+					RelativePath="..\crypt.h"
+					>
+				</File>
+				<File
+					RelativePath="..\deflate.h"
+					>
+				</File>
+				<File
+					RelativePath="..\inffast.h"
+					>
+				</File>
+				<File
+					RelativePath="..\inffixed.h"
+					>
+				</File>
+				<File
+					RelativePath="..\inflate.h"
+					>
+				</File>
+				<File
+					RelativePath="..\inftrees.h"
+					>
+				</File>
+				<File
+					RelativePath="..\ioapi.h"
+					>
+				</File>
+				<File
+					RelativePath="..\iomem.h"
+					>
+				</File>
+				<File
+					RelativePath="..\iowin.h"
+					>
+				</File>
+				<File
+					RelativePath="..\mztools.h"
+					>
+				</File>
+				<File
+					RelativePath="..\trees.h"
+					>
+				</File>
+				<File
+					RelativePath="..\unzip.h"
+					>
+				</File>
+				<File
+					RelativePath="..\versionhelper.h"
+					>
+				</File>
+				<File
+					RelativePath="..\zalias.h"
+					>
+				</File>
+				<File
+					RelativePath="..\zconf.h"
+					>
+				</File>
+				<File
+					RelativePath="..\zip.h"
+					>
+				</File>
+				<File
+					RelativePath="..\zlib.h"
+					>
+				</File>
+				<File
+					RelativePath="..\zutil.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 			>
 			<File
-				RelativePath="..\lvzlib.ico"
+				RelativePath="..\Resource.h"
+				>
+			</File>
+			<File
+				RelativePath="..\zlib.rc"
 				>
 			</File>
 		</Filter>
@@ -1062,31 +1175,7 @@
 				RelativePath="..\gzclose.c"
 				>
 				<FileConfiguration
-					Name="static Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="static Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1102,23 +1191,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Embedded|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1130,31 +1203,7 @@
 				RelativePath="..\gzguts.h"
 				>
 				<FileConfiguration
-					Name="static Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="static Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1170,23 +1219,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Embedded|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1198,31 +1231,7 @@
 				RelativePath="..\gzlib.c"
 				>
 				<FileConfiguration
-					Name="static Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="static Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1238,23 +1247,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Embedded|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1266,31 +1259,7 @@
 				RelativePath="..\gzread.c"
 				>
 				<FileConfiguration
-					Name="static Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="static Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1306,23 +1275,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Embedded|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1334,31 +1287,7 @@
 				RelativePath="..\gzwrite.c"
 				>
 				<FileConfiguration
-					Name="static Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="static Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Debug|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1374,14 +1303,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="DLL Embedded|Win32"
 					ExcludedFromBuild="true"
 					>
@@ -1389,134 +1310,6 @@
 						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
-				<FileConfiguration
-					Name="DLL Embedded|x64"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-		</Filter>
-		<Filter
-			Name="aes"
-			>
-			<File
-				RelativePath="..\aes\aes.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\aes_via_ace.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\aescrypt.c"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\aeskey.c"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\aesopt.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\aestab.c"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\aestab.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\brg_endian.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\brg_types.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\fileenc.c"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\fileenc.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\hmac.c"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\hmac.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\prng.c"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\prng.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\pwd2key.c"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\pwd2key.h"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\sha1.c"
-				>
-			</File>
-			<File
-				RelativePath="..\aes\sha1.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="bzip2"
-			>
-			<File
-				RelativePath="..\bzip2\blocksort.c"
-				>
-			</File>
-			<File
-				RelativePath="..\bzip2\bzcompress.c"
-				>
-			</File>
-			<File
-				RelativePath="..\bzip2\bzlib.c"
-				>
-			</File>
-			<File
-				RelativePath="..\bzip2\bzlib.h"
-				>
-			</File>
-			<File
-				RelativePath="..\bzip2\bzlib_private.h"
-				>
-			</File>
-			<File
-				RelativePath="..\bzip2\crctable.c"
-				>
-			</File>
-			<File
-				RelativePath="..\bzip2\decompress.c"
-				>
-			</File>
-			<File
-				RelativePath="..\bzip2\huffman.c"
-				>
-			</File>
-			<File
-				RelativePath="..\bzip2\randtable.c"
-				>
 			</File>
 		</Filter>
 	</Files>

@@ -1852,11 +1852,7 @@ extern int ZEXPORT unzGoToFilePos64(unzFile file, const unz64_file_pos *file_pos
 
 extern uint32_t ZEXPORT unzGetOffset(unzFile file)
 {
-    uint64_t offset64 = 0;
-
-    if (file == NULL)
-        return UNZ_PARAMERROR;
-    offset64 = unzGetOffset64(file);
+    uint64_t offset64 = unzGetOffset64(file);
     return (uint32_t)offset64;
 }
 
@@ -1865,7 +1861,7 @@ extern uint64_t ZEXPORT unzGetOffset64(unzFile file)
     unz64_internal *s = NULL;
 
     if (file == NULL)
-        return UNZ_PARAMERROR;
+        return UNZ_INVOFFSET;
     s = (unz64_internal*)file;
     if (!s->current_file_ok)
         return 0;
@@ -1903,10 +1899,10 @@ extern uint32_t ZEXPORT unzTell(unzFile file)
 {
     unz64_internal *s = NULL;
     if (file == NULL)
-        return UNZ_PARAMERROR;
+        return UNZ_INVOFFSET;
     s = (unz64_internal*)file;
     if (s->pfile_in_zip_read == NULL)
-        return UNZ_PARAMERROR;
+        return UNZ_INVOFFSET;
     return (uint32_t)s->pfile_in_zip_read->stream.total_out;
 }
 
@@ -1914,10 +1910,10 @@ extern uint64_t ZEXPORT unzTell64(unzFile file)
 {
     unz64_internal *s = NULL;
     if (file == NULL)
-        return UNZ_PARAMERROR;
+        return UNZ_INVOFFSET;
     s = (unz64_internal*)file;
     if (s->pfile_in_zip_read == NULL)
-        return UNZ_PARAMERROR;
+        return UNZ_INVOFFSET;
     return s->pfile_in_zip_read->total_out_64;
 }
 

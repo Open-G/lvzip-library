@@ -1,7 +1,7 @@
 /*
    utf.c - Support routines for Unicode text format conversions between the different sizes
 
-   Copyright (C) 2015-2018 Rolf Kalbermatter
+   Copyright (C) 2015-2023 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -249,7 +249,6 @@ static MgErr utf8_append(uInt32 cp, uInt8 *buffer, int32 *offset, int32 length)
     }
     return mgNoErr;
 }
-
 
 MgErr utf8_next(const uInt8 *buffer, int32 *offset, int32 length, uInt32 *cp)
 {

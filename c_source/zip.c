@@ -628,7 +628,7 @@ static zipFile ZEXPORT zipOpen4(const void *path, int append, uint64_t disk_size
 
     if (pzlib_filefunc64_32_def == NULL)
 #if WIN32
-		fill_win32_filefunc64A(&ziinit.z_filefunc.zfile_func64);
+		fill_win32_filefunc64W(&ziinit.z_filefunc.zfile_func64);
 #else
         fill_fopen64_filefunc(&ziinit.z_filefunc.zfile_func64);
 #endif

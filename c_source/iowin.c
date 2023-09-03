@@ -119,7 +119,6 @@ voidpf ZCALLBACK win32_open_file_funcA (voidpf opaque, LPCSTR filename, int mode
 {
 	voidpf ret = NULL;
 	int len = MultiByteToWideChar(CP_ACP, 0, filename, -1, NULL, 0) + 1;
-    Unused(opaque);
 	if (len > 0)
 	{
 		LPWSTR name = malloc(len * sizeof(WCHAR));
@@ -172,7 +171,6 @@ voidpf ZCALLBACK win32_opendisk_file_funcA (voidpf opaque, LPCSTR filename, uint
 {
 	voidpf ret = NULL;
 	int len = MultiByteToWideChar(CP_ACP, 0, filename, -1, NULL, 0) + 1;
-    Unused(opaque);
 	if (len > 0)
 	{
 		LPWSTR name = malloc(len * sizeof(WCHAR));

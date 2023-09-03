@@ -1,7 +1,7 @@
 /* 
    lvapi.c -- LabVIEW interface for LabVIEW ZIP library
 
-   Copyright (C) 2009-2018 Rolf Kalbermatter
+   Copyright (C) 2009-2023 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -31,6 +31,7 @@
 #include "zip.h"
 #include "unzip.h"
 #include "lvapi.h"
+#include "iomem.h"
 #include "refnum.h"
 #include "Resource.h"
 
@@ -136,7 +137,7 @@ static MgErr lvzlib_zipOpen(const LWPathHandle pathName, int append, LStrHandle 
 				err = NumericArrayResize(uB, 1, (UHandle*)globalcomment, len);
 				if (!err)
 				{
-					MoveBlock((ConstUPtr)comment, LStrBuf(**globalcomment), len);
+					MoveBlock(comment, LStrBuf(**globalcomment), len);
 					LStrLen(**globalcomment) = len;
 				}
 				else
@@ -153,28 +154,27 @@ static MgErr lvzlib_zipOpen(const LWPathHandle pathName, int append, LStrHandle 
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathName, int append, LStrHandle *globalcomment,
-                               zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathName, int append, LStrHandle *globalcomment, LVRefNum *refnum)
 {
-	MgErr err = LWPathZeroTerminate(*pathName, NULL);
+	MgErr err = LWPathZeroTerminate(pathName, -1);
 	if (!err)
 	{
-		err = lvzlib_zipOpen(*pathName, append, globalcomment, filefuncs, refnum);
+		zlib_filefunc64_def filefuncs;
+#if WIN32
+		fill_win32_filefunc64W(&filefuncs);
+#else
+		fill_fopen64_filefunc(&filefuncs);
+#endif
+		err = lvzlib_zipOpen(*pathName, append, globalcomment, &filefuncs, refnum);
 	}
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_zipOpenL(const LStrHandle pathName, int append, LStrHandle *globalcomment,
-                             zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+LibAPI(MgErr) lvzlib_zipOpenS(LStrHandle *memory, int append, LStrHandle *globalcomment, LVRefNum *refnum)
 {
-	LWPathHandle lwstr = NULL;
-	MgErr err = LStrToLWPath(pathName, CP_ACP, &lwstr, kDefaultPath, 0);
-	if (!err)
-	{
-		err = lvzlib_zipOpen(lwstr, append, globalcomment, filefuncs, refnum);
-		LWPathDispose(lwstr);
-	}
-	return err;
+	zlib_filefunc64_def filefuncs;
+	fill_mem_filefunc(&filefuncs, memory);
+	return lvzlib_zipOpen(NULL, append, globalcomment, &filefuncs, refnum);
 }
 
 /****************************************************************************************************
@@ -195,19 +195,20 @@ LibAPI(MgErr) lvzlib_zipOpenL(const LStrHandle pathName, int append, LStrHandle 
  *  memLevel:
  *  strategy:
  *  password:
- *  crecForCrypting:
- *  version:
+ *  crcForCrypting:
  *  flags:
  *  zip64:
+ *  aes:
  *
  ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
-						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
-						   LStrHandle comment, int method, int level, int raw, int windowBits,
-						   int memLevel, int strategy, const char* password, uInt32 crcForCrypting, uInt32 version, uInt32 flags, int zip64)
+						   const LStrHandle extrafield_local, const LStrHandle extrafield_global, LStrHandle comment, 
+						   int method, int level, int raw, int windowBits, int memLevel, int strategy, const char* password,
+						   uInt32 crcForCrypting, uInt32 flags, int zip64, int aes)
 {
 	zipFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, ZipMagic);
+	Unused(crcForCrypting);
 	if (!err)
 	{
 		err = ZeroTerminateLString(&filename);
@@ -216,11 +217,11 @@ LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, 
 			err = ZeroTerminateLString(&comment);
 			if (!err)
 			{
-				err = LibToMgErr(zipOpenNewFileInZip4_64(node, (const char*)LStrBufH(filename), zipfi,
+				err = LibToMgErr(zipOpenNewFileInZip5(node, (const char*)LStrBufH(filename), zipfi,
 						         LStrBufH(extrafield_local), (uint16_t)LStrLenH(extrafield_local),
 								 LStrBufH(extrafield_global), (uint16_t)LStrLenH(extrafield_global),
-								 (const char*)LStrBufH(comment), (uint16_t)method, level, raw, windowBits, memLevel,
-								 strategy, password[0] ? password : NULL, crcForCrypting, (uint16_t)version, (uint16_t)flags, zip64));
+								 (const char*)LStrBufH(comment), (uint16_t)flags, zip64, (uint16_t)method, level, raw,
+								 windowBits, memLevel, strategy, password[0] ? password : NULL, aes));
 			}
 		}
 	}
@@ -317,25 +318,26 @@ static MgErr lvzlib_unzOpen(const LWPathHandle pathName, zlib_filefunc64_def* fi
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_unzOpenLW(LWPathHandle *pathName, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+LibAPI(MgErr) lvzlib_unzOpenLW(LWPathHandle *pathName, LVRefNum *refnum)
 {
-	MgErr err = LWPathZeroTerminate(*pathName, NULL);
+	MgErr err = LWPathZeroTerminate(pathName, -1);
 	if (!err)
 	{
-		err = lvzlib_unzOpen(*pathName, filefuncs, refnum);
+		zlib_filefunc64_def filefuncs;
+#if WIN32
+		fill_win32_filefunc64W(&filefuncs);
+#else
+		fill_fopen64_filefunc(&filefuncs);
+#endif
+		err = lvzlib_unzOpen(*pathName, &filefuncs, refnum);
 	}
 	return err;
 }
-LibAPI(MgErr) lvzlib_unzOpenL(const LStrHandle pathName, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+LibAPI(MgErr) lvzlib_unzOpenS(LStrHandle *memory, LVRefNum *refnum)
 {
-	LWPathHandle lwstr = NULL;
-	MgErr err = LStrToLWPath(pathName, CP_ACP, &lwstr, kDefaultPath, 0);
-	if (!err)
-	{
-		err = lvzlib_unzOpen(lwstr, filefuncs, refnum);
-		LWPathDispose(lwstr);
-	}
-	return err;
+	zlib_filefunc64_def filefuncs;
+	fill_mem_filefunc(&filefuncs, memory); 
+	return lvzlib_unzOpen(NULL, &filefuncs, refnum);
 }
 
 /****************************************************************************************************
@@ -517,7 +519,7 @@ LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iC
 	return err;
 }
 
-MgErr lvzlib_unzLocateFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment, int iCaseSensitivity)
+LibAPI(MgErr) lvzlib_unzLocateFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment, int iCaseSensitivity)
 {
 	unzFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);

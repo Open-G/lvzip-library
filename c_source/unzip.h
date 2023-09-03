@@ -53,6 +53,8 @@ typedef voidp unzFile;
 #define UNZ_CRCERROR                    (-105)
 #define UNZ_BADPASSWORD                 (-106)
 
+#define UNZ_INVOFFSET                   (uint64_t)(-1)
+
 /* unz_global_info structure contain global data about the ZIPfile
    These data comes from the end of central dir */
 typedef struct unz_global_info64_s

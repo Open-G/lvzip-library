@@ -1,9 +1,7 @@
 /*
    lvutil.h -- support functions for LabVIEW integration
 
-   Version 1.17, Dec 8th, 2018
-
-   Copyright (C) 2002-2018 Rolf Kalbermatter
+   Copyright (C) 2002-2023 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -43,10 +41,6 @@ LibAPI(MgErr) InitializeStreamFuncs(LStrHandle  filefunc_def, LStrHandle *memory
 
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest);
 
-/* Convert the path from and into a string representation for the current platform */
-LibAPI(MgErr) LVPath_ToText(Path path, LVBoolean utf8, LStrHandle *str);
-LibAPI(MgErr) LVPath_FromText(CStr str, int32 len, Path *path, LVBoolean isDir);
-
 typedef union
 {
 	int64 q;
@@ -65,34 +59,36 @@ typedef union
 #endif
 } FileOffset;
 
-#define kFileOpIgnoreReadOnly	1
-#define kFileOpReplaceExisting  2
+/* Copy and Rename flags */
+#define kFileOpReplaceNever     0
+#define kFileOpReplaceAlways    1
+#define kFileOpReplaceIfNewer   2
+#define kFileOpReplaceMask		3
+#define kFileOpNoRecursion		4
+#define kFileOpMaintainAttrs	8
+#define kFileOpShallowCopy		16
+
+/* Delete flags */
+#define kDelIgnoreReadOnly		1
+#define kDelMoveToTrash			2
+#define kDelNoRecursion			4
+
+/* ListDirectory flags */
+#define kListArchiveNone		0
+#define kListArchiveTopLvl		1
+#define kListArchiveAll			2
+
 
 /* Check if the file pathName points to has a resource fork, only on Mac */
 LibAPI(MgErr) LVFile_HasResourceFork(LWPathHandle *pathName, LVBoolean *hasResFork, FileOffset *size);
-LibAPI(MgErr) LVPath_HasResourceFork(Path path, LVBoolean *hasResFork, FileOffset *size);
-LibAPI(MgErr) LVString_HasResourceFork(LStrHandle pathName, LVBoolean *hasResFork, FileOffset *size);
 
 /* List the directory contents with an additional array with flags and file type for each file in the names array */
-LibAPI(MgErr) LVFile_ListDirectory(LWPathHandle *folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, uInt32 mode, int32 resolveDepth);
-LibAPI(MgErr) LVPath_ListDirectory(Path folderPath, LStrArrHdl *names, FileInfoArrHdl *fileInfo, uInt32 mode, int32 resolveDepth);
-LibAPI(MgErr) LVString_ListDirectory(LStrHandle folderPath, LStrArrHdl *nameArr, FileInfoArrHdl *typeArr, uInt32 mode, int32 resolveDepth);
+LibAPI(MgErr) LVFile_ListDirectory(LWPathHandle *folderPath, LStrArrHdl *nameArr, FileTypeArrHdl *typeArr, uInt32 llbMode, int32 resolveDepth);
 
-LibAPI(MgErr) LVFile_Delete(LWPathHandle *path, LVBoolean ignoreReadOnly);
-LibAPI(MgErr) LVPath_Delete(Path pathName, LVBoolean ignoreReadOnly);
-LibAPI(MgErr) LVString_Delete(LStrHandle path, LVBoolean ignoreReadOnly);
+LibAPI(MgErr) LVFile_Delete(LWPathHandle *path, uInt32 flags);
 LibAPI(MgErr) LVFile_Rename(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32 flags);
-LibAPI(MgErr) LVPath_Rename(Path pathFrom, Path pathTo, uInt32 flags);
-LibAPI(MgErr) LVString_Rename(LStrHandle pathFrom, LStrHandle pathTo, uInt32 flags);
-LibAPI(MgErr) LVFile_Copy(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32 replaceMode);
-LibAPI(MgErr) LVPath_Copy(Path pathFrom, Path pathTo, uInt32 replaceMode);
-LibAPI(MgErr) LVString_Copy(LStrHandle pathFrom, LStrHandle pathTo, uInt32 replaceMode);
-LibAPI(MgErr) LVFile_MoveToTrash(LWPathHandle *path);
-LibAPI(MgErr) LVPath_MoveToTrash(Path pathName);
-LibAPI(MgErr) LVString_MoveToTrash(LStrHandle path);
+LibAPI(MgErr) LVFile_Copy(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32 flags);
 LibAPI(MgErr) LVFile_CreateDirectories(LWPathHandle *path, int16 permissions);
-LibAPI(MgErr) LVPath_CreateDirectories(Path path, int16 permissions);
-LibAPI(MgErr) LVString_CreateDirectories(LStrHandle path, int16 permissions);
 
 /* Windows portion of the flags parameter */
 #define kWinFileInfoReadOnly             0x00000001  
@@ -120,26 +116,24 @@ LibAPI(MgErr) LVString_CreateDirectories(LStrHandle path, int16 permissions);
 //#define kMacFileInfoArchive            0x00000800    /* file needs to be archived */
 #define kMacFileInfoHidden               0x00008000    /* hint that this item should not be displayed in a GUI (Mac OS X 10.5+) */
 
-typedef struct {        /* off */
-	ResType type;       /*  0: handled by LabVIEW Type & Creator */
-	ResType creator;    /*  4: handled by LabVIEW Type & Creator */
-	uInt32 uid;         /*  8: Unix user id */
-	uInt32 gid;         /* 12: Unix group id */
-	uInt64 size;        /* 16: file size or file count for directories */
-	uInt64 rfSize;      /* 24: resource fork size, 0 on non MacOS platforms */
-	ATime128 cDate;     /* 32: Creation date */
-	ATime128 mDate;     /* 48: Modification date */
-	ATime128 aDate;     /* 64: ast access date */
-	uInt16 winFlags;    /* 80: Windows compatible flags */
-	uInt16 unixFlags;   /* 82: Unix compatible flags */
-	uInt32 macFlags;    /* 84: MacOSX extra file flags */
-	uInt32 fileType;    /* 88: LabVIEW file type flags */
-} LVFileInfo;           /* 92: Total length */
+typedef struct {				/* off */
+	ResType type;				/*  0: handled by LabVIEW Type & Creator */
+	ResType creator;			/*  4: handled by LabVIEW Type & Creator */
+	uInt32 uid;					/*  8: Unix user id */
+	uInt32 gid;					/* 12: Unix group id */
+	uInt64 size;				/* 16: file size or file count for directories */
+	uInt64 rfSize;				/* 24: resource fork size, 0 on non MacOS platforms */
+	ATime128 cDate;				/* 32: Creation date */
+	ATime128 mDate;				/* 48: Modification date */
+	ATime128 aDate;				/* 64: ast access date */
+	uInt16 winFlags;			/* 80: Windows compatible flags */
+	uInt16 unixFlags;			/* 82: Unix compatible flags */
+	uInt32 macFlags;			/* 84: MacOSX extra file flags */
+	uInt32 fileType;			/* 88: LabVIEW file type flags */
+} FileInfoRec, *FileInfoPtr;	/* 92: Total length */
 
 /* Retrieve file information from the path */
-LibAPI(MgErr) LVFile_FileInfo(LWPathHandle *path, uInt8 write, LVFileInfo *fileInfo);
-LibAPI(MgErr) LVPath_FileInfo(Path path, uInt8 write, LVFileInfo *fileInfo);
-LibAPI(MgErr) LVString_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileInfo);
+LibAPI(MgErr) LVFile_FileInfo(LWPathHandle *path, uInt8 write, FileInfoPtr fileInfo);
 
 /* Creation flags */
 #define kLinkSoft       0x00
@@ -147,17 +141,11 @@ LibAPI(MgErr) LVString_FileInfo(LStrHandle path, uInt8 write, LVFileInfo *fileIn
 #define kLinkDir		0x02
 
 /* Resolution flags */
-#define kResolve        0x01
-#define kRecursive		0x02
+#define kRecursive		-1
 
 /* Create and read a link */
 LibAPI(MgErr) LVFile_CreateLink(LWPathHandle *path, LWPathHandle *target, uInt32 flags);
-LibAPI(MgErr) LVPath_CreateLink(Path path, Path target, uInt32 flags);
-LibAPI(MgErr) LVString_CreateLink(LStrHandle path, LStrHandle target, uInt32 flags);
-
 LibAPI(MgErr) LVFile_ReadLink(LWPathHandle *path, LWPathHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
-LibAPI(MgErr) LVPath_ReadLink(Path path, Path *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
-LibAPI(MgErr) LString_ReadLink(LStrHandle path, LStrHandle *target, int32 resolveDepth, int32 *resolveCount, uInt32 *fileFlags);
 
 enum { /* values for rsrc parameter */
 	kOpenFileRsrcData,
@@ -170,16 +158,11 @@ enum { /* values for rsrc parameter */
 
 LibAPI(MgErr) LVFile_CreateFile(LVRefNum *refnum, LWPathHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
 LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWPathHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
-LibAPI(MgErr) LVPath_CreateFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
-LibAPI(MgErr) LVPath_OpenFile(LVRefNum *refnum, Path path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
-LibAPI(MgErr) LVString_CreateFile(LVRefNum *refnum, LStrHandle path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always);
-LibAPI(MgErr) LVString_OpenFile(LVRefNum *refnum, LStrHandle path, uInt32 rsrc, uInt32 openMode, uInt32 denyMode);
-
 LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum);
-LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, FileOffset *size);
+LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, int32 mode, FileOffset *size);
 LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size);
-LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *offs);
-LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *offs, uInt16 mode);
+LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *off);
+LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *off, uInt16 mode);
 LibAPI(MgErr) LVFile_Read(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 

@@ -1,7 +1,7 @@
 /*
    lvapi.c -- LabVIEW interface for LabVIEW ZIP library
 
-   Copyright (C) 2009-2018 Rolf Kalbermatter
+   Copyright (C) 2009-2023 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -40,20 +40,20 @@ LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len);
 LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size);
 
 /* exported zip functions */
-LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathname, int append, LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
-LibAPI(MgErr) lvzlib_zipOpenL(const LStrHandle pathname, int append, LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathname, int append, LStrHandle *globalcomment, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_zipOpenS(LStrHandle *memory, int append, LStrHandle *globalcomment, LVRefNum *refnum);
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
-						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
-						   LStrHandle comment, int method, int level, int raw, int windowBits,
-						   int memLevel, int strategy, const char* password, uInt32 crcForCrypting, uInt32 version, uInt32 flags, int zip64);
+						   const LStrHandle extrafield_local, const LStrHandle extrafield_global, LStrHandle comment,
+						   int method, int level, int raw, int windowBits, int memLevel, int strategy,
+						   const char* password, uInt32 crcForCrypting, uInt32 flags, int zip64, int aes);
 LibAPI(MgErr) lvzlib_zipWriteInFileInZip(LVRefNum *refnum, const LStrHandle buffer);
 LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw32(LVRefNum *refnum, uInt32 uncompressedSize, uInt32 crc32);
 LibAPI(MgErr) lvzlib_zipCloseFileInZipRaw64(LVRefNum *refnum, uInt64 uncompressedSize, uInt32 crc32);
 LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const char *globalComment, LStrHandle *stream);
 
 /* exported unzip functions */
-LibAPI(MgErr) lvzlib_unzOpenLW(LWPathHandle *pathname, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
-LibAPI(MgErr) lvzlib_unzOpenL(const LStrHandle pathname, zlib_filefunc64_def* filefuncs, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_unzOpenLW(LWPathHandle *pathname, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_unzOpenS(LStrHandle *memory, LVRefNum *refnum);
 LibAPI(MgErr) lvzlib_unzClose(LVRefNum *refnum, LStrHandle *stream);
 LibAPI(MgErr) lvzlib_unzGetGlobalInfo32(LVRefNum *refnum, LStrHandle *comment, uInt32 *nEntry);
 LibAPI(MgErr) lvzlib_unzGetGlobalInfo64(LVRefNum *refnum, LStrHandle *comment, uInt64 *nEntry);

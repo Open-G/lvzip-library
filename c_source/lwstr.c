@@ -1,9 +1,7 @@
 /*
    lwstr.c -- widechar/shortchar unicode string support functions for LabVIEW integration
 
-   Version 1.2, March 22th, 2022
-
-   Copyright (C) 2017-2022 Rolf Kalbermatter
+   Copyright (C) 2017-2023 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -40,619 +38,51 @@
  #endif
 #endif
 
-MgErr LWPathResize(LWPathHandle *lwstr, size_t numChar)
-{
-	int32 len = (int32)(2 * sizeof(int32) + (numChar + 1) * sizeof(LWChar));
-	if (*lwstr)
-	{
-		if (DSGetHandleSize((UHandle)*lwstr) < len)
-			return DSSetHandleSize((UHandle)*lwstr, len);
-	}
-	else
-	{
-		*lwstr = (LWPathHandle)DSNewHandle(len);
-		if (!*lwstr)
-			return mFullErr;
-		ClearMem((UPtr)(**lwstr), 8);
-	}
-	return mgNoErr;
-}
-
-MgErr LWPathDispose(LWPathHandle lwstr)
-{
-	if (lwstr)
-		return DSDisposeHandle((UHandle)lwstr);
-	return mgNoErr;
-}
-
-MgErr LWPathZeroTerminate(LWPathHandle pathName, LWChar *end)
-{
-	int32 newLen = end ? (end - LWPathBuf(pathName)) : LWPathLenGet(pathName);
-	MgErr err = LWPathResize(&pathName, newLen);
-	if (!err)
-	{
-		LWPathLenSet(pathName, newLen);
-	}
-	return err;
-}
-
-MgErr LWPathNormalize(LWPathHandle lwstr)
-{
-	int32 len = LWPathLenGet(lwstr);
-	LWChar *a, *s, *t; 
-	a = s = t = LWPathBuf(lwstr);
-
-	if (*s && len)
-	{
-		LWChar *e = s + len;
-#if Win32
-		int32 unc = FALSE;
-/*
-		\\?\UNC\server\share
-		\\?\C:\
-		\\.\UNC\server\share
-		\\.\C:\
-		\\server\share
-		C:\
-*/
-
-		if (s[0] == kPathSeperator)
-		{
-			int32 n = 1;
-			s++;
-			if (s[0] == kPathSeperator)
-			{
-				n++;
-				s++;
-				if ((s[0] == '?' || s[0] == '.') && s[1] == kPathSeperator)
-				{
-					n += 2;
-					s += 2;
-					if ((s[0] == 'U' || s[0] == 'u') && (s[1] == 'N' || s[1] == 'n') && (s[2] == 'C' || s[2] == 'C') && s[3] == kPathSeperator)
-					{
-						unc = TRUE;
-						n += 4;
-						s += 4;
-					}
-				}
-				else if (isalpha(s[0]))
-				{
-					unc = TRUE;
-				}
-				else
-				{
-					return mgArgErr;
-				}
-			}
-			t += n;
-			a = s;
-		}
-		if (isalpha(s[0]) && s[1] == ':')
-		{
-			/* X:\ */
-			s += 2;
-			t += 2;
-			if (s[0] == kPathSeperator)
-			{
-				s++; t++;
-			}
-		}
-
-		/* Canonicalize the rest of the path */
-		while (s < e)
-		{
-			if (s[0] == '.')
-			{
-				if (s[1] == kPathSeperator && (s == a || s[-1] == kPathSeperator || s[-1] == ':'))
-				{
-					s += 2; /* Skip .\ */
-				}
-				else if (s[1] == '.' && (t == a || t[-1] == kPathSeperator))
-				{
-					/* \.. backs up a directory, over the root if it has no \ following X:.
-					* .. is ignored if it would remove a UNC server name or initial \\
-					*/
-					if (t != a)
-					{
-						if (t > a + 1 && t[-1] == kPathSeperator &&
-							(t[-2] != kPathSeperator || t > a + 2))
-						{
-							if (t[-2] == ':' && (t > a + 3 || t[-3] == ':'))
-							{
-								t -= 2;
-								while (t > a && *t != kPathSeperator)
-									t--;
-								if (*t == kPathSeperator)
-									t++; /* Reset to last '\' */
-								else
-									t = a; /* Start path again from new root */
-							}
-							else if (t[-2] != ':' && !unc)
-								t -= 2;
-						}
-
-						while (t > a && *t != kPathSeperator)
-							t--;
-						if (t == a)
-						{
-							*t = kPathSeperator;
-							s++;
-						}
-					}
-					s += 2; /* Skip .. in src path */
-				}
-				else
-					*t++ = *s++;
-			}
-			else
-				*t++ = *s++;
-		}
-		/* Append \ to naked drive spec */
-		if (len == 2 && t[-1] == ':')
-		{
-			return LWPathAppendSeparator(lwstr);
-		}
-#elif Unix || MacOSX
-		/* Canonicalize the path */
-		while (s < e)
-		{
-			if (s[0] == kPosixPathSeperator && s[1] == kPosixPathSeperator)
-			{
-				s++; /* Reduce // to / */ 
-			}
-			else if (s[0] == '.')
-			{
-				if (s[1] == kPosixPathSeperator && (s == a && s[-1] == kPosixPathSeperator))
-				{
-					s += 2; /* Skip ./ */
-				}
-				else if (s[1] == '.')
-				{
-					/* .. backs up a directory but only if it is not at the root of the path */
-					if (t == a || (t > a + 2 && t[-1] == kPosixPathSeperator && t[-2] == '.'))
-					{
-						*t++ = *s++;
-						*t++ = *s++;
-					}
-					else if (t > a + 2 && t[-1] == kPosixPathSeperator && (t[-2] != kPosixPathSeperator))
-					{
-						t -= 2;
-						while (t > a && *t != kPosixPathSeperator)
-							t--;
-						if (*t == kPosixPathSeperator)
-							t++; /* Reset to last '\' */
-						s += 3; /* Skip ../ in src path */
-					}
-					else
-						return mgArgErr;
-				}
-				else
-					*t++ = *s++;
-			}
-			else
-				*t++ = *s++;
-		}
-		if (*t == kPosixPathSeperator && t > a + 1)
-			t--;
+#if usesWinPath
+#define IsSeperator(c) (c == kPathSeperator || c == kPosixPathSeperator)
+#else
+#define IsSeperator(c) (c == kPathSeperator)
 #endif
-	}
-	return LWPathZeroTerminate(lwstr, t);
-}
+#define IsPosixSeperator(c) (c == kPosixPathSeperator)
 
-MgErr LWPathNCat(LWPathHandle *lwstr, int32 off, const LWChar *str, int32 strLen)
+LWChar gNotAPath[] = LW("<Not A Path>");
+
+static int32 LWPtrCompare(const LWChar *s1, const LWChar *s2, int32 len)
 {
-	MgErr err;
-	if (strLen == -1)
-	    strLen = lwslen(str);
-	if (off == -1)
-		off = LWPathLenGet(*lwstr);
-
-	err = LWPathResize(lwstr, off + strLen);
-	if (!err)
+	register LWChar u1, u2;
+	for (;len > 0; len--)
 	{
-		lwsncpy(LWPathBuf(*lwstr) + off, str, strLen);
-		LWPathLenSet(*lwstr, off + strLen);
+		u1 = *s1++;
+		u2 = *s2++;
+		if (u1 != u2)
+			return u1 - u2;
+		if (u1 == '\0')
+			break;
 	}
-	return err;
+	return 0;
 }
 
-MgErr LWPathAppendSeparator(LWPathHandle lwstr)
-{
-	MgErr err = mgNoErr;
-	int32 len = LWPathLenGet(lwstr);
-	if (LWPathBuf(lwstr)[len - 1] != kNativePathSeperator)
-	{
-		err =  LWPathResize(&lwstr, len + 1);
-		if (!err)
-		{
-			LWPathBuf(lwstr)[len] = kNativePathSeperator;
-			LWPathLenSet(lwstr, ++len);
-			LWPathBuf(lwstr)[len] = 0;
-		}
-	}
-	return err;
-}
-
-
-static int32 StrUNCOffset(const char *ptr, int32 offset)
+static int32 LWPtrUNCOffset(const LWChar *ptr, int32 offset, int32 len)
 {
 	int32 sep = 0;
-	for (ptr += offset; *ptr; offset++)
+	for (ptr += offset; *ptr && offset < len; *ptr++, offset++)
 	{
-		if (*ptr++ == kNativePathSeperator)
+		if (IsSeperator(*ptr))
 		{
-			sep++;
-			offset++;
-			if (sep >= 3)
-				return offset;
-			if (*ptr++ == kNativePathSeperator)
-				return -1;
+			while (IsSeperator(ptr[1]))
+			{
+				ptr++;
+				offset++;
+			}
+			if (++sep >= 2)
+				return ++offset;
 		}
+	}
+	if (sep == 1 && (!*ptr || offset == len))
+	{
+		return offset;
 	}
 	return -1;  
-}
-
-LibAPI(int32) LStrRootPathLen(const LStrHandle filePath, int32 offset, uInt8 *type)
-{
-	int32 len = LStrLenH(filePath);
-	if (len)
-	{
-		const char *ptr = (const char*)LStrBuf(*filePath);
-
-		if (offset < 0)
-			offset = HasDOSDevicePrefix(ptr, len);
-#if usesWinPath && !Pharlap
-		if (len == offset || (offset == 8 && len <= 8))
-		{
-			if (type)
-				*type = fAbsPath;		
-			offset = 0;
-		}
-		else if ((len >= 3 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator))
-		{
-			if (type)
-				*type = fAbsPath;		
-			offset += 3;
-		}
-		else if (len > 8 && offset == 8)
-		{
-			offset = StrUNCOffset(ptr, offset);
-			if (type)
-				*type = offset < 0 ? fNotAPath : fUNCPath;		
-		}
-		else if (len >= 3 + offset && ptr[0] == kPathSeperator && ptr[1] == kPathSeperator && ptr[2] < 128 && isalpha(ptr[2]))
-		{
-			offset = StrUNCOffset(ptr, offset + 2);
-			if (type)
-				*type = offset < 0 ? fNotAPath : fUNCPath;		
-		}
-#elif usesWinPath && Pharlap
-		if (len >= 3 + offset && (ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator))
-		{
-			if (type)
-				*type = fAbsPath;		
-			offset += 3;
-		}
-		else if (len >= 3 + offset && ptr[offset] == kPathSeperator && ptr[offset + 1] == kPathSeperator && ptr[offset + 2] < 128 && isalpha(ptr[offset + 2]))
-		{
-			offset = StrUNCOffset(ptr, offset + 2);
-			if (type)
-				*type = offset < 0 ? fNotAPath : fUNCPath;		
-		}
-#else
-		if (ptr[offset] == kPosixPathSeperator)
-		{
-			if (len >= 2 + offset && ptr[offset + 1] == kPosixPathSeperator)
-			{
-				offset = StrUNCOffset(ptr, offset + 2);
-				if (type)
-					*type = offset < 0 ? fNotAPath : fUNCPath;		
-			}
-			else
-			{
-				if (type)
-					*type = fAbsPath;		
-				offset += 1;
-			}
-		}
-#endif
-		else
-		{
-			if (type)
-				*type = fRelPath;		
-		}
-	}
-	else
-	{
-		/* len == 0 is root path and always absolute */
-		if (type)
-			*type = fAbsPath;		
-	}
-	return offset;
-}
-
-Bool32 LStrIsAPathOfType(const LStrHandle pathName, int32 offset, uInt8 isType)
-{
-	uInt8 type = fNotAPath;
-	int32 off = offset < 0 ? HasDOSDevicePrefix(LStrBufH(pathName), LStrLenH(pathName)) : offset;
-	
-	LStrRootPathLen(pathName, off, &type);
-	return (type == isType);
-}
-
-Bool32 LStrIsAbsPath(const LStrHandle pathName, int32 offset)
-{
-	uInt8 type = fNotAPath;
-	int32 off = offset < 0 ? HasDOSDevicePrefix(LStrBufH(pathName), LStrLenH(pathName)) : offset;
-	
-	LStrRootPathLen(pathName, off, &type);
-	return ((type == fAbsPath) || (type == fUNCPath));
-}
-
-static int32 ParentPathInternal(uChar *string, int32 rootLen, int32 end)
-{
-	while (end > rootLen && string[--end] != kNativePathSeperator);
-	return end;
-}
-
-LibAPI(MgErr) LStrParentPath(LStrHandle filePath, LStrHandle *fileName, LVBoolean *empty)
-{
-	MgErr err = mgNoErr;
-	uInt8 srcType = fNotAPath;
-	uChar *srcPtr = LStrBufH(filePath);
-	int32 dstLen, srcLen = LStrLenH(filePath),
-		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
-	      srcRoot = LStrRootPathLen(filePath, srcOff, &srcType);
-
-	if (LStrLenH(*fileName))
-		LStrLen(**fileName) = 0;
-
-	if (srcLen <= srcOff || srcType == fNotAPath)
-		return mgArgErr;
-
-	if (srcPtr[srcLen - 1] == kNativePathSeperator)
-		LStrLen(*filePath) = --srcLen;
-
-/*                         parent                 name             srcLen  srcOff  srcRoot  R<L  srcRoot+1  empty  srcLen+1  srcOff+1  destLen
-C:\data\test               C:\data                test               12       0       3      T      7         F       7         8         4
-C:\data\                   C:\                    data              7(8)      0       3      T      3         F       3         3         4
-C:\data                    C:\                    data                7       0       3      T      3         F       3         3         4
-C:\                        <empty>                c                   3       0       3    F                T       0       (0)         1       
-\\?\C:\data                \\?\C:\                data               11       4       7      T      7         F       7         7         4
-\\?\C:\                    <empty>                c                 6(7)      4       7    F                T       0       (4)         1          
-\\server\share\data        \\server\share         data               19       0      14      T     14         F      14        15         4       
-\\server\share             <empty>                \\server\share     14       0      14    F                T       0       (0)        14          
-\\?\UNC\server\share\data  \\?\UNC\server\share   data               25       8      20      T     20         F      10        21         4
-\\?\UNC\server\share\      <empty>                \\server\share  20(21)      8      20    F                T       0        6         14
-data\test                  data                   test                9       0       0      T      4         F       4         5         4
-data                       <empty>                data                4       0       0      T      0         T       0         0         4
-
-/data/test/                /data                  test            10(11)      0       1      T      5         F       5         6         4
-/data/test                 /data                  test               10       0       1      T      5         F       5         6         4
-/data                      <empty>                data                5       0       1      T      0         T       0         1         4
-//server/share/data        //server/share         data               19       0      14      T     14         F      14        15         4
-//server/share             <empty>                //server/share     14       0      14    F                T       0       (0)        14       
-data/test                  data                   test                9       0       0      T      4         F       4         5         4
-data                       <empty>                data                4       0       0      T      0         T       0         0         4
-
-Volume:Data:Test
-:Data:Test
-*/
-	if (srcRoot < srcLen)
-	{
-		srcRoot = ParentPathInternal(srcPtr, srcRoot, srcLen); 
-		if (empty)
-			*empty = (LVBoolean)(srcRoot <= srcOff);
-		srcOff = srcRoot;
-		if (srcPtr[srcOff] == kNativePathSeperator)
-			srcOff++;
-		dstLen = srcLen - srcOff;
-		srcLen = srcRoot;
-	}
-	else
-	{
-		if (empty)
-			*empty = LV_TRUE;
-		if (srcType == fUNCPath && srcOff == 8)
-			srcOff = 6;
-		dstLen = (srcType == fAbsPath) ? 1 : (srcLen - srcOff);
-		srcLen = 0;
-	}
-	err = NumericArrayResize(uB, 1, (UHandle*)fileName, dstLen);
-	if (!err)
-	{
-		MoveBlock(srcPtr + srcOff, LStrBuf(**fileName), dstLen);
-#if usesWinPath && !Pharlap
-		if (!srcLen && srcOff == 6)
-			LStrBuf(**fileName)[0] = kNativePathSeperator;
-#endif
-		LStrLen(**fileName) = dstLen;
-	}
-	LStrLen(*filePath) = srcLen;
-	return err;
-}
-
-LibAPI(MgErr) LStrAppendPath(LStrHandle *filePath, LStrHandle relPath)
-{
-	MgErr err = mgNoErr;
-	uChar *srcPtr = LStrBufH(*filePath), *relPtr = LStrBufH(relPath);
-	uInt8 srcType = fNotAPath, relType = fNotAPath;
-	int32 srcLen = LStrLenH(*filePath),
-		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
-		  srcRoot = LStrRootPathLen(*filePath, srcOff, &srcType),
-		  relLen = LStrLenH(relPath),
-		  relOff = HasDOSDevicePrefix(relPtr, relLen),
-		  relRoot = LStrRootPathLen(relPath, relOff, &relType);
-
-	/* If empty relative path, there is nothing to append */
-	if (relLen <= relOff)
-		return mgNoErr;
-
-	/* If start path is not empty and relative path is not relative, we have a problem */
-	if (srcLen > srcOff && relType != fRelPath)
-		return mgArgErr;
-
-	/* Remove trailing path seperator */
-	if (srcLen > srcRoot && srcPtr[srcLen - 1] == kNativePathSeperator)
-		srcLen--;
-
-	if (relLen > relRoot && relPtr[relLen - 1] == kNativePathSeperator)
-		relLen--;
-
-	err = NumericArrayResize(uB, 1, (UHandle*)filePath, srcLen + relLen + 1);
-	if (!err)
-	{
-		srcPtr = LStrBufH(*filePath);
-		
-		if (relPtr[0] != kNativePathSeperator && srcLen > srcRoot)
-			srcPtr[srcLen++] = kNativePathSeperator;
-		MoveBlock(relPtr, srcPtr + srcLen, relLen);
-		LStrLen(**filePath) = srcLen + relLen;
-	}
-	return err;
-}
-
-LibAPI(MgErr) LRefParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVBoolean *empty)
-{
-	MgErr err = mgNoErr;
-	LWChar *srcPtr = LWPathBuf(*filePath);
-	uInt8 srcType = fNotAPath;
-	int32 srcLen = LWPathLenGet(*filePath),
-		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
-	      srcRoot = LWPathRootLen(*filePath, srcOff, &srcType);
-
-	if (LStrLenH(*fileName))
-		LStrLen(**fileName) = 0;
-
-	if (srcLen <= srcOff || srcType == fNotAPath)
-		return mgArgErr;
-
-	if (srcPtr[srcLen - 1] == kNativePathSeperator)
-		LWPathLenSet(*filePath, --srcLen);
-
-	if (srcRoot < srcLen)
-	{
-		srcRoot = LWPathParentInternal(*filePath, srcRoot, srcLen); 
-		if (empty)
-			*empty = (LVBoolean)(srcRoot <= srcOff);
-		srcOff = srcRoot;
-		if (srcPtr[srcOff] == kNativePathSeperator)
-			srcOff++;
-		srcLen = srcRoot;
-	}
-	else
-	{
-		if (empty)
-			*empty = LV_TRUE;
-		if (srcType == fUNCPath && srcOff == 8)
-			srcOff = 6;
-		if (srcType == fAbsPath)
-			LWPathLenSet(*filePath, srcOff + 1);
-		srcLen = 0;
-	}
-	err = LStrFromLWPath(fileName, CP_UTF8, *filePath, srcOff, LV_TRUE);
-	if (!err)
-	{
-#if usesWinPath && !Pharlap
-		if (!srcLen && srcOff == 6)
-			LStrBuf(**fileName)[0] = kNativePathSeperator;
-#endif
-		LWPathLenSet(*filePath, srcLen);
-	}
-	return err;
-}
-
-LibAPI(MgErr) LRefAppendPath(LWPathHandle *filePath, LStrHandle relString)
-{
-	MgErr err = mgNoErr;
-	LWPathHandle relPath = NULL;
-	uInt8 relType = fNotAPath;
-	int32 srcLen = LWPathLenGet(*filePath),
-		  srcOff = HasDOSDevicePrefix(LWPathBuf(*filePath), srcLen),
-		  relLen = LStrLen(*relString),
-		  relOff = HasDOSDevicePrefix(LStrBuf(*relString), relLen);
-
-	/* If empty relative path, there is nothing to append */
-	if (relLen <= relOff)
-		return mgNoErr;
-
-	LStrRootPathLen(relString, relOff, &relType);
-
-	/* If start path is not empty and relative path is not relative, we have a problem */
-	if (srcLen > srcOff && relType != fRelPath)
-		return mgArgErr;
-
-	err = LStrToLWPath(relString, CP_UTF8, &relPath, kDefaultPath, 0);
-	if (!err)
-	{
-		err = LWPathAppend(*filePath, srcLen, filePath, relPath);
-		LWPathDispose(relPath);
-	}
-	return err;
-}
-
-uInt16 PathDepth(uChar *string, int32 offset, int32 rootLen, int32 end)
-{
-	uInt16 i = 0;
-	while (end && end > rootLen)
-	{
-		end = ParentPathInternal(string, rootLen, end);
-		i++;
-	}
-	return (i + (uInt16)(end > offset));
-}
-
-/* Return values:
-   -2: invalid path
-   -1: no path segment left
-    0: empty path, canonical root
-   1..: next segment offset
- */
-static int32 LStrNextPathSegment(LStrHandle filePath, int32 start, int32 end)
-{
-	if (end < 0)
-		end = LStrLenH(filePath);
-
-	if (LStrBufH(filePath)[end - 1] == kNativePathSeperator)
-		end--;
-
-	if (start <= 0)
-	{
-		int32 rootLen = LStrRootPathLen(filePath, -1, NULL);
-		if (rootLen == -2)
-			return -2;
-		if (rootLen == -1)
-			start = 0;
-		else
-			return rootLen;
-	}
-
-	if (start >= end)
-		return -1;
-
-	for (;start < end && LStrBufH(filePath)[start] != kNativePathSeperator; start++);
-
-	return start;
-}
-
-static int32 LWStrUNCOffset(LWPathHandle lwstr, int32 offset)
-{
-	int32 sep = 0, len = LWPathLenGet(lwstr);
-	const LWChar *ptr = LWPathBuf(lwstr);
-
-	for (ptr += offset; offset < len; offset++)
-	{
-		if (*ptr++ == kNativePathSeperator)
-		{
-			sep++;
-			offset++;
-			if (sep >= 3)
-				return offset;
-			if (*ptr++ == kNativePathSeperator)
-				return -1;
-		}
-	}
-	return -2;  
 }
 
 /* Returns:
@@ -660,67 +90,48 @@ static int32 LWStrUNCOffset(LWPathHandle lwstr, int32 offset)
    -1 for a relative path
    -2 when there is an invalid path
  */
-int32 LWPathRootLen(LWPathHandle lwstr, int32 offset, uInt8 *type)
+DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *type)
 {
-	int32 len = LWPathLenGet(lwstr);
-	if (len)
-	{
-		LWChar *ptr = LWPathBuf(lwstr);
+	if (offset < 0)
+		offset = HasDOSDevicePrefix(ptr, len);
 
-		if (offset < 0)
-			offset = HasDOSDevicePrefix(ptr, len);
-#if usesWinPath && !Pharlap
-		if (len == offset || (offset == 8 && len <= 8))
+	if (len > offset)
+	{
+#if usesWinPath
+		if ((len >= 2 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':'))
 		{
 			if (type)
 				*type = fAbsPath;		
-			offset = 0;
+			offset += 2 + (IsSeperator(ptr[offset + 2]) ? 1 : 0);
 		}
-		else if ((len >= 3 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator))
+		else if (len >= 3 + offset && IsSeperator(ptr[offset]) && IsSeperator(ptr[offset + 1]) && ptr[offset + 2] < 128 && isalpha(ptr[offset + 2]))
 		{
-			if (type)
-				*type = fAbsPath;		
-			offset += 3;
-		}
-		else if (len > 8 && offset == 8)
-		{
-			offset = LWStrUNCOffset(lwstr, offset);
-			if (type)
-				*type = (offset < 0) ? fNotAPath : fUNCPath;		
-		}
-		else if (len >= 3 + offset && ptr[offset] == kPathSeperator && ptr[offset + 1] == kPathSeperator && ptr[offset + 2] < 128 && isalpha(ptr[2]))
-		{
-			offset = LWStrUNCOffset(lwstr, offset + 2);
-			if (type)
-				*type = (offset < 0) ? fNotAPath : fUNCPath;		
-		}
-#elif usesWinPath && Pharlap 
-		if (len >= 3 + offset && (ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':' && ptr[offset + 2] == kPathSeperator))
-		{
-			if (type)
-				*type = fAbsPath;		
-			offset += 3;
-		}
-		if (len >= 3 + offset && ptr[offset] == kPathSeperator && ptr[offset + 1] == kPathSeperator && ptr[offset + 2] < 128 && isalpha(ptr[2]))
-		{
-			offset = LWStrUNCOffset(lwstr, offset + 2);
+			offset = LWPtrUNCOffset(ptr, offset + 2, len);
 			if (type)
 				*type = offset < 0 ? fNotAPath : fUNCPath;		
 		}
-#else
-		if (len >= 1 + offset && ptr[offset] == kPosixPathSeperator)
+ #if !Pharlap
+		else if (offset == 8)
 		{
-			if (len >= 2 + offset && ptr[offset + 1] == kPosixPathSeperator)
+			offset = LWPtrUNCOffset(ptr, offset, len);
+			if (type)
+				*type = offset < 0 ? fNotAPath : fUNCPath;		
+		}
+ #endif
+#else
+		if (IsPosixSeperator(ptr[offset]))
+		{
+			if (len >= 2 + offset && IsSeperator(ptr[offset + 1]))
 			{
-				offset = LWStrUNCOffset(lwstr, offset + 2);
+				offset = LWPtrUNCOffset(ptr, offset + 2, len);
 				if (type)
 					*type = offset < 0 ? fNotAPath : fUNCPath;		
 			}
 			else
 			{
+				offset++;
 				if (type)
 					*type = fAbsPath;		
-				offset += 1;
 			}
 		}
 #endif
@@ -732,97 +143,11 @@ int32 LWPathRootLen(LWPathHandle lwstr, int32 offset, uInt8 *type)
 	}
 	else
 	{
+		/* len == offset is root path and always absolute */
 		if (type)
 			*type = fAbsPath;		
 	}
 	return offset;
-}
-
-Bool32 LWPathIsOfType(LWPathHandle pathName, int32 offset, uInt8 isType)
-{
-	uInt8 type = fNotAPath;
-
-	if (offset < 0)
-		offset = HasDOSDevicePrefix(LWPathBuf(pathName), LWPathLenGet(pathName));
-	
-	LWPathRootLen(pathName, offset, &type);
-	return (type == isType) || (isType == fAbsPath && type == fUNCPath);
-}
-
-int32 LWPathParentInternal(LWPathHandle lwstr, int32 rootLen, int32 end)
-{
-	if (end < 0)
-		end = LWPathLenGet(lwstr);
-	while (end && end > rootLen && LWPathBuf(lwstr)[--end] != kNativePathSeperator);
-	return end;
-}
-
-int32 LWPathParent(LWPathHandle lwstr, int32 end)
-{
-	int32 rootLen = LWPathRootLen(lwstr, -1, NULL);
-	if (rootLen >= -1)
-		return LWPathParentInternal(lwstr, rootLen, end);
-	return -1;
-}
-
-int32 LWPathDepth(LWPathHandle lwstr, int32 end)
-{
-	int32 i = 0, 
-		  offset = HasDOSDevicePrefix(LWPathBuf(lwstr), LWPathLenGet(lwstr)),
-		  rootLen = LWPathRootLen(lwstr, offset, NULL);
-	if (end < 0)
-		end = LWPathLenGet(lwstr);
-	while (end && end > rootLen)
-	{
-		end = LWPathParentInternal(lwstr, rootLen, end);
-		i++;
-	}
-	return end > offset ? i + 1 : i;
-}
-
-MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPathHandle relPath)
-{
-	MgErr err = mgNoErr;
-	LWPathHandle tmpPath = newPath ? *newPath : srcPath;
-	uInt8 relType = fNotAPath;
-	LWChar *srcPtr = LWPathBuf(srcPath), *relPtr = LWPathBuf(relPath);
-	int32 srcLen = end < 0 ? LWPathLenGet(srcPath) : end,
-		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
-		  relLen = LWPathLenGet(relPath),
-		  relOff = HasDOSDevicePrefix(relPtr, relLen),
-		  relRoot = LWPathRootLen(relPath, relOff, &relType);
-
-	/* If empty relative path, there is nothing to append */
-	if (relLen <= relOff)
-		return mgNoErr;
-
-	/* If start path is not empty and relative path is not relative, we have a problem */
-	if (srcLen > srcOff && relType != fRelPath)
-		return mgArgErr;
-	
-	/* Remove trailing path seperator */
-	if (srcLen > LWPathRootLen(srcPath, srcOff, NULL) && srcPtr[srcLen - 1] == kNativePathSeperator)
-		srcLen--;
-
-	if (relLen > relRoot && relPtr[relLen - 1] == kNativePathSeperator)
-		relLen--;
-
-	if (srcPath != tmpPath)
-	{
-		err = LWPathNCat(&tmpPath, 0, srcPtr, srcLen);
-	}
-	if (!err)
-	{
-		if (relPtr[0] != kNativePathSeperator)
-			err = LWPathAppendSeparator(tmpPath);
-		if (!err)
-			err = LWPathNCat(&tmpPath, -1, relPtr, relLen);
-		if (!err && newPath && *newPath != tmpPath)
-		{
-			*newPath = tmpPath;
-		}
-	}
-	return err;
 }
 
 /* Return values:
@@ -831,63 +156,643 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
     0: empty path, canonical root
    1..: next segment offset
  */
-int32 LWPathNextElement(LWPathHandle lwstr, int32 start, int32 end)
+int32 LWPtrNextElement(const LWChar *ptr, int32 len, int32 off)
 {
-	LWChar *ptr = LWPathBuf(lwstr);
-
-	if (start <= 0)
+	if (off <= 0)
 	{
 		uInt8 type = fNotAPath;
-		int32 rootLen = LWPathRootLen(lwstr, -1, &type);
+
+		off = LWPtrRootLen(ptr, len, -1, &type);
 		if (type == fNotAPath)
 			return -2;
-		if (type == fRelPath)
-			start = 0;
-		else
-			return rootLen;
+		if (type != fRelPath)
+			return off;
 	}
 
-	if (end < 0)
-		end = LWPathLenGet(lwstr);
+	if (IsSeperator(ptr[off]))
+		off++;
 
-	if (ptr[start] == kNativePathSeperator)
-		start++;
-
-	if (start >= end)
+	if (off >= len)
 		return -1;
 
-	if (ptr[end - 1] == kNativePathSeperator)
-		end--;
+	if (IsSeperator(ptr[len - 1]))
+		len--;
 
-	for (;start < end && ptr[start] && ptr[start] != kNativePathSeperator; start++);
+	for (;off < len && ptr[off] && !IsSeperator(ptr[off]); off++);
 
-	return start;
+	return off;
 }
 
-MgErr LWStrRelativePath(LWPathHandle startPath, LWPathHandle endPath, LWPathHandle *relPath)
+int32 LWPtrParentInternal(const LWChar *ptr, int32 len, int32 rootLen)
 {
-	int32 startCount, endCount, level, notchesUp;
-	int16 length, totalLength, remainingEndCount, i, err;
-	uInt8 startType = fNotAPath, endType = fNotAPath;
-	LWChar *startp = LWPathBuf(startPath),
-		   *endp = LWPathBuf(endPath);
-	int32 startLen = LWPathLenGet(startPath),
-		  startOff = HasDOSDevicePrefix(startp, startLen),
-		  startRoot = LWPathRootLen(startPath, startOff, &startType),
-		  endLen = LWPathLenGet(endPath),
-		  endOff = HasDOSDevicePrefix(endp, endLen),
-		  endRoot = LWPathRootLen(endPath, endOff, &endType); 
+	while (len && len-- > rootLen && !IsSeperator(ptr[len]));
+	return len;
+}
 
-	if (startType != fAbsPath && endType != fAbsPath && relPath)
+int32 LWPtrParent(const LWChar *ptr, int32 len)
+{
+	int32 rootLen = LWPtrRootLen(ptr, len, -1, NULL);
+	if (rootLen >= -1)
+		return LWPtrParentInternal(ptr, len, rootLen);
+	return -1;
+}
+
+int32 LWPtrDepth(const LWChar *ptr, int32 len, int32 offset, int32 rootLen)
+{
+	int32 i = 0;
+
+	while (len && len > rootLen)
+	{
+		len = LWPtrParentInternal(ptr, len, rootLen);
+		i++;
+	}
+	return len > offset ? i + 1 : i;
+}
+
+Bool32 LWPtrIsOfType(const LWChar *ptr, int32 len, int32 offset, uInt8 isType)
+{
+	uInt8 type = fNotAPath;
+
+	if (offset < 0)
+		offset = HasDOSDevicePrefix(ptr, len);
+	
+	LWPtrRootLen(ptr, len, offset, &type);
+	return (type == isType);
+}
+
+DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *lwstr, int32 reserve)
+{
+	MgErr err = noErr;
+	if (srcLen < sizeof(gNotAPath) || LWPtrCompare(gNotAPath, srcPtr, sizeof(gNotAPath)))
+	{
+		uInt8 type = fNotAPath;
+		int32 xtrLen = 0,
+			  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
+			  srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, &type);
+
+#if Unix || MacOSX
+		if (!srcLen)
+		{
+			// we want to make the path at least contain a separater
+			reserve++;
+		}
+#elif Win32 && !Pharlap /* Windows and not Pharlap */
+		if (!srcOff)
+		{
+			/* Create DOS Device paths for absolute paths that aren't that yet */ 
+			if (type == fAbsPath && srcLen)
+			{
+				/* Absolute path with drive letter */
+				xtrLen = 4;
+			}
+			else if (type == fUNCPath)
+			{
+				/* Absolute UNC path */
+				xtrLen = 8;
+				srcPtr += 2;
+				srcLen -= 2;
+				srcRoot -= 2;
+			}
+		}
+#endif
+		err = LWPathResize(lwstr, srcLen + xtrLen + reserve);
+		if (!err)
+		{
+#if usesWinPath && !Pharlap /* Windows and not Pharlap */
+			switch (xtrLen)
+			{
+				case 4:
+					LWPathNCat(lwstr, 0, L"\\\\?\\", xtrLen);
+					break;
+				case 8:
+					LWPathNCat(lwstr, 0, L"\\\\?\\UNC\\", xtrLen);
+					break;
+			}
+#endif
+			if (srcLen)
+			{
+				err = LWPtrNormalize(srcPtr, srcLen, srcRoot, lwstr, xtrLen, type);
+			}
+#if Unix || MacOSX
+			else
+			{
+				LWPathBuf(*lwstr)[0] = kPathSeperator;
+			}
+#endif
+		}
+	}
+	else
+	{
+		err = LWPathResize(lwstr, 0);
+		if (!err)
+		{
+			LWPathLenSet(*lwstr, 0);
+			LWPathCntSet(*lwstr, 0);
+			LWPathTypeSet(*lwstr, fNotAPath);
+		}
+	}
+	return err;
+}
+
+MgErr LWPathResize(LWPathHandle *lwstr, size_t numChar)
+{
+	int32 len = (int32)(offsetof(LWPathRec, str) + (numChar + 1) * sizeof(LWChar));
+	if (*lwstr)
+	{
+		if (DSGetHandleSize((UHandle)*lwstr) < len)
+			DSSetHandleSize((UHandle)*lwstr, len);
+	}
+	else
+	{
+		*lwstr = (LWPathHandle)DSNewHandle(len);
+		if (!*lwstr)
+			return mFullErr;
+		ClearMem((UPtr)(**lwstr), offsetof(LWPathRec, str));
+	}
+	return mgNoErr;
+}
+
+MgErr LWPathDispose(LWPathHandle lwstr)
+{
+	if (lwstr)
+		return DSDisposeHandle((UHandle)lwstr);
+	return mgNoErr;
+}
+
+MgErr LWPathZeroTerminate(LWPathHandle *pathName, int32 len)
+{
+	int32 newLen = len < 0 ? LWPathLenGet(*pathName) : len;
+	MgErr err = LWPathResize(pathName, newLen);
+	if (!err && newLen >= 0)
+	{
+		LWPathLenSet(*pathName, newLen);
+	}
+	return err;
+}
+
+DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot, LWPathHandle *pathName, int32 tgtOff, uInt8 type)
+{
+	LWChar *tgtPtr = LWPathBuf(*pathName);
+	int32 srcOff = 0, tgtRoot = tgtOff + srcRoot;
+	uInt16 cnt = 0;
+
+	/*
+	 srcLen  srcPtr[0]
+       0        x         0
+       1        .         0
+       1        x         1
+	  >=2       x         1
+	*/
+
+	if (srcPtr && srcPtr[0] && (srcLen > 1 || srcLen == 1 && srcPtr[0] != '.'))
+	{
+		/*								prefix	srcRoot	type   cnt
+		rtest\file						   0	   0	 rel	2	+1
+		.\rtest\file					   0	   0	 rel	2	+1
+		C:\								   0       3	 abs    1
+		C:rtest\file					   0	   2	 abs	3	+2
+		C:\rtest\file					   0	   3	 abs	3	+2
+		\\server\share\rtest\file		   0	  15	 unc	3	+2
+		\\?\rtest\file					   4	   4	 rel	3	+1
+		\\?\rtest\file					   4	   4	 rel	3	+1
+		\\?\C:\							   4	   7	 abs	1
+		\\?\C:rtest\file				   4	   6	 abs	3	+2
+		\\?\C:\rtest\file				   4       7	 abs	3	+2
+		\\?\UNC\server\share\rtest\file	   8	  21	 unc	3	+2
+
+		rtest/file						   0	   0	 rel	2	+1
+		/dir/rtest/file					   0	   1	 abs	3   +1
+		//server/share/rtest/file		   0	  15	 unc	3	+2
+		*/
+
+		if (IsSeperator(srcPtr[srcLen - 1]) && (srcLen > srcRoot || type == fUNCPath))
+			srcLen--;
+		
+		cnt++;
+
+		/* Canonicalize the path */
+		while (srcLen > srcOff)
+		{
+			if (srcOff < srcRoot)
+			{
+#if usesWinPath
+				if (srcPtr[srcOff] == '/')
+				{
+					tgtPtr[tgtOff++] = kPathSeperator;
+					srcOff++;
+				}
+				else
+#endif
+				{
+					tgtPtr[tgtOff++] = srcPtr[srcOff++];
+				}
+			}
+			else if (IsSeperator(srcPtr[srcOff]) && IsSeperator(srcPtr[srcOff + 1]))
+			{
+				srcOff++; /* Reduce // to / */ 
+			}
+			else if (srcPtr[srcOff] == '.')
+			{
+				if (srcOff == srcLen - 1)
+				{
+					// trailing period at end of path
+#if usesPosixPath
+					tgtPtr[tgtOff++] = srcPtr[srcOff++];
+#else
+					srcOff++; /* Skip trailing . */
+#endif
+				}
+				else if (IsSeperator(srcPtr[srcOff + 1]))
+				{
+					if (tgtOff == srcRoot || IsSeperator(srcPtr[srcOff - 1]))
+					{
+						// embedded current directory, skip it
+						srcOff += 2; /* Skip ./ */
+					}
+					else
+					{
+						// trailing period at end of path element
+#if usesPosixPath
+						tgtPtr[tgtOff++] = srcPtr[srcOff++];
+#else
+						srcOff++; /* Skip trailing . */
+#endif
+					}
+				}
+				else if (srcPtr[srcOff + 1] == '.')
+				{
+					/* .. backs up a directory but only if it is not at the root of the path */
+					if (type == fRelPath && srcOff == srcRoot)
+					{
+						tgtPtr[tgtOff++] = srcPtr[srcOff++];
+						tgtPtr[tgtOff++] = srcPtr[srcOff++];
+						tgtPtr[tgtOff++] = srcPtr[srcOff++];
+						srcRoot += 3;
+						cnt++;
+					}
+					else
+					{
+						if (tgtOff > tgtRoot && tgtPtr[tgtOff - 1] == kPathSeperator)
+						{
+							tgtOff -= 2;
+							while (tgtOff > tgtRoot && tgtPtr[tgtOff] != kPathSeperator)
+								tgtOff--;
+							if (tgtPtr[tgtOff] == kPathSeperator)
+								tgtOff++; /* Reset to last '\' */
+							cnt--;
+						}
+						srcOff += 3; /* Skip ../ in src path */
+					}
+				}
+				else
+					tgtPtr[tgtOff++] = srcPtr[srcOff++];
+			}
+			else
+			{
+				if (IsSeperator(srcPtr[srcOff]) && (tgtOff && tgtPtr[tgtOff - 1] != kPathSeperator))
+				{
+					cnt++;
+				}
+				if (!IsSeperator(srcPtr[srcOff]) || (tgtOff && tgtPtr[tgtOff - 1] != kPathSeperator))
+				{
+					tgtPtr[tgtOff++] = IsSeperator(srcPtr[srcOff]) ? kPathSeperator : srcPtr[srcOff];
+				}
+				srcOff++;
+			}
+		}
+#if usesWinPath
+		if (type == fAbsPath)
+		{
+			if (tgtPtr[tgtOff - 1] == ':')
+			{	
+				/* Append \ to naked drive spec */
+				LWPathAppendSeperator(*pathName, tgtOff++);
+			}
+			if (tgtOff > tgtRoot)
+				cnt++;
+		}
+		else
+#endif
+		if (type == fUNCPath)
+		{
+			if (tgtOff > tgtRoot)
+				cnt++;
+		}
+		if (cnt > 2 && tgtPtr[tgtOff - 1] == kPathSeperator && tgtOff > tgtRoot)
+		{
+			tgtOff--;
+			cnt--;
+		}
+	}
+	LWPathCntSet(*pathName, cnt);
+	LWPathLenSet(*pathName, tgtOff);
+	LWPathTypeSet(*pathName, type);
+	return noErr;
+}
+
+
+MgErr LWPathNCat(LWPathHandle *lwstr, int32 offset, const LWChar *str, int32 strLen)
+{
+	MgErr err;
+	LWChar *srcPtr = LWPathBuf(*lwstr);
+	int32 xtrLen = 0;
+
+	if (strLen == -1)
+	    strLen = lwslen(str);
+	if (offset == -1)
+		offset = LWPathLenGet(*lwstr);
+
+	if (offset && !IsSeperator(srcPtr[offset - 1]) && !IsSeperator(str[0]))
+		xtrLen = 1;
+
+	err = LWPathResize(lwstr, offset + strLen + xtrLen);
+	if (!err)
+	{
+		uInt8 type;
+		int32 rootLen;
+
+		srcPtr = LWPathBuf(*lwstr);
+		if (xtrLen)
+			srcPtr[offset++] = kPathSeperator;
+		lwsncpy(srcPtr + offset, str, strLen);
+		strLen += offset;
+
+		offset = HasDOSDevicePrefix(srcPtr, strLen);
+		rootLen = LWPtrRootLen(srcPtr, strLen, offset, &type);
+
+		LWPathLenSet(*lwstr, strLen);
+		LWPathCntSet(*lwstr, LWPtrDepth(srcPtr, strLen, offset, rootLen));
+		LWPathTypeSet(*lwstr, type);
+	}
+	return err;
+}
+
+MgErr LWPathAppendSeperator(LWPathHandle lwstr, int32 len)
+{
+	MgErr err = mgNoErr;
+	
+	if (len < 0) 
+		len = LWPathLenGet(lwstr);
+
+	if (!IsSeperator(LWPathBuf(lwstr)[len - 1]))
+	{
+		err =  LWPathResize(&lwstr, len + 2);
+		if (!err)
+		{
+			LWPathBuf(lwstr)[len] = kPathSeperator;
+			LWPathLenSet(lwstr, ++len);
+			LWPathBuf(lwstr)[len] = 0;
+		}
+	}
+	return err;
+}
+
+LibAPI(MgErr) LWPathGetPathType(LWPathHandle *pathName, int32 *type, int32 *depth)
+{
+	int32 size = pathName ? LWPathLenGet(*pathName) : -1;
+	if (size >= 0)
+	{
+		if (type)
+			*type = LWPathTypeGet(*pathName);
+		if (depth)
+			*depth = LWPathCntGet(*pathName);
+	}
+	else
+	{
+		// We make it the root path so that we can pass in an empty string buffer
+		if (type)
+			*type = fAbsPath;
+		if (depth)
+			*depth = 0;	
+	}
+	return mgNoErr;
+}
+
+LibAPI(MgErr) LWPathParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVBoolean *empty)
+{
+	MgErr err = mgNoErr;
+	LWChar *srcPtr = LWPathBuf(*filePath);
+	uInt8 srcType = fNotAPath;
+	uInt16 srcCnt = LWPathCntGet(*filePath);
+	int32 offset, srcLen = LWPathLenGet(*filePath),
+		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
+	      srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, &srcType);
+
+	// Remove path seperator at end
+	if (srcLen > srcRoot && IsSeperator(srcPtr[srcLen - 1]))
+		LWPathLenSet(*filePath, --srcLen);
+
+	// If the path is empty, invalid or just containing the relative path prefix, there is nothing we can do with this path
+	if ((srcLen <= srcOff) || (srcType == fNotAPath) ||
+		((srcType == fRelPath) && (srcLen == srcRoot + 1) && (srcPtr[srcRoot] == kRelativePathPrefix)))
 		return mgArgErr;
 
-	startCount = LWPathDepth(startPath, -1);
-	endCount = LWPathDepth(endPath, -1);
-	for (level = startCount; level > 0; level--)
-	{
+	if (fileName && LStrLenH(*fileName))
+		LStrLen(**fileName) = 0;
 
+	srcCnt--;
+	if (srcRoot < srcLen)
+	{
+		offset = LWPtrParentInternal(srcPtr, srcLen, srcRoot);
+		if (empty)
+			*empty = (LVBoolean)(srcOff >= offset);
+
+		/*															cntin	root	cntout
+			C:\test				C:\				test				  2		 3		   1
+			C:\test\test		C:\test			test				  3		 3		   2
+			\\server\share\test	\\server\share	test				  2		15		   1
+
+			/test				<EmptyPath>		test				  1      1		   0
+			/test/test			/test			test				  2		 1		   1
+		*/
+		srcLen = offset;
+		if (IsSeperator(srcPtr[offset]))
+		{
+			offset++;
+			if (srcCnt == 1 && srcType == fAbsPath)
+			{
+				srcLen++;
+			}
+		}
+#if usesWinPath
+		else if (IsSeperator(srcPtr[offset - 1]) && (srcCnt > 1 || srcType != fAbsPath))
+#else
+		else if (IsSeperator(srcPtr[offset - 1]))
+#endif
+		{
+			srcLen--;
+		}
 	}
-	return 0;
+	else
+	{
+		/*															cntin	root	cntout
+		    <EmptyPath>         <NotAPath>                            0      0		  -1
+			C:\					<EmptyPath>		C 					  1		 3		   0
+			\\server\share		<NotAPath>		\\server\share		  1     14		  -1
+
+			/					<NotAPath>							  0		 1		  -1
+		*/
+		if (empty)
+			*empty = LV_TRUE;
+		offset = srcOff;
+#if usesWinPath
+#if !Pharlap
+		if (srcType == fUNCPath)
+		{
+			if (offset == 8)
+				offset = 6;
+			srcType = fAbsPath;
+		}
+		else
+#endif
+		if (srcType == fAbsPath)
+		{
+			LWPathLenSet(*filePath, 1);
+		}
+		else if (!srcCnt)
+#endif
+		{
+			srcType = fNotAPath;
+		}
+		srcLen = 0;
+	}
+	err = LStrFromLWPath(fileName, CP_UTF8, filePath, offset, kDefaultPath);
+	if (!err)
+	{
+#if usesWinPath && !Pharlap
+		if (!srcLen && srcOff == 6)
+			LStrBuf(**fileName)[0] = kPathSeperator;
+#endif
+		LWPathTypeSet(*filePath, srcType);
+		LWPathLenSet(*filePath, srcLen);
+		LWPathCntSet(*filePath, srcCnt);
+	}
+	return err;
+}
+
+MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPathHandle relPath)
+{
+	MgErr err = mgNoErr;
+	LWPathHandle tmpPath = newPath ? *newPath : srcPath;
+	LWChar *srcPtr = LWPathBuf(srcPath), *relPtr = LWPathBuf(relPath);
+	uInt8 srcType = LWPathTypeGet(srcPath), relType = LWPathTypeGet(relPath);
+	int32 xtrLen = 0,
+		  srcLen = end >= 0 ? end : LWPathLenGet(srcPath),
+		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
+		  srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, NULL),
+		  srcCnt = end >= 0 ? LWPtrDepth(srcPtr, end, srcOff, srcRoot) : LWPathCntGet(srcPath),
+		  relLen = LWPathLenGet(relPath),
+		  relOff = HasDOSDevicePrefix(relPtr, relLen),
+		  relRoot = LWPtrRootLen(relPtr, relLen, relOff, NULL),
+		  relCnt = LWPathCntGet(relPath);
+
+
+	/* If either path is invalid or start path is not empty and relative path is not relative, we have a problem */
+	if ((srcType == fNotAPath) || (relType == fNotAPath) || (srcCnt && relType != fRelPath))
+		return mgArgErr;
+
+	/* If relative path then relOff should be adjusted to relRoot to skip possible relative prefix */
+	if (relType == fRelPath)
+		relOff = relRoot;
+
+	if (srcCnt && !IsSeperator(srcPtr[srcLen - 1]))
+		xtrLen = 1;
+#if usesWinPath || usesPosixPath
+	else if (!srcCnt && srcType == fAbsPath && relType == fRelPath)
+#if usesWinPath
+		xtrLen = 2;
+#elif usesPosixPath
+		xtrLen = 1;
+#endif
+#endif
+
+	if (srcPath != tmpPath || relCnt)
+	{
+		err = LWPathResize(&tmpPath, srcLen + relLen - relOff + xtrLen);
+	}
+	if (!err)
+	{
+		if (srcPath != tmpPath && (srcCnt || relType == fRelPath))
+		{
+			// We have a new destination path with a valid source path, copy it over
+			MoveBlock(*srcPath, *tmpPath, offsetof(LWPathRec, str) + srcLen * sizeof(LWChar));
+		}
+		else if (!srcCnt && relType != fRelPath)
+		{
+			// No source path and the incoming path is not a relative path, so copy over 
+			MoveBlock(*relPath, *tmpPath, (*relPath)->size + sizeof(int32));
+		}
+
+		/* If empty relative path, there is nothing to append */
+		if (relCnt)
+		{
+			srcPtr = LWPathBuf(tmpPath);
+//			srcLen = LWPathLenGet(tmpPath);
+			if (xtrLen == 1)
+			{
+				srcPtr[srcLen++] = kPathSeperator;
+			}
+			
+			MoveBlock(relPtr + relOff, srcPtr + srcLen, (relLen - relOff) * sizeof(LWChar));
+			srcLen += relLen - relOff;
+
+#if usesWinPath
+			if (!err && xtrLen == 2)
+			{
+				srcPtr[srcLen++] = ':';
+				srcPtr[srcLen++] = kPathSeperator;
+			}
+#endif
+			LWPathCntSet(tmpPath, srcCnt + relCnt);
+		}
+		LWPathLenSet(tmpPath, srcLen);
+	}
+	return err;
+}
+
+LibAPI(MgErr) LWPathAppendUStr(LWPathHandle *filePath, int32 end, const LStrHandle relString)
+{
+	LWPathHandle relPath = NULL;
+	MgErr err = LStrToLWPath(relString, CP_UTF8, &relPath, 0);
+	if (!err)
+	{
+		err = LWPathAppend(filePath ? *filePath : NULL, end, filePath, relPath);
+		LWPathDispose(relPath);
+	}
+	return err;
+}
+
+LibAPI(MgErr) LWPathAppendLWPath(LWPathHandle *filePath, const LWPathHandle *relPath)
+{
+	return LWPathAppend(filePath ? *filePath : NULL, -1, filePath, *relPath);
+}
+
+LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath, LWPathHandle *relPath)
+{
+	MgErr err = mgArgErr;
+	if (startPath && endPath)
+	{
+		int16 startCnt = LWPathCntGet(*startPath),
+			  endCnt = LWPathCntGet(*endPath),
+			  level, length, totalLength, remainingEndCount;
+		uInt8 startType = fNotAPath, endType = fNotAPath;
+		LWChar *startp = LWPathBuf(*startPath),
+			   *endp = LWPathBuf(*endPath);
+		int32 startLen = LWPathLenGet(*startPath),
+			  startOff = HasDOSDevicePrefix(startp, startLen),
+			  startRoot = LWPtrRootLen(startp, startLen, startOff, &startType),
+			  endLen = LWPathLenGet(*endPath),
+			  endOff = HasDOSDevicePrefix(endp, endLen),
+			  endRoot = LWPtrRootLen(endp, endLen, endOff, &endType); 
+
+		if (startType == fAbsPath || endType != fAbsPath && relPath)
+		{
+			for (level = startCnt; level > 0; level--)
+			{
+			}
+		}
+	}
+	return err;
 }
 
 /*
@@ -936,7 +841,7 @@ TH_REENTRANT MgErr FRelPath(Path start, Path end, Path relPath)
 	}
 */
 
-static ResType LWStrFileTypeFromExt(LWPathHandle lwstr)
+static ResType LWPathFileTypeFromExt(LWPathHandle lwstr)
 {
 	int32 len = LWPathLenGet(lwstr), k = 0;
     LWChar *ptr = LWPathBuf(lwstr);
@@ -960,7 +865,7 @@ MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, ResType *fType, ResType *f
 {
 	/* Try to determine LabVIEW file types based on file ending? */
 	uInt32 creator = kUnknownCreator,
-		   type = LWStrFileTypeFromExt(lwstr);
+		   type = LWPathFileTypeFromExt(lwstr);
 	if (type != kUnknownFileType)
 	{
 		creator = kLVCreatorType;
@@ -974,120 +879,45 @@ MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, ResType *fType, ResType *f
 	return noErr;
 }
 
-MgErr LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
+/* Windows: path is an ACP mulibyte encoded path string and lwstr is filled with a Windows UTF16LE string from the path
+   MacOSX, Unix, VxWorks, Pharlap: path is an platform encoded path string and lwstr is filled with a local encoded SBC or
+   MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
+MgErr LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, int32 reserve)
 {
-	MgErr err = noErr;
-	uChar *srcPtr = LStrBufH(string);
-	uInt8 srcType = fNotAPath;
-	int32 dstLen = 0, srcLen = LStrLenH(string),
-		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
-		  srcRoot = LStrRootPathLen(string, srcOff, &srcType);
+	MgErr err;
+	LWStrHandle temp = NULL;
 
-#if Unix || MacOSX || Pharlap
-	LStrHandle temp = NULL;
-	if (srcLen)
-	{
 #if usesHFSPath
-		if (!(flags & kLeaveHFSPath))
-			err = ConvertToPosixPath(string, codePage, &temp, CP_UTF8, '?', NULL, FALSE);
-		else
+	err = CStrToPosixPath(LStrBufH(string), LStrLenH(string), codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL, FALSE);
+#elif Unix || MacOSX || Pharlap
+	err = ConvertLString(string, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL);
+#else
+	err = MultiByteCStrToWideString(LStrBufH(string), LStrLenH(string), (WStrHandle*)&temp, codePage);
 #endif
-			if (codePage == CP_UTF8)
-			{
-				temp = string;
-			}
-			else
-			{
-				err = ConvertLString(string, codePage, &temp, CP_UTF8, '?', NULL);
-				if (err)
-					return err;
-			}
-		dstLen = LStrLenH(temp);
-	}
-#if Unix || MacOSX
-	else
-	{
-		dstLen = 1;
-	}
-#endif
-	err = LWPathResize(lwstr, dstLen + reserve);
 	if (!err)
 	{
-		if (LStrLenH(temp))
-		{
-			MoveBlock((UPtr)LStrBufH(temp), (UPtr)LWPathBuf(*lwstr), dstLen);
-		}
-#if Unix || MacOSX
-		else
-		{
-			LWPathBuf(*lwstr)[0] = flags & kCvtHFSToPosix ? kNativePathSeperator : kPathSeperator;
-			dstLen = 1;
-		}
-#endif
-	}
-	if (temp && temp != string)
+		err = LWPtrToLWPath(LWStrBuf(temp), LWStrLen(temp), lwstr, reserve);
 		DSDisposeHandle((UHandle)temp);
-#else /* Windows and not Pharlap */
-	int32 rlen = 0;
-	
-	if (!srcOff)
-	{
-		/* Create DOS Device paths for absolute paths that aren't that yet */ 
-		if (!srcLen || (srcLen >= 3) && srcPtr[0] < 128 && isalpha(srcPtr[0]) && srcPtr[1] == ':' && srcPtr[2] == kPathSeperator)
-		{
-			/* Absolute path with drive letter */
-			rlen = 4;
-		}
-		else if (srcPtr[0] == kPathSeperator && srcPtr[1] == kPathSeperator && srcPtr[2] < 128 && isalpha(srcPtr[2]))
-		{
-			/* Absolute UNC path */
-			rlen = 7;
-		}
 	}
-	dstLen = MultiByteToWideChar(codePage, 0, (LPCSTR)srcPtr, srcLen, NULL, 0);
-	if (dstLen <= 0)
-		return mgArgErr;
-	
-	err = LWPathResize(lwstr, rlen + dstLen + reserve);
-	if (err)
-		return err;
-
-	switch (rlen)
-	{
-		case 4:
-			LWPathNCat(lwstr, 0, L"\\\\?\\", rlen);
-			break;
-		case 7:
-			LWPathNCat(lwstr, 0, L"\\\\?\\UNC", rlen);
-			break;
-	}
-	dstLen = MultiByteToWideChar(codePage, 0, (LPCSTR)srcPtr + (rlen == 7), srcLen - (rlen == 7), LWPathBuf(*lwstr) + rlen, dstLen + reserve);
-	if (dstLen <= 0)
-		return mgArgErr;
-	dstLen += rlen;
-#endif
-	LWPathLenSet(*lwstr, dstLen);
-	LWPathTypeSet(*lwstr, srcType);
-	LWPathCntSet(*lwstr, PathDepth(srcPtr, srcOff, srcRoot, srcLen));
-	return LWPathNormalize(*lwstr);
+	return err;
 }
 
 /* Windows: path is an UTF8 encoded path string and lwstr is filled with a Windows UTF16LE string from the path
    MacOSX, Unix, VxWorks, Pharlap: path is an UTF8 encoded path string and lwstr is filled with a local encoded SBC or
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-LibAPI(MgErr) UPathToLWPath(const LStrHandle path, LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) UStrToLWPath(const LStrHandle path, LWPathHandle *lwstr, int32 reserve)
 {
-	return LStrToLWPath(path, CP_UTF8, lwstr, flags, 0);
+	return LStrToLWPath(path, CP_UTF8, lwstr, reserve);
 }
 
 /* Windows: path is a LabVIEW path and lwstr is filled with a Windows UTF16LE string from this path
    MacOSX, Unix, VxWorks, Pharlap: path is a LabVIEW path and lwstr is filled with a local encoded SBC or MBC
    string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-LibAPI(MgErr) LPathToLWPath(const Path path, LWPathHandle *lwstr, uInt32 flags, int32 reserve)
+LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, int32 reserve)
 {
 	LStrPtr lstr;
     int32 bufLen = -1;
-    MgErr err = FPathToText(path, (LStrPtr)&bufLen);
+    MgErr err = FPathToText(pathName, (LStrPtr)&bufLen);
     if (!err)
     {
 		bufLen += 1 + reserve;
@@ -1095,42 +925,51 @@ LibAPI(MgErr) LPathToLWPath(const Path path, LWPathHandle *lwstr, uInt32 flags, 
         if (!lstr)
             return mFullErr;
         LStrLen(lstr) = bufLen;
-        err = FPathToText(path, lstr);
+        err = FPathToText(pathName, lstr);
         if (!err)
-			err = LStrToLWPath(&lstr, CP_ACP, lwstr, flags, reserve);
+			err = LStrToLWPath(&lstr, CP_ACP, lwstr, reserve);
 
 		DSDisposePtr((UPtr)lstr);
     }
     return err;
 }
 
-MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle lwstr, int32 offset, uInt32 flags)
+MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *lwstr, int32 offset, uInt32 flags)
 {
 	MgErr err = noErr;
-	int32 len = LWPathLenGet(lwstr);
-	if (len)
+	uInt16 type = lwstr ? LWPathTypeGet(*lwstr) : fNotAPath;
+	if (type != fNotAPath)
 	{
-		LWChar *ptr = LWPathBuf(lwstr);
-#if Unix || MacOSX || Pharlap
+		int32 len = LWPathLenGet(*lwstr);
+		if (len)
+		{
+			LWChar *ptr = LWPathBuf(*lwstr);
 #if usesHFSPath
-		if (!(flags & kLeaveHFSPath))
 			err = ConvertFromPosixPath(ptr + offset, len - offset, CP_UTF8, pathName, codePage, '?', FALSE);
-		else
-#endif
+#elif Unix || MacOSX || Pharlap
 			err = ConvertCString(ptr + offset, len - offset, CP_UTF8, pathName, codePage, '?', NULL);
 #else /* Windows and not Pharlap */
-		if (!offset && !(flags & kCvtKeepDOSDevice))
-		{
-			offset = HasDOSDevicePrefix(ptr, len);
-			if (offset == 8)
-				offset = 6;
-		}
-		err = WideCStrToMultiByte(ptr + offset, len - offset, pathName, codePage, '?', NULL);
-		if (!err && offset == 6 && LStrBuf(**pathName)[1] == kPathSeperator)
-		{
-			LStrBuf(**pathName)[0] = kPathSeperator;
-		}
+			if (!offset && !(flags & kKeepDOSDevice))
+			{
+				offset = HasDOSDevicePrefix(ptr, len);
+				if (offset == 8)
+					offset = 6;
+			}
+			err = WideCStrToMultiByte(ptr + offset, len - offset, pathName, codePage, '?', NULL);
+			if (!err && offset == 6 && LStrBuf(**pathName)[1] == kPathSeperator)
+			{
+				LStrBuf(**pathName)[0] = kPathSeperator;
+			}
 #endif
+		}
+		else if (pathName && *pathName)
+		{
+			LStrLen(**pathName) = 0;
+		}
+	}
+	else if (lwstr)
+	{
+		err = WideCStrToMultiByte(gNotAPath, sizeof(gNotAPath), pathName, codePage, '?', NULL);
 	}
 	else if (pathName && *pathName)
 	{
@@ -1139,20 +978,71 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle l
 	return err;
 }
 
-LibAPI(MgErr) UPathFromLWPath(LStrHandle *pathName, const LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) UStrFromLWPath(LStrHandle *pathName, const LWPathHandle *lwstr, uInt32 flags)
 {
-	return LStrFromLWPath(pathName, CP_UTF8, *lwstr, 0, flags);
+	return LStrFromLWPath(pathName, CP_UTF8, lwstr, 0, flags);
 }
 
-LibAPI(MgErr) LPathFromLWPath(Path *pathName, const LWPathHandle *lwstr, uInt32 flags)
+LibAPI(MgErr) LPathFromLWPath(Path *pathName, const LWPathHandle *lwstr)
 {
 	LStrHandle dest = NULL;
-	MgErr err = LStrFromLWPath(&dest, CP_ACP, *lwstr, 0, flags);
+	MgErr err = LStrFromLWPath(&dest, CP_ACP, lwstr, 0, kDefaultPath);
 	if (!err)
 	{
 		err = FTextToPath(LStrBuf(*dest), LStrLen(*dest), pathName);
 		DSDisposeHandle((UHandle)dest);
 	}
+	return err;
+}
+
+/* 
+   These two APIs will use the platform specific path syntax except for the
+   MacOSX 32-bit plaform where it will use posix format
+*/
+LibAPI(MgErr) LPathToText(Path path, LVBoolean isUtf8, LStrHandle *str)
+{
+	int32 pathLen = -1;
+	MgErr err = FPathToText(path, (LStrPtr)&pathLen);
+	if (!err)
+	{
+		err = NumericArrayResize(uB, 1, (UHandle*)str, pathLen + 1);
+		if (!err)
+		{
+			LStrLen(**str) = pathLen;
+			err = FPathToText(path, **str);
+			if (!err)
+			{
+#if usesHFSPath
+				err = CStrToPosixPath(LStrBufH(*str), LStrLenH(*str), CP_ACP, str, isUtf8 ? CP_UTF8 : CP_ACP, '?', NULL, false);
+#else
+				if (isUtf8)
+					err = ConvertLString(*str, CP_ACP, str, isUtf8 ? CP_UTF8 : CP_ACP, '?', NULL);
+#endif
+				if (!err && IsSeperator(LStrBuf(**str)[LStrLen(**str) - 1]))
+				{
+					LStrLen(**str)--;
+				}
+			}
+		}
+	}
+	return err;
+}
+
+LibAPI(MgErr) LPathFromText(CStr str, int32 len, Path *path, LVBoolean isDir)
+{
+	MgErr err = mgNoErr;
+#if usesHFSPath
+	LStrHandle hfsPath = NULL;
+	/* Convert the posix path to an HFS path */
+	err = ConvertFromPosixPath(str, len, CP_ACP, &hfsPath, CP_ACP, '?', NULL, isDir);
+	if (!err && hfsPath)
+	{
+		err = FTextToPath(LStrBuf(*hfsPath), LStrLen(*hfsPath), path);
+	}
+#else
+	Unused(isDir);
+	err = FTextToPath(str, len, path);
+#endif
 	return err;
 }
 
@@ -1251,7 +1141,7 @@ LibAPI(MgErr) ConvertFromPosixPath(ConstCStr src, int32 srclen, uInt32 srccp, LS
 	{
 		int32 len = LStrLen(**dest);
 		UPtr buf = LStrBuf(**dest);
-		if (src[0] == '/' && src[1] != '/')
+		if (IsPosixSeperator(src[0]) && !IsPosixSeperator(src[1]))
 		{
 			*buf++ = src[1];
 			*buf++ = ':';
@@ -1259,9 +1149,9 @@ LibAPI(MgErr) ConvertFromPosixPath(ConstCStr src, int32 srclen, uInt32 srccp, LS
 		}
 		for (; len; len--, buf++)
 		{
-			if (*buf == '/')
+			if (IsPosixSeperator(*buf))
 			{
-				*buf = '\\';
+				*buf = kPathSeperator;
 			}
 		}
 	}
@@ -1335,8 +1225,7 @@ static void TerminateLStr(LStrHandle *dest, int32 numBytes)
 #endif
 
 /* Converts a LabVIEW platform path to Unix style path */
-LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
-{
+MgErr CStrToPosixPath(ConstCStr src, int32 len, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir){
     MgErr err = mgNotSupported;
 #if usesHFSPath
     Unused(defUsed);
@@ -1344,7 +1233,7 @@ LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle 
 	if (encoding != kCFStringEncodingInvalidId)
 	{
 		CFURLRef urlRef = NULL;
-		CFStringRef posixRef, fileRef = CFStringCreateWithBytes(kCFAllocatorDefault, LStrBuf(*src), LStrLen(*src), encoding, false);
+		CFStringRef posixRef, fileRef = CFStringCreateWithBytes(kCFAllocatorDefault, src, len, encoding, false);
 		if (!fileRef)
 		{
 			return mFullErr;
@@ -1393,56 +1282,50 @@ LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle 
 	}
 #else
     Unused(isDir);
-	err = ConvertLString(src, srccp, dest, destcp, defaultChar, defUsed);
+	err = ConvertCString(src, len, srccp, dest, destcp, defaultChar, defUsed);
 #if usesWinPath
 	if (!err && *dest)
 	{
-		UPtr buf = LStrBufH(*dest);
-		int32 len = LStrLenH(*dest),
-			  offset = HasDOSDevicePrefix(buf, len);
+		CStr ptr, buf = LStrBufH(*dest);
+		int32 offset = HasDOSDevicePrefix(buf, LStrLenH(*dest));
+
+		len = LStrLenH(*dest);
 		if (offset == 8)
 		{
 			offset = 7;
 			*buf++ = kPosixPathSeperator;
 			len--;
 		}
-		else if (buf[offset + 1] == ':' && buf[offset + 2] == kPathSeperator)
+		else if (buf[offset + 1] == ':' && IsSeperator(buf[offset + 2]))
 		{
-			buf[1] = buf[offset];
 			buf[0] = kPosixPathSeperator;
+			buf[1] = buf[offset];
 			buf += 2;
 			len -= 2;
 		}
-		if (offset)
+		
+		ptr = buf + offset;
+		for (len -= offset; len; len--, ptr++, buf++)
 		{
-			UPtr ptr = buf + offset;
-			for (len -= offset; len; len--, ptr++, buf++)
-			{
-				if (*ptr == kPathSeperator)
-				{	
-					*buf = kPosixPathSeperator;
-				}
-				else
-				{
-					*buf = *ptr;
-				}
+			if (IsSeperator(*ptr))
+			{	
+				*buf = kPosixPathSeperator;
 			}
-			LStrLen(**dest) -= offset;
-		}
-		else
-		{
-			for (;len; len--, buf++)
+			else if (offset)
 			{
-				if (*buf == kPathSeperator)
-				{	
-					*buf = kPosixPathSeperator;
-				}
+				*buf = *ptr;
 			}
 		}
+		LStrLen(**dest) -= offset;
 	}
 #endif
 #endif
 	return err;
+}
+
+LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
+{
+	return CStrToPosixPath(LStrBufH(src), LStrLenH(src), srccp, dest, destcp, defaultChar, defUsed, isDir);
 }
 
 #if Unix
@@ -1803,7 +1686,7 @@ LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *
 {
 	if (defaultCharWasUsed)
 		*defaultCharWasUsed = LV_FALSE;
-	if (dest && *dest)
+	if (dest && *dest && **dest)
 		LStrLen(**dest) = 0;
 
 	if (srclen < 0)
