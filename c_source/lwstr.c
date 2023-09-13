@@ -151,6 +151,91 @@ DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *
 	return offset;
 }
 
+#if Win32
+static int32 WStrUNCOffset(const wchar_t *ptr, int32 offset, int32 len)
+{
+	int32 sep = 0;
+	for (ptr += offset; *ptr && offset < len; *ptr++, offset++)
+	{
+		if (IsSeperator(*ptr))
+		{
+			while (IsSeperator(ptr[1]))
+			{
+				ptr++;
+				offset++;
+			}
+			if (++sep >= 2)
+				return ++offset;
+		}
+	}
+	if (sep == 1 && (!*ptr || offset == len))
+	{
+		return offset;
+	}
+	return -1;  
+}
+
+DebugAPI(int32) WStrRootLen(const wchar_t *ptr, int32 len, int32 offset, uInt8 *type)
+{
+	if (offset < 0)
+		offset = HasDOSDevicePrefix(ptr, len);
+
+	if (len > offset)
+	{
+#if usesWinPath
+		if ((len >= 2 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':'))
+		{
+			if (type)
+				*type = fAbsPath;		
+			offset += 2 + (IsSeperator(ptr[offset + 2]) ? 1 : 0);
+		}
+		else if (len >= 3 + offset && IsSeperator(ptr[offset]) && IsSeperator(ptr[offset + 1]) && ptr[offset + 2] < 128 && isalpha(ptr[offset + 2]))
+		{
+			offset = WStrUNCOffset(ptr, offset + 2, len);
+			if (type)
+				*type = offset < 0 ? fNotAPath : fUNCPath;		
+		}
+ #if !Pharlap
+		else if (offset == 8)
+		{
+			offset = WStrUNCOffset(ptr, offset, len);
+			if (type)
+				*type = offset < 0 ? fNotAPath : fUNCPath;		
+		}
+ #endif
+#else
+		if (IsPosixSeperator(ptr[offset]))
+		{
+			if (len >= 2 + offset && IsSeperator(ptr[offset + 1]))
+			{
+				offset = WStrUNCOffset(ptr, offset + 2, len);
+				if (type)
+					*type = offset < 0 ? fNotAPath : fUNCPath;		
+			}
+			else
+			{
+				offset++;
+				if (type)
+					*type = fAbsPath;		
+			}
+		}
+#endif
+		else
+		{
+			if (type)
+				*type = fRelPath;
+		}
+	}
+	else
+	{
+		/* len == offset is root path and always absolute */
+		if (type)
+			*type = fAbsPath;		
+	}
+	return offset;
+}
+#endif
+
 /* Return values:
    -2: invalid path
    -1: no path segment left
@@ -1077,7 +1162,7 @@ DebugAPI(MgErr) LStrPtrToLWPath(const UPtr string, int32 len, uInt32 codePage, L
 #if usesHFSPath
 		err = CStrToPosixPath(string, len, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL, FALSE);
 #elif Unix || MacOSX || Pharlap
-		err = ConvertLString(string, len, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL);
+		err = ConvertCString(string, len, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL);
 #else
 		err = MultiByteCStrToWideString(string, len, (WStrHandle*)&temp, codePage);
 #endif
@@ -1176,7 +1261,7 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *
 	}
 	else if (lwstr)
 	{
-		err = WideCStrToMultiByte(gNotAPath, (sizeof(gNotAPath) / sizeof(LWChar)) - 1, pathName, 0, codePage, 0, NULL);
+		err = WideCStrToMultiByte((const wchar_t*)gNotAPath, (sizeof(gNotAPath) / sizeof(LWChar)) - 1, pathName, 0, codePage, 0, NULL);
 	}
 	else if (pathName && *pathName)
 	{
@@ -1460,12 +1545,12 @@ static void TerminateLStr(LStrHandle *dest, int32 numBytes)
 #define kFlatten	1
 
 #if usesWinPath
-static int32 ConvertToPosixLWString(LWChar *src, int32 srcLen, uInt8 *type, LWChar *dst)
+static int32 ConvertToPosixWString(wchar_t *src, int32 srcLen, uInt8 *type, wchar_t *dst)
 {
-	LWChar *ptr = dst;
+	wchar_t *ptr = dst;
 	int32 len = 0, offset = HasDOSDevicePrefix(src, srcLen);
 
-	LWPtrRootLen(src, srcLen, offset, type);
+	WStrRootLen(src, srcLen, offset, type);
 
 	if (*type == fNotAPath)
 		return -1;
@@ -1493,7 +1578,7 @@ static int32 ConvertToPosixLWString(LWChar *src, int32 srcLen, uInt8 *type, LWCh
 #endif
 	if (ptr)
 	{
-		LWChar *end = src + srcLen;
+		wchar_t *end = src + srcLen;
 
 		for (src += offset; src < end; src++, ptr++)
 		{
@@ -1581,13 +1666,13 @@ MgErr CStrToPosixPath(ConstCStr src, int32 len, uInt32 srccp, LStrHandle *dest, 
 		if (!err)
 		{
 			uInt8 type = fNotAPath;
-			int32 needed = ConvertToPosixLWString(LWStrBuf(temp), LWStrLen(temp), &type, NULL);
+			int32 needed = ConvertToPosixWString(LWStrBuf(temp), LWStrLen(temp), &type, NULL);
 			if (needed >= 0)
 			{
 				err = NumericArrayResize(uW, 1, (UHandle*)&temp, needed);
 				if (!err)
 				{
-					LStrLen(*temp) = ConvertToPosixLWString(LWStrBuf(temp), LWStrLen(temp), &type, LWStrBuf(temp));
+					LStrLen(*temp) = ConvertToPosixWString(LWStrBuf(temp), LWStrLen(temp), &type, LWStrBuf(temp));
 					err = WideStringToMultiByte(temp, dest, destcp, defaultChar, defUsed);
 				}
 			}

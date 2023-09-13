@@ -86,13 +86,14 @@ extern "C" {
  #define MacOS 0
  #define MacOSX 0
  #define Unix 0
- #define Pharlap 0
  #if defined(_DEBUG) || defined(_CVI_DEBUG_)
   #define DEBUG 1
  #endif
  #define BigEndian 0
  #if EMBEDDED
   #define Pharlap 1
+ #else
+  #define Pharlap 0
  #endif
 // #define _WIN32_WINNT 0x0501
 #elif defined(linux) || defined(__linux) || defined(__linux__)

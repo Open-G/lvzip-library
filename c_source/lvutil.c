@@ -53,7 +53,9 @@
  #include <shlobj.h>
  #include <shellapi.h>
  #include "iowin.h"
- #include "versionhelper.h"
+ #if !Pharlap
+  #include "versionhelper.h"
+ #endif
 
  #ifndef INVALID_FILE_ATTRIBUTES
   #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
@@ -109,6 +111,7 @@
 
 #if Pharlap
  static const char strWildcardPattern[] = "*.*";
+ #define COPY_FILE_FAIL_IF_EXISTS   1
  #define WIN32_FIND_DATALW						WIN32_FIND_DATAA
  #define CreateFileLW(path, fl, sh, ds, op, se, ov)	CreateFileA(LWPathBuf(path), fl, sh, ds, op, se, ov)
  #define CreateDirectoryLW(path, sec)			CreateDirectoryA(LWPathBuf(path), sec)
@@ -119,7 +122,7 @@
  #define RemoveDirectoryLW(path)				RemoveDirectoryA(LWPathBuf(path))
  #define DeleteFileLW(path)						DeleteFileA(LWPathBuf(path))
  #define MoveFileLW(pathFrom, pathTo)			MoveFileA(LWPathBuf(pathFrom), LWPathBuf(pathTo))
- #define CopyFileLW(pathFrom, pathTo, progress, data, cancel, flags)	CopyFileA(LWPathBuf(pathFrom), LWPathBuf(pathTo), flags == COPY_FILE_FAIL_IF_EXISTS)
+ #define CopyFileLW(pathFrom, pathTo, progress, data, cancel, flags)	CopyFileA(LWPathBuf(pathFrom), LWPathBuf(pathTo), flags & COPY_FILE_FAIL_IF_EXISTS != 0)
  #define GetLogicalDriveStringsLW(length, buf)	GetLogicalDriveStringsA(length, buf)
 #else
  static const wchar_t strWildcardPattern[] = L"*.*";
@@ -2428,6 +2431,7 @@ static MgErr lvFile_ReadLink(LWPathHandle pathName, LWPathHandle *target, int32 
 	err = lvFile_FileAttr(src, -1, &tmpAttr);
 	if (!err)
 	{
+		err = mgNotSupported;
 		if (fileAttr)
 			*fileAttr = tmpAttr;
 #if Win32
@@ -2676,11 +2680,14 @@ LibAPI(MgErr) LVFile_Delete(LWPathHandle *pathName, uInt32 flags)
 		err = lvFile_FileAttr(*pathName, -1, &fileAttr);
 		if (!err)
 		{
+#if !Pharlap
 			if (flags & kDelMoveToTrash)
 			{
 				err = lvFile_MoveToTrash(*pathName, flags);
 			}
-			else if (fileAttr & kIsFile)
+			else
+#endif
+			if (fileAttr & kIsFile)
 			{
 				err = lvFile_DeleteFile(*pathName, (LVBoolean)(flags & kDelIgnoreReadOnly));
 			}
@@ -3134,6 +3141,7 @@ LibAPI(MgErr) LVFile_Rename(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32
 	return err;
 }
 
+#if !Pharlap
 static MgErr lvFile_MoveToTrash(LWPathHandle pathName, uInt32 flags)
 {
     MgErr err = mgArgErr;
@@ -3142,10 +3150,6 @@ static MgErr lvFile_MoveToTrash(LWPathHandle pathName, uInt32 flags)
 	if (type == fAbsPath || type == fUNCPath)
 	{
 #if Win32
-#if Pharlap
-		// No trashcan operation, simply delete the item
-		err = lvFile_Delete(pathName, LV_TRUE);
-#else
 		IFileOperation *pFO = NULL;
 		IShellItem *pSI = NULL;
 		HRESULT hr = CoCreateInstance(&CLSID_FileOperation, NULL, CLSCTX_ALL, &IID_IFileOperation, &pFO);
@@ -3186,7 +3190,6 @@ static MgErr lvFile_MoveToTrash(LWPathHandle pathName, uInt32 flags)
 		err = SHErrToLVFileErr(hr);
 #else
 		err = SUCCEEDED(hr) ? mgNoErr : fIOErr;
-#endif
 #endif
 #elif  MacOSX
 		err = fIOErr;
@@ -3230,6 +3233,7 @@ static MgErr lvFile_MoveToTrash(LWPathHandle pathName, uInt32 flags)
 	}
 	return err;
 }
+#endif
 
 static MgErr lvFile_CreateDirectory(LWPathHandle lwstr, int32 end, int16 permissions)
 {
