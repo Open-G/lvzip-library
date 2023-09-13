@@ -88,6 +88,8 @@ typedef char			LWChar;
 	/* Use default (or build's) alignment */
 #endif /* struct alignment set */
 
+#define kFlagUnicode	0x80
+
 typedef struct LWPATHREC
 {
 	int32 size;			/* In order to be able to pass this as a byte array/string handle we always use size in bytes */
@@ -166,7 +168,7 @@ typedef enum
 
 DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *lwstr, int32 reserve);
 
-DebugAPI(MgErr) LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, int32 reserve);
+DebugAPI(MgErr) LStrPtrToLWPath(const UPtr string, int32 len, uInt32 codePage, LWPathHandle *lwstr, int32 reserve);
 DebugAPI(MgErr) LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *lwstr, int32 offset, uInt32 flags);
 
 LibAPI(MgErr) UStrToLWPath(const LStrHandle pathName, LWPathHandle *lwstr, int32 reserve);
@@ -183,6 +185,11 @@ LibAPI(MgErr) LWPathAppendLWPath(LWPathHandle *pathName, const LWPathHandle *rel
 LibAPI(MgErr) LWPathAppendUStr(LWPathHandle *pathName, int32 end, const LStrHandle relString);
 LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath, LWPathHandle *relPath);
 
+#define kFlattenUnicode	0x80
+LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr ptr, int32 *length);
+LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName);
+
+
 /* Different conversion functions between various codepages */
 #define CP_ACP                    0           // default to ANSI code page
 #define CP_OEMCP                  1           // default to OEM  code page
@@ -193,7 +200,7 @@ LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string);
 LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, WStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) WideStringToMultiByte(const WStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
-LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
+LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, int32 offset, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
 
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
 LibAPI(MgErr) ConvertLString(const LStrHandle src, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed);

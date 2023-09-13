@@ -1482,7 +1482,7 @@ static MgErr lvFile_ListDirectory(LWPathHandle pathName, LStrArrHdl *nameArr, Fi
 						err = ConvertCString(buf + off, len, CP_ACP, namePtr, CP_UTF8, 0, NULL);
 #else
 						len = (int32)wcslen(buf + off);
-						err = WideCStrToMultiByte(buf + off, len, namePtr, CP_UTF8, 0, NULL);
+						err = WideCStrToMultiByte(buf + off, len, namePtr, 0, CP_UTF8, 0, NULL);
 #endif
 						off += len + 1;
 						index++;
@@ -1593,7 +1593,7 @@ static MgErr lvFile_ListDirectory(LWPathHandle pathName, LStrArrHdl *nameArr, Fi
 #if Pharlap
 							err = ConvertCString(fileName, -1, CP_ACP, namePtr, CP_UTF8, 0, NULL);
 #else
-							err = WideCStrToMultiByte(fileName, -1, namePtr, CP_UTF8, 0, NULL);
+							err = WideCStrToMultiByte(fileName, -1, namePtr, 0, CP_UTF8, 0, NULL);
 #endif
 							index++;
 							(**nameArr)->numItems = index;

@@ -45,6 +45,9 @@
 #endif
 #define IsPosixSeperator(c) (c == kPosixPathSeperator)
 
+static MgErr WideCStrToMultiByteBuf(const wchar_t *src, int32 srclen, UPtr ptr, int32 *length, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
+static MgErr ConvertCStringBuf(ConstCStr src, int32 srclen, uInt32 srccp, UPtr ptr, int32 *length, uInt32 destcp, char defaultChar, LVBoolean *defUsed);
+
 LWChar gNotAPath[] = LW("<Not A Path>");
 
 static int32 LWPtrCompare(const LWChar *s1, const LWChar *s2, int32 len)
@@ -87,8 +90,6 @@ static int32 LWPtrUNCOffset(const LWChar *ptr, int32 offset, int32 len)
 
 /* Returns:
    >= 0 for a valid absolute path, with 0 being the canonical root path and > 0 indicating the length of the first path element
-   -1 for a relative path
-   -2 when there is an invalid path
  */
 DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *type)
 {
@@ -212,10 +213,6 @@ int32 LWPtrDepth(const LWChar *ptr, int32 len, int32 offset, int32 rootLen)
 Bool32 LWPtrIsOfType(const LWChar *ptr, int32 len, int32 offset, uInt8 isType)
 {
 	uInt8 type = fNotAPath;
-
-	if (offset < 0)
-		offset = HasDOSDevicePrefix(ptr, len);
-	
 	LWPtrRootLen(ptr, len, offset, &type);
 	return (type == isType);
 }
@@ -223,9 +220,10 @@ Bool32 LWPtrIsOfType(const LWChar *ptr, int32 len, int32 offset, uInt8 isType)
 DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *lwstr, int32 reserve)
 {
 	MgErr err = noErr;
-	if (srcLen < sizeof(gNotAPath) || LWPtrCompare(gNotAPath, srcPtr, sizeof(gNotAPath)))
+	int32 len = ((sizeof(gNotAPath) / sizeof(LWChar)) - 1);
+	uInt8 type = fNotAPath;
+	if (srcLen != len || LWPtrCompare(gNotAPath, srcPtr, srcLen))
 	{
-		uInt8 type = fNotAPath;
 		int32 xtrLen = 0,
 			  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
 			  srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, &type);
@@ -271,25 +269,26 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 #endif
 			if (srcLen)
 			{
-				err = LWPtrNormalize(srcPtr, srcLen, srcRoot, lwstr, xtrLen, type);
+				return LWPtrNormalize(srcPtr, srcLen, srcRoot, lwstr, xtrLen, type);
 			}
 #if Unix || MacOSX
-			else
-			{
-				LWPathBuf(*lwstr)[0] = kPathSeperator;
-			}
+			LWPathBuf(*lwstr)[0] = kPathSeperator;
+			srcLen++;
 #endif
+			srcLen += xtrLen;
 		}
 	}
 	else
 	{
+		srcLen = 0;
 		err = LWPathResize(lwstr, 0);
-		if (!err)
-		{
-			LWPathLenSet(*lwstr, 0);
-			LWPathCntSet(*lwstr, 0);
-			LWPathTypeSet(*lwstr, fNotAPath);
-		}
+	}
+	if (!err)
+	{
+		LWPathLenSet(*lwstr, srcLen);
+		LWPathFlagsSet(*lwstr, 0);
+		LWPathTypeSet(*lwstr, type);
+		LWPathCntSet(*lwstr, 0);
 	}
 	return err;
 }
@@ -753,7 +752,7 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 LibAPI(MgErr) LWPathAppendUStr(LWPathHandle *filePath, int32 end, const LStrHandle relString)
 {
 	LWPathHandle relPath = NULL;
-	MgErr err = LStrToLWPath(relString, CP_UTF8, &relPath, 0);
+	MgErr err = LStrPtrToLWPath(LStrBuf(*relString), LStrLen(*relString), CP_UTF8, &relPath, 0);
 	if (!err)
 	{
 		err = LWPathAppend(filePath ? *filePath : NULL, end, filePath, relPath);
@@ -841,6 +840,192 @@ TH_REENTRANT MgErr FRelPath(Path start, Path end, Path relPath)
 	}
 */
 
+#define kFlatPathCode	RTToL('P','T','H','0')
+
+/*
+Write the information in path p to memory pointed to by fp and return the size used.
+Call with fp==NULL to preflight for size information.
+	flat format:
+		int32 ver		'PTH0' magic code to indicate flatten version
+		int32 size		handle size needed for path
+		uint8 flags		highest significant bit set for UTF8 encoded path, otherwise it is using the user specific 8-bit encoding
+		uInt8 type		fAbsPath, fRelPath, fNotAPath, fUNCPath
+		int16 cnt		# of p strings
+		pStrings		concatenated pstrings
+		[pad byte]		to make total size even
+*/
+LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int32 *length)
+{
+	LWChar *src = LWPathBuf(*pathName);
+	int32 srcLen = LWPathLenGet(*pathName);
+	int32 offset = 0, after = 0, extLen = 0, len = length && *length ? *length - 12 : 0;
+	uInt8 pathFlags = 0;
+	MgErr err = noErr;
+	
+	if (*pathName)
+	{
+		uInt8 type = fNotAPath;
+	
+		offset = HasDOSDevicePrefix(src, srcLen),
+		after = LWPtrRootLen(src, srcLen, offset, &type);
+
+		if (flags & kFlattenUnicode)
+		{
+#if Win32 && !Pharlap
+			pathFlags = kFlagUnicode;
+#else
+			pathFlags = LWPathFlagsGet(*pathName);
+#endif
+		}
+		/* Preflight the path */
+		switch (type)
+		{
+			case fAbsPath:
+				/* C:\path\path => \01C\04path, nothing needed now but C will need to move one up */
+				/* /path/path => \04path\04path, do nothing */
+				break;
+			case fRelPath:
+				/* path\path => \04path\04path, add an extra len for the first Pascal length */
+				/* path/path => \04path\04path, add an extra len for the first Pascal length */
+				extLen++;
+				break;
+			case fNotAPath:
+				len = -1;
+				break;
+			case fUNCPath:
+				extLen = 3;
+#if Win32 && !Pharlap
+				if (!offset)
+#endif
+				{
+					/* \\server\share\path => \016//server/share\04path, add an extra len for first Pascal length */
+					/* //server/share/path => \016//server/share\04path, add an extra len for first Pascal length */
+					offset = 2;
+				}
+				break;
+		}	
+		if (!len)
+		{
+#if Win32 && !Pharlap
+			err = WideCStrToMultiByteBuf(src + offset, srcLen - offset, NULL, &len, pathFlags ? CP_UTF8 : CP_ACP, 0, NULL);
+#else
+			err = ConvertCStringBuf(src + offset, srcLen - offset, CP_ACP, NULL, &len, pathFlags ? CP_UTF8 : CP_ACP, 0, NULL);
+#endif
+		}
+	}
+	if (dst)
+	{
+		UPtr ptr = dst;
+
+		SetALong(ptr, kFlatPathCode);
+		ptr += 4;
+		SetALong(ptr, 4 + extLen + len);
+		LToStd(ptr);
+		ptr += 4;
+
+		if (*pathName)
+		{
+			uInt16 cnt = 0;
+
+			*ptr++ = pathFlags;
+			*ptr++ = LWPathTypeGet(*pathName);
+			if (len > 0)
+			{
+				UPtr end, lPtr;
+
+				// Skip cnt for now
+				ptr += 2;
+
+				if (extLen)
+				{
+					ptr++; // Skip length byte for now
+					if (extLen == 3)
+					{
+						*ptr++ = kPathSeperator;
+						*ptr++ = kPathSeperator;
+					}
+				}
+#if Win32 && !Pharlap
+				err = WideCStrToMultiByteBuf(src + offset, srcLen - offset, ptr, &len, pathFlags ? CP_UTF8 : CP_ACP, 0, NULL);
+#else
+				err = ConvertCStringBuf(src + offset, srcLen - offset, CP_ACP, ptr, &len, pathFlags ? CP_UTF8 : CP_ACP, 0, NULL);
+#endif
+#if Win32
+				if (!extLen)
+				{
+					ptr[1] = ptr[0];
+				}
+#endif
+				ptr = dst + 4;
+				SetALong(ptr, 4 + extLen + len);
+				LToStd(ptr);
+				
+				ptr = dst + 12;
+				end = ptr + extLen + len;
+
+				if (extLen == 3)
+				{
+					lPtr = ptr;
+					ptr += extLen; // Skip over the length byte and the two seperators
+					// search two separators for UNC server and share
+					for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
+					*ptr++ = kPathSeperator;
+					offset++;
+					for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
+					*lPtr = (uInt8)(ptr - lPtr - 1);
+					cnt++;
+				}
+				
+				while (ptr < end)
+				{
+					lPtr = ptr++; // Skip over the length byte
+					for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
+					*lPtr = (uInt8)(ptr - lPtr - 1);
+					cnt++;
+				}
+				ptr = dst + 10;
+			}
+			SetAWord(ptr, cnt);
+			WToStd(ptr);
+		}
+		else
+		{
+			SetALong(ptr, 0L);
+		}
+	}
+	if (length)
+		*length = 12 + (extLen + len > 0 ? extLen + len : 0);
+	return noErr;
+}
+
+LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName)
+{
+	int32 len;
+	if (length < 8 || GetALong(ptr) != kFlatPathCode)
+		return mgArgErr;
+
+	ptr += 4;
+	len = GetALong(ptr);
+	StdToL(&len);
+	if (len)
+	{
+		MgErr err = noErr;
+		uInt8 flags, type;
+		uInt16 cnt;
+
+		ptr += 4;
+		flags = *ptr++;
+		type = *ptr++;
+		cnt = GetAWord(ptr);
+		StdToW(&cnt);
+		ptr += 2;
+
+
+		return err;
+	}
+	return LWPathResize(pathName, 0);
+}
+
 static ResType LWPathFileTypeFromExt(LWPathHandle lwstr)
 {
 	int32 len = LWPathLenGet(lwstr), k = 0;
@@ -882,18 +1067,21 @@ MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, ResType *fType, ResType *f
 /* Windows: path is an ACP mulibyte encoded path string and lwstr is filled with a Windows UTF16LE string from the path
    MacOSX, Unix, VxWorks, Pharlap: path is an platform encoded path string and lwstr is filled with a local encoded SBC or
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
-MgErr LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr, int32 reserve)
+DebugAPI(MgErr) LStrPtrToLWPath(const UPtr string, int32 len, uInt32 codePage, LWPathHandle *lwstr, int32 reserve)
 {
-	MgErr err;
+	MgErr err = noErr;
 	LWStrHandle temp = NULL;
 
+	if (string && len > 0)
+	{
 #if usesHFSPath
-	err = CStrToPosixPath(LStrBufH(string), LStrLenH(string), codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL, FALSE);
+		err = CStrToPosixPath(string, len, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL, FALSE);
 #elif Unix || MacOSX || Pharlap
-	err = ConvertLString(string, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL);
+		err = ConvertLString(string, len, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL);
 #else
-	err = MultiByteCStrToWideString(LStrBufH(string), LStrLenH(string), (WStrHandle*)&temp, codePage);
+		err = MultiByteCStrToWideString(string, len, (WStrHandle*)&temp, codePage);
 #endif
+	}
 	if (!err)
 	{
 		err = LWPtrToLWPath(LWStrBuf(temp), LWStrLen(temp), lwstr, reserve);
@@ -907,7 +1095,7 @@ MgErr LStrToLWPath(const LStrHandle string, uInt32 codePage, LWPathHandle *lwstr
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
 LibAPI(MgErr) UStrToLWPath(const LStrHandle path, LWPathHandle *lwstr, int32 reserve)
 {
-	return LStrToLWPath(path, CP_UTF8, lwstr, reserve);
+	return LStrPtrToLWPath(LStrBufH(path), LStrLenH(path), CP_UTF8, lwstr, reserve);
 }
 
 /* Windows: path is a LabVIEW path and lwstr is filled with a Windows UTF16LE string from this path
@@ -915,21 +1103,40 @@ LibAPI(MgErr) UStrToLWPath(const LStrHandle path, LWPathHandle *lwstr, int32 res
    string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
 LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, int32 reserve)
 {
-	LStrPtr lstr;
-    int32 bufLen = -1;
-    MgErr err = FPathToText(pathName, (LStrPtr)&bufLen);
-    if (!err)
-    {
-		bufLen += 1 + reserve;
-        lstr = (LStrPtr)DSNewPClr(sizeof(int32) + bufLen + 1);
-        if (!lstr)
-            return mFullErr;
-        LStrLen(lstr) = bufLen;
-        err = FPathToText(pathName, lstr);
-        if (!err)
-			err = LStrToLWPath(&lstr, CP_ACP, lwstr, reserve);
+	int32 type = fNotAPath;
+	MgErr err = FGetPathType(pathName, &type);
+	if (!err)
+	{
+		if (type != fNotAPath || FDepth(pathName))
+		{
+			LStrPtr lstr;
+		    int32 bufLen = -1;
+			
+			err = FPathToText(pathName, (LStrPtr)&bufLen);
+			if (!err)
+			{
+				lstr = (LStrPtr)DSNewPClr(sizeof(int32) + bufLen);
+				if (!lstr)
+					return mFullErr;
+				LStrLen(lstr) = bufLen;
+				err = FPathToText(pathName, lstr);
+				if (!err)
+					err = LStrPtrToLWPath(LStrBuf(lstr), LStrLen(lstr), CP_ACP, lwstr, reserve);
 
-		DSDisposePtr((UPtr)lstr);
+				DSDisposePtr((UPtr)lstr);
+			}
+		}
+		else
+		{
+			err = LWPathResize(lwstr, 0);
+			if (!err)
+			{
+				LWPathLenSet(*lwstr, 0);
+				LWPathFlagsSet(*lwstr, 0);
+				LWPathTypeSet(*lwstr, type);
+				LWPathCntSet(*lwstr, 0);
+			}
+		}
     }
     return err;
 }
@@ -955,7 +1162,7 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *
 				if (offset == 8)
 					offset = 6;
 			}
-			err = WideCStrToMultiByte(ptr + offset, len - offset, pathName, codePage, '?', NULL);
+			err = WideCStrToMultiByte(ptr + offset, len - offset, pathName, 0, codePage, '?', NULL);
 			if (!err && offset == 6 && LStrBuf(**pathName)[1] == kPathSeperator)
 			{
 				LStrBuf(**pathName)[0] = kPathSeperator;
@@ -969,7 +1176,7 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *
 	}
 	else if (lwstr)
 	{
-		err = WideCStrToMultiByte(gNotAPath, sizeof(gNotAPath), pathName, codePage, '?', NULL);
+		err = WideCStrToMultiByte(gNotAPath, (sizeof(gNotAPath) / sizeof(LWChar)) - 1, pathName, 0, codePage, 0, NULL);
 	}
 	else if (pathName && *pathName)
 	{
@@ -1091,6 +1298,33 @@ LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string)
 	return LV_FALSE;
 }
 
+static MgErr ConvertCStringBuf(ConstCStr src, int32 srclen, uInt32 srccp, UPtr ptr, int32 *length, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
+{
+	MgErr err = noErr;
+	if (srccp != destcp)
+	{
+		WStrHandle ustr = NULL;
+		err = MultiByteCStrToWideString(src, srclen, &ustr, srccp);
+		if (!err && ustr)
+		{
+			err = WideCStrToMultiByteBuf(LWStrBuf(ustr), LWStrLen(ustr), ptr, length, destcp, defaultChar, defUsed);
+			DSDisposeHandle((UHandle)ustr);
+		}
+		return err;
+	}
+
+	if (srclen == -1)
+		srclen = StrLen(src);
+	if (srclen > 0)
+	{
+		if (srclen > *length)
+			srclen = *length;
+		MoveBlock(src, ptr, srclen);
+	}
+	*length = srclen;
+	return err;
+}
+
 LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
 {
 	MgErr err = noErr;
@@ -1102,26 +1336,26 @@ LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHand
 		{
 			err = WideStringToMultiByte(ustr, dest, destcp, defaultChar, defUsed);
 			DSDisposeHandle((UHandle)ustr);
-			return err;
 		}
+		return err;
 	}
-	else
+
+	if (srclen == -1)
+		srclen = StrLen(src);
+	if (srclen > 0)
 	{
-		if (srclen == -1)
-			srclen = StrLen(src);
-		if (srclen > 0)
+		err = NumericArrayResize(uB, 1, (UHandle*)dest, srclen);
+		if (!err)
 		{
-			err = NumericArrayResize(uB, 1, (UHandle*)dest, srclen);
-			if (!err)
-			{
-				MoveBlock(src, LStrBuf(**dest), srclen);
-				LStrLen(**dest) = srclen;
-				return err;
-			}
+			MoveBlock(src, LStrBuf(**dest), srclen);
+		}
+		else
+		{
+			srclen = 0;
 		}
 	}
 	if (*dest)
-		LStrLen(**dest) = 0;
+		LStrLen(**dest) = srclen;
 	return err;
 }
 
@@ -1216,17 +1450,71 @@ LibAPI(MgErr) ConvertFromPosixPath(ConstCStr src, int32 srclen, uInt32 srccp, LS
 	return err;
 }
 
-#if !Unix || !defined(HAVE_ICONV)
 static void TerminateLStr(LStrHandle *dest, int32 numBytes)
 {
 	LStrLen(**dest) = numBytes;
 	LStrBuf(**dest)[numBytes] = 0;
 }
+
+#define kPosix		0
+#define kFlatten	1
+
+#if usesWinPath
+static int32 ConvertToPosixLWString(LWChar *src, int32 srcLen, uInt8 *type, LWChar *dst)
+{
+	LWChar *ptr = dst;
+	int32 len = 0, offset = HasDOSDevicePrefix(src, srcLen);
+
+	LWPtrRootLen(src, srcLen, offset, type);
+
+	if (*type == fNotAPath)
+		return -1;
+
+	if (offset == 8)
+	{
+		if (ptr)
+		{
+			*ptr++ = kPosixPathSeperator;
+		}
+		offset = 7;
+		len++;
+	}
+#if Win32
+	else if (src[offset + 1] == ':' && IsSeperator(src[offset + 2]))
+	{
+		if (ptr)
+		{
+			*ptr++ = kPosixPathSeperator;
+			*ptr++ = src[offset];
+		}
+		offset = 3;
+		len = 2;
+	}
+#endif
+	if (ptr)
+	{
+		LWChar *end = src + srcLen;
+
+		for (src += offset; src < end; src++, ptr++)
+		{
+			if (IsSeperator(*src))
+			{	
+				*ptr = kPosixPathSeperator;
+			}
+			else
+			{
+				*ptr = *src;
+			}
+		}
+	}
+	return srcLen - offset + len;
+}
 #endif
 
 /* Converts a LabVIEW platform path to Unix style path */
-MgErr CStrToPosixPath(ConstCStr src, int32 len, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir){
-    MgErr err = mgNotSupported;
+MgErr CStrToPosixPath(ConstCStr src, int32 len, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
+{
+    MgErr err = mgArgErr;
 #if usesHFSPath
     Unused(defUsed);
 	CFStringEncoding encoding = ConvertCodepageToEncoding(srccp);
@@ -1280,45 +1568,39 @@ MgErr CStrToPosixPath(ConstCStr src, int32 len, uInt32 srccp, LStrHandle *dest, 
 			err = mFullErr;
 		}
 	}
+	else
+	{
+		err = mgNotSupported;
+	}
+#elif usesWinPath
+    Unused(isDir);
+	if (src && len && dest)
+	{
+		WStrHandle temp = NULL;
+		MgErr err = MultiByteCStrToWideString(src, len, &temp, srccp);
+		if (!err)
+		{
+			uInt8 type = fNotAPath;
+			int32 needed = ConvertToPosixLWString(LWStrBuf(temp), LWStrLen(temp), &type, NULL);
+			if (needed >= 0)
+			{
+				err = NumericArrayResize(uW, 1, (UHandle*)&temp, needed);
+				if (!err)
+				{
+					LStrLen(*temp) = ConvertToPosixLWString(LWStrBuf(temp), LWStrLen(temp), &type, LWStrBuf(temp));
+					err = WideStringToMultiByte(temp, dest, destcp, defaultChar, defUsed);
+				}
+			}
+			else
+			{
+				err = mgArgErr;
+			}
+			DSDisposeHandle((UHandle)temp);
+		}
+	}
 #else
     Unused(isDir);
 	err = ConvertCString(src, len, srccp, dest, destcp, defaultChar, defUsed);
-#if usesWinPath
-	if (!err && *dest)
-	{
-		CStr ptr, buf = LStrBufH(*dest);
-		int32 offset = HasDOSDevicePrefix(buf, LStrLenH(*dest));
-
-		len = LStrLenH(*dest);
-		if (offset == 8)
-		{
-			offset = 7;
-			*buf++ = kPosixPathSeperator;
-			len--;
-		}
-		else if (buf[offset + 1] == ':' && IsSeperator(buf[offset + 2]))
-		{
-			buf[0] = kPosixPathSeperator;
-			buf[1] = buf[offset];
-			buf += 2;
-			len -= 2;
-		}
-		
-		ptr = buf + offset;
-		for (len -= offset; len; len--, ptr++, buf++)
-		{
-			if (IsSeperator(*ptr))
-			{	
-				*buf = kPosixPathSeperator;
-			}
-			else if (offset)
-			{
-				*buf = *ptr;
-			}
-		}
-		LStrLen(**dest) -= offset;
-	}
-#endif
 #endif
 	return err;
 }
@@ -1376,7 +1658,7 @@ static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uI
 	return UnixToLVFileErr();
 }
 
-static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *dest, int32 offset, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
 	MgErr err;
 	iconv_t cd = iconv_open(iconv_getcharset(codePage), "WCHAR_T");
@@ -1387,16 +1669,16 @@ static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *de
 		if (srclen == -1)
 			srclen = wcslen(src);
 
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, srclen * sizeof(uInt16) * 2);
+		err = NumericArrayResize(uB, 1, (UHandle*)dest, offset + srclen * sizeof(uInt16) * 2);
 		if (!err)
 		{
-			char *inbuf = (char*)src, *outbuf = (char*)LStrBuf(**dest);
+			char *inbuf = (char*)src, *outbuf = (char*)LStrBuf(**dest) + offset;
 			size_t retval, inleft = srclen * sizeof(uInt16), outleft = srclen * sizeof(uInt16) * 2;
 			retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
 			if (retval == (size_t)-1)
 				err = UnixToLVFileErr();
 			else
-				LStrLen(**dest) = srclen * 2 - outleft;
+				LStrLen(**dest) = offset + retval;
 		}
 		if (iconv_close(cd) != 0 && !err)
 			err = UnixToLVFileErr();
@@ -1498,7 +1780,9 @@ static MgErr unix_convert_mbtow(const char *src, int32 sLen, WStrHandle *dest, u
 	return err;
 }
 
-static MgErr unix_convert_wtomb(const wchar_t *src, int32 sLen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+static MgErr unix_convert_wtomb(const wchar_t *src, int32 sLen, UPtr ptr, uInt32 *length, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+
+static MgErr unix_convert_wtomb(const wchar_t *src, int32 sLen, LStrHandle *dest, int32 offset, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
 	size_t max, mLen = 0, dLen = 0;
 	const wchar_t *wPtr = src;
@@ -1550,12 +1834,12 @@ static MgErr unix_convert_wtomb(const wchar_t *src, int32 sLen, LStrHandle *dest
 	}
 	if (!err && dLen > 0)
 	{
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, dLen + 1);
+		err = NumericArrayResize(uB, 1, (UHandle*)dest, offset + dLen + 1);
 		if (!err)
 		{
 			if (codePage == CP_UTF8)
 			{
-				err = wchartoutf8(src, sLen, LStrBuf(**dest), NULL, dLen + 1);
+				err = wchartoutf8(src, sLen, LStrBuf(**dest) + offset, NULL, dLen + 1);
 			}
 			else
 			{
@@ -1603,7 +1887,7 @@ static MgErr unix_convert_wtomb(const wchar_t *src, int32 sLen, LStrHandle *dest
 		}
 	}
 	if (!err && *dest)
-	    LStrLen(**dest) = dLen; 
+	    LStrLen(**dest) = offset + dLen; 
 	return err;
 }
 #endif
@@ -1613,7 +1897,7 @@ LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle 
 {
 	if (*dest)
 		WStrLenSet(*dest, 0);
-	if (src && src[0])
+	if (src && src[0] && srclen > 0)
 	{
 		MgErr err = mgNotSupported;
 #if Win32
@@ -1679,39 +1963,61 @@ LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest)
 
 LibAPI(MgErr) WideStringToMultiByte(const WStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
-	return WideCStrToMultiByte(WStrBuf(src), WStrLen(src), dest, codePage, defaultChar, defaultCharWasUsed);
+	return WideCStrToMultiByte(WStrBuf(src), WStrLen(src), dest, 0, codePage, defaultChar, defaultCharWasUsed);
 }
 
-LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, int32 offset, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
 	if (defaultCharWasUsed)
 		*defaultCharWasUsed = LV_FALSE;
 	if (dest && *dest && **dest)
 		LStrLen(**dest) = 0;
+	
+	if (srclen < 0)
+		srclen = (int32)wcslen(src);
+	
+	if (srclen > 0)
+	{
+		int32 numBytes = 0;
+		MgErr err = WideCStrToMultiByteBuf(src, srclen, NULL, &numBytes, codePage, defaultChar, defaultCharWasUsed);
+		if (!err && numBytes > 0)
+		{
+			err = NumericArrayResize(uB, 1, (UHandle*)dest, offset + numBytes + 1);
+			if (!err)
+			{
+				err = WideCStrToMultiByteBuf(src, srclen, LStrBufH(*dest) + offset, &numBytes, codePage, defaultChar, defaultCharWasUsed);
+				TerminateLStr(dest, offset + numBytes);
+			}
+		}
+		return err;
+	}
+	return mgNoErr;
+}
+
+static MgErr WideCStrToMultiByteBuf(const wchar_t *src, int32 srclen, UPtr ptr, int32 *length, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+{
+	MgErr err = mgNoErr;
+
+	if (defaultCharWasUsed)
+		*defaultCharWasUsed = LV_FALSE;
 
 	if (srclen < 0)
 		srclen = (int32)wcslen(src);
 
 	if (srclen > 0)
 	{
-		MgErr err = mgNotSupported;
 #if Win32 
-		int32 numBytes = WideCharToMultiByte(codePage, 0, src, srclen, NULL, 0, NULL, NULL);
+		BOOL defUsed = FALSE;
+		BOOL utfCp = ((codePage == CP_UTF8) || (codePage == CP_UTF7));
+		int32 numBytes = WideCharToMultiByte(codePage, 0, src, srclen, (LPSTR)ptr, *length, utfCp ? NULL : &defaultChar, utfCp ? NULL : &defUsed);
 		if (numBytes > 0)
 		{ 
-			BOOL defUsed = FALSE;
-			BOOL utfCp = ((codePage == CP_UTF8) || (codePage == CP_UTF7));
-			err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
-			if (!err)
-			{
-				numBytes = WideCharToMultiByte(codePage, 0, src, srclen, (LPSTR)LStrBuf(**dest), numBytes, utfCp ? NULL : &defaultChar, utfCp ? NULL : &defUsed);
-				TerminateLStr(dest, numBytes);
-				if (defaultCharWasUsed)
-					*defaultCharWasUsed = (LVBoolean)(defUsed != FALSE);
-			}
+			*length = numBytes;
+			if (defaultCharWasUsed)
+				*defaultCharWasUsed = (LVBoolean)(defUsed != FALSE);
 		}
 #elif MacOSX
-		CFStringRef cfpath = CFStringCreateWithCharacters(kCFAllocatorDefault, src, srclen);
+		CFStringRef cfpath = CFStringCreateWithCharactersNoCopy(kCFAllocatorDefault, src, srclen, kCFAllocatorNull);
 		if (cfpath)
 		{
 			CFMutableStringRef cfpath2 = CFStringCreateMutableCopy(kCFAllocatorDefault, 0, cfpath);
@@ -1722,24 +2028,18 @@ LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *
 				CFStringEncoding encoding = ConvertCodepageToEncoding(codePage);
 				if (encoding != kCFStringEncodingInvalidId)
 				{
-					CFIndex numBytes;
-					if (CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, NULL, 0, &numBytes) > 0)
+					CFIndex numBytes = *length;
+					if (CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, (UInt8*)LStrBuf(**dest), numBytes, &numBytes) > 0)
 					{
-						err = NumericArrayResize(uB, 1, (UHandle*)dest, numBytes + 1);
-						if (!err)
-						{
-							CFStringGetBytes(cfpath2, CFRangeMake(0, CFStringGetLength(cfpath2)), encoding, defaultChar, false, (UInt8*)LStrBuf(**dest), numBytes, &numBytes);
-							TerminateLStr(dest, numBytes);
-						}
+						*length = (int32)numBytes;
 					}
 				}
 				CFRelease(cfpath2);
 			}
 		}
 #elif Unix
-		err = unix_convert_wtomb(src, srclen, dest, codePage, defaultChar, defaultCharWasUsed);
+		err = unix_convert_wtomb(src, srclen, ptr, length, codePage, defaultChar, defaultCharWasUsed);
 #endif
-		return err;
 	}
-	return mgNoErr;
+	return err;
 }

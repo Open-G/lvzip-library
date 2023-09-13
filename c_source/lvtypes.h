@@ -41,6 +41,7 @@ extern "C" {
 #define kPIC		8
 #define kARM		9
 #define kX64		10
+#define kARM64		11
 
 #if defined(macintosh) || defined(__PPCC__) || defined(THINK_C) || defined(__SC__) || defined(__MWERKS__) || defined(__APPLE_CC__)
  #if defined(__powerc) || defined(__ppc__)
@@ -51,6 +52,9 @@ extern "C" {
   #define BigEndian 0
  #elif defined(__x86_64)
   #define ProcessorType	kX64
+  #define BigEndian 0
+ #elif defined(__arm)
+  #define ProcessorType	kARM64
   #define BigEndian 0
  #else
   #define ProcessorType	kM68000
@@ -143,6 +147,7 @@ extern "C" {
  #error No target defined
 #endif
 
+#define Is64Bit			 ProcessorType == kX64 || ProcessorType == kARM64
 #define usesHFSPath      MacOS && ProcessorType != kX64
 #define usesPosixPath    Unix || (MacOSX && ProcessorType == kX64)
 #define usesWinPath      Win32
@@ -240,7 +245,7 @@ typedef int32           MgErr;
 
 typedef int32           Bool32;
 
-#if ProcessorType==kX64
+#if Is64Bit
 #define uPtr uQ
 #else
 #define uPtr uL
@@ -279,7 +284,11 @@ void		RevBQ(UPtr p);
 #define RTToW(c1,c2)        Cat2Chrs(c1,c2)
 #define StdToW(x)			
 #define StdToL(x			
-#define StdToQ(x)			
+#define StdToQ(x)
+#define StdToR(x)
+#define StdToR32(x)
+#define StdToP(x)
+#define StdToPtr(x)
 #define ConvertBE16(x)		x
 #define ConvertBE32(x)		x
 #define ConvertLE16(x)		Swap16(x)
@@ -290,10 +299,47 @@ void		RevBQ(UPtr p);
 #define StdToW(x)			SwapBW((UPtr)(x))
 #define StdToL(x)			RevBL((UPtr)(x))
 #define StdToQ(x)			RevBQ((UPtr)(x))
+#define StdToR(x)			(SwapBW((int8*)(x)), SwapBW(((int8*)(x))+2), SwapBW(((int8*)(x))+4), SwapBW(((int8*)(x))+6))
+#define StdToR32(x)			(RevBL((int8*)(x)), RevBL(((int8*)(x))+4), RevBL(((int8*)(x))+8), RevBL(((int8*)(x))+12))
+#define StdToP(x)			(SwapBW((int8*)(x)), SwapBW(((int8*)(x))+2))
+#if Is64Bit
+#define StdToPtr(x)			StdToQ(x)		
+#else
+#define StdToPtr(x)			StdToL(x)
+#endif
 #define ConvertBE16(x)		Swap16(x)
 #define ConvertBE32(x)		Swap32(x)
 #define ConvertLE16(x)		x
 #define ConvertLE32(x)		x
+#endif
+#define WToStd(x)			StdToW(x)
+#define LToStd(x)			StdToL(x)
+#define QToStd(x)			StdToQ(x)
+#define PtrToStd(x)			StdToPtr(x)
+#define RToStd(x)			StdToR(x)
+#define R32ToStd(x)			StdToR32(x)
+#define PToStd(x)			StdToP(x)
+
+#if (ProcessorType==kX86) || (ProcessorType==kX64) || (ProcessorType==kM68000)
+	#define UseGetSetIntMacros	1
+#else
+	#define UseGetSetIntMacros	0
+#endif
+
+#if UseGetSetIntMacros
+#define GetAWord(p)			(*(int16*)(p))
+#define SetAWord(p, x)		(*(int16*)(p) = x)
+#define GetALong(p)			(*(int32*)(p))
+#define SetALong(p, x)		(*(int32*)(p) = x)
+#define GetAQuad(p)			(*(int64*)(p))
+#define SetAQuad(p, x)		(*(int64*)(p) = x)
+#else
+int16			GetAWord(void *);
+int16			SetAWord(void *, int16);
+int32			GetALong(void *);
+int32			SetALong(void *, int32);
+int64			GetAQuad(void *);
+int64			SetAQuad(void *, int64);
 #endif
 
 #if !Mac
