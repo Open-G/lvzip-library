@@ -379,6 +379,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copying shared library"
+				CommandLine="copy /Y /B &quot;$(TargetDir)$(TargetFileName)&quot; &quot;C:\Program Files\National Instruments\LabVIEW 2009\user.lib\_OpenG.lib\lvzip&#x0D;&#x0A;copy /Y /B &quot;$(TargetDir)$(TargetFileName)&quot; $(InputDir)..\..\source&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1175,7 +1177,7 @@
 				RelativePath="..\gzclose.c"
 				>
 				<FileConfiguration
-					Name="DLL Debug|Win32"
+					Name="DLL Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1183,7 +1185,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|Win32"
+					Name="DLL Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1204,7 +1206,6 @@
 				>
 				<FileConfiguration
 					Name="DLL Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1212,6 +1213,14 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="DLL Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="DLL Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1231,7 +1240,7 @@
 				RelativePath="..\gzlib.c"
 				>
 				<FileConfiguration
-					Name="DLL Debug|Win32"
+					Name="DLL Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1239,7 +1248,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|Win32"
+					Name="DLL Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1259,7 +1268,7 @@
 				RelativePath="..\gzread.c"
 				>
 				<FileConfiguration
-					Name="DLL Debug|Win32"
+					Name="DLL Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1267,7 +1276,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|Win32"
+					Name="DLL Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1287,7 +1296,7 @@
 				RelativePath="..\gzwrite.c"
 				>
 				<FileConfiguration
-					Name="DLL Debug|Win32"
+					Name="DLL Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1295,7 +1304,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="DLL Release|Win32"
+					Name="DLL Release|x64"
 					ExcludedFromBuild="true"
 					>
 					<Tool
