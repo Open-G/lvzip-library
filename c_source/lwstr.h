@@ -187,7 +187,7 @@ LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath,
 
 #define kFlattenUnicode	0x80
 LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr ptr, int32 *length);
-LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName);
+LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName, uInt32 flags);
 
 
 /* Different conversion functions between various codepages */

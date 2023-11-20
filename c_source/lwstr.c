@@ -949,10 +949,10 @@ LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int3
 	
 	if (*pathName)
 	{
-		uInt8 type = fNotAPath;
+		uInt8 pathType = fNotAPath;
 	
 		offset = HasDOSDevicePrefix(src, srcLen),
-		after = LWPtrRootLen(src, srcLen, offset, &type);
+		after = LWPtrRootLen(src, srcLen, offset, &pathType);
 
 		if (flags & kFlattenUnicode)
 		{
@@ -963,7 +963,7 @@ LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int3
 #endif
 		}
 		/* Preflight the path */
-		switch (type)
+		switch (pathType)
 		{
 			case fAbsPath:
 				/* C:\path\path => \01C\04path, nothing needed now but C will need to move one up */
@@ -1083,7 +1083,7 @@ LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int3
 	return noErr;
 }
 
-LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName)
+LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName, uInt32 flags)
 {
 	int32 len;
 	if (length < 8 || GetALong(ptr) != kFlatPathCode)
@@ -1095,12 +1095,12 @@ LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName)
 	if (len)
 	{
 		MgErr err = noErr;
-		uInt8 flags, type;
+		uInt8 pathFlags, pathType;
 		uInt16 cnt;
 
 		ptr += 4;
-		flags = *ptr++;
-		type = *ptr++;
+		pathFlags = *ptr++;
+		pathType = *ptr++;
 		cnt = GetAWord(ptr);
 		StdToW(&cnt);
 		ptr += 2;
