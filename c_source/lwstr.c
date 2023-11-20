@@ -1150,7 +1150,7 @@ MgErr LWPathGetFileTypeAndCreator(LWPathHandle lwstr, ResType *fType, ResType *f
 }
 
 /* Windows: path is an ACP mulibyte encoded path string and lwstr is filled with a Windows UTF16LE string from the path
-   MacOSX, Unix, VxWorks, Pharlap: path is an platform encoded path string and lwstr is filled with a local encoded SBC or
+   MacOSX, Unix, VxWorks, Pharlap: path is a platform encoded path string and lwstr is filled with a local encoded SBC or
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
 DebugAPI(MgErr) LStrPtrToLWPath(const UPtr string, int32 len, uInt32 codePage, LWPathHandle *lwstr, int32 reserve)
 {
@@ -1696,6 +1696,8 @@ LibAPI(MgErr) ConvertToPosixPath(const LStrHandle src, uInt32 srccp, LStrHandle 
 }
 
 #if Unix
+extern MgErr UnixToLVFileErr(void);
+
 #ifdef HAVE_ICONV
 static char *iconv_getcharset(uInt32 codePage)
 {
@@ -1727,10 +1729,10 @@ static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uI
 		err = NumericArrayResize(uB, 1, (UHandle*)dest, len * sizeof(wchar_t));
 		if (!err)
 		{
-			char *inbuf = (char*)src, 
-				 *outbuf = (char*)WStrBuf(*dest);
+			char *inbuf = (char*)src; 
+			void *outbuf = (void*)WStrBuf(*dest);
 			size_t retval, inleft = len, outleft = len * sizeof(wchar_t);
-			retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
+			retval = iconv(cd, &inbuf, &inleft, (char**)&outbuf, &outleft);
 			if (retval == (size_t)-1)
 				err = UnixToLVFileErr();
 			else
@@ -1743,7 +1745,7 @@ static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uI
 	return UnixToLVFileErr();
 }
 
-static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *dest, int32 offset, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, UPtr dest, int32 *outLen, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
 	MgErr err;
 	iconv_t cd = iconv_open(iconv_getcharset(codePage), "WCHAR_T");
@@ -1751,20 +1753,25 @@ static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, LStrHandle *de
 	Unused(defaultCharWasUsed);
 	if (cd != (iconv_t)-1)
 	{
+		char *inbuf = (char*)src, *outbuf = (char*)dest;
+		size_t retval, inleft = srclen * sizeof(wchar_t), outleft = srclen * sizeof(uInt16) * 2;
+
 		if (srclen == -1)
 			srclen = wcslen(src);
 
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, offset + srclen * sizeof(uInt16) * 2);
-		if (!err)
-		{
-			char *inbuf = (char*)src, *outbuf = (char*)LStrBuf(**dest) + offset;
-			size_t retval, inleft = srclen * sizeof(uInt16), outleft = srclen * sizeof(uInt16) * 2;
-			retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
-			if (retval == (size_t)-1)
-				err = UnixToLVFileErr();
-			else
-				LStrLen(**dest) = offset + retval;
-		}
+
+		inleft = srclen * sizeof(wchar_t);
+		outleft = srclen * sizeof(uInt16) * 2;
+
+		retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
+		if (retval == (size_t)-1)
+			err = UnixToLVFileErr();
+		else
+			*outLen = retval;
+
+        
+
+
 		if (iconv_close(cd) != 0 && !err)
 			err = UnixToLVFileErr();
 		return err;
@@ -1865,9 +1872,7 @@ static MgErr unix_convert_mbtow(const char *src, int32 sLen, WStrHandle *dest, u
 	return err;
 }
 
-static MgErr unix_convert_wtomb(const wchar_t *src, int32 sLen, UPtr ptr, uInt32 *length, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
-
-static MgErr unix_convert_wtomb(const wchar_t *src, int32 sLen, LStrHandle *dest, int32 offset, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, UPtr dest, int32 *outLen, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
 	size_t max, mLen = 0, dLen = 0;
 	const wchar_t *wPtr = src;

@@ -115,7 +115,7 @@ MgErr lvzlibCreateRefnum(void *node, LVRefNum *refnum, uInt32 magic, LVBoolean a
 
 MgErr lvzlibGetRefnum(LVRefNum *refnum, void **node, uInt32 magic)
 {
-	FileNode *pNode;
+	FileNode *pNode = NULL;
 	MgErr err = MCGetCookieInfo(gCookieJar, *refnum, (MagicCookieInfo)&pNode);
 	if (!err)
 	{
@@ -133,7 +133,7 @@ MgErr lvzlibGetRefnum(LVRefNum *refnum, void **node, uInt32 magic)
 
 MgErr lvzlibDisposeRefnum(LVRefNum *refnum, void **node, uInt32 magic)
 {
-	FileNode *pNode;
+	FileNode *pNode = NULL;
 	MgErr err = MCGetCookieInfo(gCookieJar, *refnum, (MagicCookieInfo)&pNode);
 	if (!err)
 	{
