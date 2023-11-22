@@ -1718,6 +1718,8 @@ static char *iconv_getcharset(uInt32 codePage)
 	return NULL;
 }
 
+#define BUF_LENGTH 1024
+
 static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uInt32 codePage)
 {
 	iconv_t cd = iconv_open("WCHAR_T", iconv_getcharset(codePage));
@@ -1730,7 +1732,7 @@ static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uI
 		if (!err)
 		{
 			char *inbuf = (char*)src; 
-			void *outbuf = (void*)WStrBuf(*dest);
+			wchar_t *outbuf = WStrBuf(*dest);
 			size_t retval, inleft = len, outleft = len * sizeof(wchar_t);
 			retval = iconv(cd, &inbuf, &inleft, (char**)&outbuf, &outleft);
 			if (retval == (size_t)-1)
@@ -1745,33 +1747,63 @@ static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uI
 	return UnixToLVFileErr();
 }
 
-static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, UPtr dest, int32 *outLen, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
+static MgErr unix_convert_wtomb(const wchar_t *src, int32 srcLen, UPtr dest, int32 *outLen, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
 	MgErr err;
 	iconv_t cd = iconv_open(iconv_getcharset(codePage), "WCHAR_T");
+
 	Unused(defaultChar);
 	Unused(defaultCharWasUsed);
+
 	if (cd != (iconv_t)-1)
 	{
-		char *inbuf = (char*)src, *outbuf = (char*)dest;
-		size_t retval, inleft = srclen * sizeof(wchar_t), outleft = srclen * sizeof(uInt16) * 2;
+		char *inbuf = (char*)src, *outbuf;
+		size_t retval, cbinleft, cboutleft;
 
-		if (srclen == -1)
-			srclen = wcslen(src);
+		if (srcLen == -1)
+			srcLen = wcslen(src);
 
+		cbinleft = srcLen * sizeof(wchar_t);
 
-		inleft = srclen * sizeof(wchar_t);
-		outleft = srclen * sizeof(uInt16) * 2;
+		if (!dest || !*outLen)
+		{
+			char buffer[BUF_LENGTH],
 
-		retval = iconv(cd, &inbuf, &inleft, &outbuf, &outleft);
-		if (retval == (size_t)-1)
-			err = UnixToLVFileErr();
+			*outLen = 0;
+			do
+			{
+				cboutleft = BUF_LENGTH;
+				outbuf = buffer;
+
+				retval = iconv(cd, &inbuf, &cbinleft, &outbuf, &cboutleft);
+				if (retval == (size_t)-1)
+				{
+					err = UnixToLVFileErr();
+					if (err == mFullErr)
+					{
+						*outLen += BUF_LENGTH - cboutleft;
+					}
+				}
+				else
+				{
+					*outLen += BUF_LENGTH - cboutleft;
+				}
+
+			}
+			while (err == mFullErr);
+		}
 		else
-			*outLen = retval;
+		{
+			cboutleft = *outLen;
+			outbuf = (char*)dest;
 
-        
-
-
+			retval = iconv(cd, &inbuf, &cbinleft, &outbuf, &cboutleft);
+			if (retval == (size_t)-1)
+				err = UnixToLVFileErr();
+			else
+				*outLen -= cboutleft;
+		}
+ 
 		if (iconv_close(cd) != 0 && !err)
 			err = UnixToLVFileErr();
 		return err;

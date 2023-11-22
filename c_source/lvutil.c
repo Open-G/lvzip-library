@@ -917,6 +917,8 @@ MgErr UnixToLVFileErr(void)
       case EMFILE:      return fTMFOpen;
       case ENOMEM:      return mFullErr;
       case EIO:         return fIOErr;
+	  case EILSEQ:      return bogusError;
+	  case E2BIG:       return mFullErr;
     }
     return fIOErr;   /* fIOErr generally signifies some unknown file error */
 }

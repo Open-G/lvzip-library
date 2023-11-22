@@ -1899,10 +1899,10 @@ extern uint32_t ZEXPORT unzTell(unzFile file)
 {
     unz64_internal *s = NULL;
     if (file == NULL)
-        return UNZ_INVOFFSET;
+        return (uint32_t)UNZ_INVOFFSET;
     s = (unz64_internal*)file;
     if (s->pfile_in_zip_read == NULL)
-        return UNZ_INVOFFSET;
+        return (uint32_t)UNZ_INVOFFSET;
     return (uint32_t)s->pfile_in_zip_read->stream.total_out;
 }
 

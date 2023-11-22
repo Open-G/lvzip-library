@@ -943,9 +943,9 @@ static int ZEXPORT zipOpenNewFileInZip_internal(zipFile file,
     zip64_internal *zi = NULL;
     uint64_t size_available = 0;
     uint64_t size_needed = 0;
-	size_t size_filename = filename != NULL ? strlen(filename) : 0;
-    size_t size_comment = comment != NULL ? strlen(comment) :0;
-    uint16_t i = 0;
+	uint32_t size_filename = filename != NULL ? (uint32_t)strlen(filename) : 0;
+    uint32_t size_comment = comment != NULL ? (uint32_t)strlen(comment) :0;
+    uint32_t i = 0;
     unsigned char *central_dir = NULL;
     int err = ZIP_OK;
 
