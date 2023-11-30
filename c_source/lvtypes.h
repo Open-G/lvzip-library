@@ -175,12 +175,12 @@ extern "C" {
   #elif _MSC_VER >= 1400
 	 #define DoDebugger()   __debugbreak()
   #else
-   #define DoDebugger()    {__asm int 3}
+   #define DoDebugger(		{__asm int 3}
   #endif
  #elif MacOS
-  #define DoDebugger()    Debugger()
+  #define DoDebugger()		Debugger()
  #else
-  #define DoDebugger()
+  #define DoDebugger()		__builtin_trap
  #endif
  #define DEBUGPRINTF(args)      DbgPrintf args
 #else

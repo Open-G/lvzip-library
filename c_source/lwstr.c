@@ -33,6 +33,9 @@
  #include <sys/xattr.h>
 #elif Unix
  #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <locale.h>
  #ifdef HAVE_ICONV
   #include <iconv.h>
  #endif
@@ -314,12 +317,23 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 			  srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, &type);
 
 #if Unix || MacOSX
-		if (!srcLen)
+		if (!srcLen || (srcLen == 1 && srcPtr[0] == kPathSeperator))
 		{
-			// we want to make the path at least contain a separater
-			reserve++;
+			srcLen = 0;
+			// we want to make the path at least contain a seperater
+			xtrLen = 1;
 		}
-#elif Win32 && !Pharlap /* Windows and not Pharlap */
+#elif Win32
+#if Pharlap
+		// Remove any DOS device prefix on Pharlap
+		if (srcOff)
+		{
+			if (type == fUNCPath)
+				xtrLen = 2;
+			srcPtr += srcOff;
+			srcLen -= srcOff;
+		}
+#else /* Windows and not Pharlap */
 		if (!srcOff)
 		{
 			/* Create DOS Device paths for absolute paths that aren't that yet */ 
@@ -338,28 +352,27 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 			}
 		}
 #endif
+#endif
 		err = LWPathResize(lwstr, srcLen + xtrLen + reserve);
 		if (!err)
 		{
-#if usesWinPath && !Pharlap /* Windows and not Pharlap */
-			switch (xtrLen)
+			if (xtrLen)
 			{
-				case 4:
-					LWPathNCat(lwstr, 0, L"\\\\?\\", xtrLen);
-					break;
-				case 8:
-					LWPathNCat(lwstr, 0, L"\\\\?\\UNC\\", xtrLen);
-					break;
-			}
+#if Win32
+#if Pharlap
+				LWPathNCat(lwstr, 0, "\\\\", xtrLen);
+#else
+				LWPathNCat(lwstr, 0, L"\\\\?\\UNC\\", xtrLen);
 #endif
+#else
+				LWPathNCat(lwstr, 0, "/", xtrLen);
+#endif
+			}
+
 			if (srcLen)
 			{
 				return LWPtrNormalize(srcPtr, srcLen, srcRoot, lwstr, xtrLen, type);
 			}
-#if Unix || MacOSX
-			LWPathBuf(*lwstr)[0] = kPathSeperator;
-			srcLen++;
-#endif
 			srcLen += xtrLen;
 		}
 	}
@@ -421,14 +434,15 @@ DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot
 	uInt16 cnt = 0;
 
 	/*
-	 srcLen  srcPtr[0]
+	 srcLen  srcPtr[0]    
        0        x         0
        1        .         0
+       1        /         0   Non-Windows
        1        x         1
 	  >=2       x         1
 	*/
 
-	if (srcPtr && srcPtr[0] && (srcLen > 1 || srcLen == 1 && srcPtr[0] != '.'))
+	if (srcPtr && srcPtr[0] && (srcLen > 1 || (srcLen == 1 && srcPtr[0] != '.')))
 	{
 		/*								prefix	srcRoot	type   cnt
 		rtest\file						   0	   0	 rel	2	+1
@@ -445,14 +459,17 @@ DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot
 		\\?\UNC\server\share\rtest\file	   8	  21	 unc	3	+2
 
 		rtest/file						   0	   0	 rel	2	+1
+		.\rtest\file					   0	   0	 rel	2	+1
+		/                                  0       1     abs    0   
 		/dir/rtest/file					   0	   1	 abs	3   +1
 		//server/share/rtest/file		   0	  15	 unc	3	+2
 		*/
 
-		if (IsSeperator(srcPtr[srcLen - 1]) && (srcLen > srcRoot || type == fUNCPath))
+		if ((srcLen > srcRoot || type == fUNCPath) && IsSeperator(srcPtr[srcLen - 1]))
 			srcLen--;
 		
-		cnt++;
+		if (srcLen > 1 || srcPtr[0] != kPosixPathSeperator)
+			cnt++;
 
 		/* Canonicalize the path */
 		while (srcLen > srcOff)
@@ -460,7 +477,7 @@ DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot
 			if (srcOff < srcRoot)
 			{
 #if usesWinPath
-				if (srcPtr[srcOff] == '/')
+				if (srcPtr[srcOff] == kPosixPathSeperator)
 				{
 					tgtPtr[tgtOff++] = kPathSeperator;
 					srcOff++;
@@ -779,15 +796,14 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 	if (relType == fRelPath)
 		relOff = relRoot;
 
+#if usesWinPath
 	if (srcCnt && !IsSeperator(srcPtr[srcLen - 1]))
 		xtrLen = 1;
-#if usesWinPath || usesPosixPath
 	else if (!srcCnt && srcType == fAbsPath && relType == fRelPath)
-#if usesWinPath
 		xtrLen = 2;
-#elif usesPosixPath
+#else
+	if (srcType == fAbsPath && !IsSeperator(srcPtr[srcLen - 1]))
 		xtrLen = 1;
-#endif
 #endif
 
 	if (srcPath != tmpPath || relCnt)
@@ -992,9 +1008,9 @@ LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int3
 		if (!len)
 		{
 #if Win32 && !Pharlap
-			err = WideCStrToMultiByteBuf(src + offset, srcLen - offset, NULL, &len, pathFlags ? CP_UTF8 : CP_ACP, 0, NULL);
+			err = WideCStrToMultiByteBuf(src + offset, srcLen - offset, NULL, &len, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
 #else
-			err = ConvertCStringBuf(src + offset, srcLen - offset, CP_ACP, NULL, &len, pathFlags ? CP_UTF8 : CP_ACP, 0, NULL);
+			err = ConvertCStringBuf(src + offset, srcLen - offset, GetCurrentCodePage(CP_ACP), NULL, &len, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
 #endif
 		}
 	}
@@ -1031,9 +1047,9 @@ LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int3
 					}
 				}
 #if Win32 && !Pharlap
-				err = WideCStrToMultiByteBuf(src + offset, srcLen - offset, ptr, &len, pathFlags ? CP_UTF8 : CP_ACP, 0, NULL);
+				err = WideCStrToMultiByteBuf(src + offset, srcLen - offset, ptr, &len, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
 #else
-				err = ConvertCStringBuf(src + offset, srcLen - offset, CP_ACP, ptr, &len, pathFlags ? CP_UTF8 : CP_ACP, 0, NULL);
+				err = ConvertCStringBuf(src + offset, srcLen - offset, GetCurrentCodePage(CP_ACP), ptr, &len, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
 #endif
 #if Win32
 				if (!extLen)
@@ -1160,9 +1176,9 @@ DebugAPI(MgErr) LStrPtrToLWPath(const UPtr string, int32 len, uInt32 codePage, L
 	if (string && len > 0)
 	{
 #if usesHFSPath
-		err = CStrToPosixPath(string, len, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL, FALSE);
+		err = CStrToPosixPath(string, len, codePage, (LStrHandle*)&temp, CP_UTF8, '?', NULL, FALSE);
 #elif Unix || MacOSX || Pharlap
-		err = ConvertCString(string, len, codePage, (LStrHandle*)&temp, CP_ACP, '?', NULL);
+		err = ConvertCString(string, len, codePage, (LStrHandle*)&temp, CP_UTF8, '?', NULL);
 #else
 		err = MultiByteCStrToWideString(string, len, (WStrHandle*)&temp, codePage);
 #endif
@@ -1180,6 +1196,7 @@ DebugAPI(MgErr) LStrPtrToLWPath(const UPtr string, int32 len, uInt32 codePage, L
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
 LibAPI(MgErr) UStrToLWPath(const LStrHandle path, LWPathHandle *lwstr, int32 reserve)
 {
+	DoDebugger();
 	return LStrPtrToLWPath(LStrBufH(path), LStrLenH(path), CP_UTF8, lwstr, reserve);
 }
 
@@ -1206,7 +1223,7 @@ LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, int32 rese
 				LStrLen(lstr) = bufLen;
 				err = FPathToText(pathName, lstr);
 				if (!err)
-					err = LStrPtrToLWPath(LStrBuf(lstr), LStrLen(lstr), CP_ACP, lwstr, reserve);
+					err = LStrPtrToLWPath(LStrBuf(lstr), LStrLen(lstr), GetCurrentCodePage(CP_ACP), lwstr, reserve);
 
 				DSDisposePtr((UPtr)lstr);
 			}
@@ -1248,7 +1265,7 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *
 					offset = 6;
 			}
 			err = WideCStrToMultiByte(ptr + offset, len - offset, pathName, 0, codePage, '?', NULL);
-			if (!err && offset == 6 && LStrBuf(**pathName)[1] == kPathSeperator)
+			if (!err && type == fUNCPath && LStrBuf(**pathName)[1] == kPathSeperator)
 			{
 				LStrBuf(**pathName)[0] = kPathSeperator;
 			}
@@ -1261,7 +1278,11 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *
 	}
 	else if (lwstr)
 	{
-		err = WideCStrToMultiByte((const wchar_t*)gNotAPath, (sizeof(gNotAPath) / sizeof(LWChar)) - 1, pathName, 0, codePage, 0, NULL);
+#if usesWinPath
+		err = WideCStrToMultiByte((const wchar_t*)gNotAPath, -1, pathName, 0, codePage, 0, NULL);
+#else
+		err = ConvertCString(gNotAPath, -1, CP_UTF8, pathName, codePage, '?', NULL);
+#endif
 	}
 	else if (pathName && *pathName)
 	{
@@ -1272,13 +1293,14 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *
 
 LibAPI(MgErr) UStrFromLWPath(LStrHandle *pathName, const LWPathHandle *lwstr, uInt32 flags)
 {
+	DoDebugger();
 	return LStrFromLWPath(pathName, CP_UTF8, lwstr, 0, flags);
 }
 
 LibAPI(MgErr) LPathFromLWPath(Path *pathName, const LWPathHandle *lwstr)
 {
 	LStrHandle dest = NULL;
-	MgErr err = LStrFromLWPath(&dest, CP_ACP, lwstr, 0, kDefaultPath);
+	MgErr err = LStrFromLWPath(&dest, GetCurrentCodePage(CP_ACP), lwstr, 0, kDefaultPath);
 	if (!err)
 	{
 		err = FTextToPath(LStrBuf(*dest), LStrLen(*dest), pathName);
@@ -1305,10 +1327,10 @@ LibAPI(MgErr) LPathToText(Path path, LVBoolean isUtf8, LStrHandle *str)
 			if (!err)
 			{
 #if usesHFSPath
-				err = CStrToPosixPath(LStrBufH(*str), LStrLenH(*str), CP_ACP, str, isUtf8 ? CP_UTF8 : CP_ACP, '?', NULL, false);
+				err = CStrToPosixPath(LStrBufH(*str), LStrLenH(*str), GetCurrentCodePage(CP_ACP), str, isUtf8 ? CP_UTF8 : GetCurrentCodePage(CP_ACP), '?', NULL, false);
 #else
 				if (isUtf8)
-					err = ConvertLString(*str, CP_ACP, str, isUtf8 ? CP_UTF8 : CP_ACP, '?', NULL);
+					err = ConvertLString(*str, GetCurrentCodePage(CP_ACP), str, isUtf8 ? CP_UTF8 : GetCurrentCodePage(CP_ACP), '?', NULL);
 #endif
 				if (!err && IsSeperator(LStrBuf(**str)[LStrLen(**str) - 1]))
 				{
@@ -1326,10 +1348,11 @@ LibAPI(MgErr) LPathFromText(CStr str, int32 len, Path *path, LVBoolean isDir)
 #if usesHFSPath
 	LStrHandle hfsPath = NULL;
 	/* Convert the posix path to an HFS path */
-	err = ConvertFromPosixPath(str, len, CP_ACP, &hfsPath, CP_ACP, '?', NULL, isDir);
+	err = ConvertFromPosixPath(str, len, GetCurrentCodePage(CP_ACP), &hfsPath, GetCurrentCodePage(CP_ACP), '?', NULL, isDir);
 	if (!err && hfsPath)
 	{
 		err = FTextToPath(LStrBuf(*hfsPath), LStrLen(*hfsPath), path);
+		DSDisposeHandle((UHandle)hfsPath);
 	}
 #else
 	Unused(isDir);
@@ -1350,97 +1373,166 @@ static CFStringEncoding ConvertCodepageToEncoding(uInt32 codePage)
 }
 #endif
 
-LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp)
+static LVBoolean IsExtendedByteCode(UPtr ptr, int32 len)
 {
-#if Win32
-	return acp ? GetACP() : GetOEMCP();
-#elif MacOSX
-    Unused(acp);
-	CFStringEncoding encoding = CFStringGetSystemEncoding();
-	return CFStringConvertEncodingToWindowsCodepage(encoding);
-#else
-    if (utf8_is_current_mbcs())
-		return CP_UTF8;
-	return acp ? CP_ACP : CP_OEMCP;
-#endif
+	for (; len > 0; len--)
+	{
+		if (*ptr++ >= 0x80)
+		{
+			return LV_TRUE;
+		}
+	}
+	return LV_FALSE;
 }
 
 LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string)
 {
 	if (string)
 	{
-		int32 i = LStrLen(*string) - 1;
-		UPtr ptr = LStrBuf(*string);
-
-		for (; i >= 0; i--)
-		{
-			if (*ptr++ >= 0x80)
-			{
-				return LV_TRUE;
-			}
-		}
+		return IsExtendedByteCode(LStrBuf(*string), LStrLen(*string));
 	}
 	return LV_FALSE;
 }
 
-static MgErr ConvertCStringBuf(ConstCStr src, int32 srclen, uInt32 srccp, UPtr ptr, int32 *length, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
+#ifdef HAVE_ICONV
+static MgErr unix_convert_mbtomb(const char *src, int32 srcLen, uInt32 srccp, UPtr dest, int32 *outLen, uInt32 dstcp, char defaultChar, LVBoolean *defaultCharWasUsed);
+
+static uInt32 codePage125xOEM[] = {852, 866, 850, 737, 857, 862, 720, 775}; 
+#endif
+
+LibAPI(uInt32) GetCurrentCodePage(uInt32 codePage)
+{
+	if (codePage == CP_ACP || codePage == CP_OEMCP)
+	{		
+#if Win32
+		return codePage == CP_ACP ? GetACP() : GetOEMCP();
+#elif MacOSX
+		Unused(acp);
+		CFStringEncoding encoding = CFStringGetSystemEncoding();
+		return CFStringConvertEncodingToWindowsCodepage(encoding);
+#else
+		if (utf8_is_current_mbcs())
+			return CP_UTF8;
+#ifdef HAVE_ICONV
+		char *lc = setlocale(LC_CTYPE, NULL);
+		if (lc)
+		{
+			char *tc = strrchr(lc, '.');
+			if (tc)
+			{
+				tc++;
+			}
+			else
+			{
+				tc = lc;
+			}
+
+			if (!strcasecmp(tc, "UTF-8"))
+			{
+				return CP_UTF8;
+			}
+
+			if (!strncasecmp(tc, "CP", 2))
+			{
+				int n = sscanf(tc + 2, "%u", &codePage);
+				if (codePage == CP_OEMCP && n > 0)
+				{
+					if (codePage >= 1250 && codePage <= 1257)
+					{
+						codePage = codePage125xOEM[codePage - 1250];
+					}
+				}
+				return codePage;
+			}
+		}
+#endif
+		return codePage == CP_ACP ? 1252 : 437;
+#endif
+	}
+	return codePage;
+}
+
+static MgErr ConvertCStringBuf(ConstCStr src, int32 srcLen, uInt32 srccp, UPtr ptr, int32 *length, uInt32 dstcp, char defaultChar, LVBoolean *defUsed)
 {
 	MgErr err = noErr;
-	if (srccp != destcp)
+	srccp = GetCurrentCodePage(srccp);
+	dstcp = GetCurrentCodePage(dstcp);
+	if (srccp != dstcp)
 	{
+#ifdef HAVE_ICONV
+		err = unix_convert_mbtomb(src, srcLen, srccp, ptr, length, dstcp, defaultChar, defUsed);
+#else
 		WStrHandle ustr = NULL;
-		err = MultiByteCStrToWideString(src, srclen, &ustr, srccp);
+		err = MultiByteCStrToWideString(src, srcLen, &ustr, srccp);
 		if (!err && ustr)
 		{
-			err = WideCStrToMultiByteBuf(LWStrBuf(ustr), LWStrLen(ustr), ptr, length, destcp, defaultChar, defUsed);
+			err = WideCStrToMultiByteBuf(LWStrBuf(ustr), LWStrLen(ustr), ptr, length, dstcp, defaultChar, defUsed);
 			DSDisposeHandle((UHandle)ustr);
 		}
+#endif
 		return err;
 	}
 
-	if (srclen == -1)
-		srclen = StrLen(src);
-	if (srclen > 0)
+	if (srcLen == -1)
+		srcLen = StrLen(src);
+	if (ptr && srcLen > 0)
 	{
-		if (srclen > *length)
-			srclen = *length;
-		MoveBlock(src, ptr, srclen);
+		if (srcLen > *length)
+			srcLen = *length;
+		MoveBlock(src, ptr, srcLen);
 	}
-	*length = srclen;
+	*length = srcLen;
 	return err;
 }
 
-LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srclen, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed)
+LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srcLen, uInt32 srccp, LStrHandle *dest, uInt32 dstcp, char defaultChar, LVBoolean *defUsed)
 {
 	MgErr err = noErr;
-	if (srccp != destcp)
+	srccp = GetCurrentCodePage(srccp);
+	dstcp = GetCurrentCodePage(dstcp);
+	if (srccp != dstcp)
 	{
+#ifdef HAVE_ICONV
+		int32 length = 0;
+		err = unix_convert_mbtomb(src, srcLen, srccp, NULL, &length, dstcp, defaultChar, defUsed);
+		if (!err)
+		{
+			err = NumericArrayResize(uB, 1, (UHandle*)dest, length);
+			if (!err)
+			{
+				err = unix_convert_mbtomb(src, srcLen, srccp,  LStrBuf(**dest), &length, dstcp, defaultChar, defUsed);
+				if (!err)
+					LStrLen(**dest) = length;
+			}
+		}
+#else
 		WStrHandle ustr = NULL;
-		err = MultiByteCStrToWideString(src, srclen, &ustr, srccp);
+		err = MultiByteCStrToWideString(src, srcLen, &ustr, srccp);
 		if (!err && ustr)
 		{
-			err = WideStringToMultiByte(ustr, dest, destcp, defaultChar, defUsed);
+			err = WideStringToMultiByte(ustr, dest, dstcp, defaultChar, defUsed);
 			DSDisposeHandle((UHandle)ustr);
 		}
+#endif
 		return err;
 	}
 
-	if (srclen == -1)
-		srclen = StrLen(src);
-	if (srclen > 0)
+	if (srcLen == -1)
+		srcLen = StrLen(src);
+	if (srcLen > 0)
 	{
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, srclen);
+		err = NumericArrayResize(uB, 1, (UHandle*)dest, srcLen);
 		if (!err)
 		{
-			MoveBlock(src, LStrBuf(**dest), srclen);
+			MoveBlock(src, LStrBuf(**dest), srcLen);
 		}
 		else
 		{
-			srclen = 0;
+			srcLen = 0;
 		}
 	}
 	if (*dest)
-		LStrLen(**dest) = srclen;
+		LStrLen(**dest) = srcLen;
 	return err;
 }
 
@@ -1701,119 +1793,172 @@ extern MgErr UnixToLVFileErr(void);
 #ifdef HAVE_ICONV
 static char *iconv_getcharset(uInt32 codePage)
 {
-	static char cp[10];
-	switch (codePage)
+	char *cp = NULL;
+	if (codePage == CP_UTF8)
+		return strdup("UTF-8");
+	
+	cp = malloc(10);
+	if (cp)
 	{
-		case CP_ACP:
-			return "CHAR";
-		case CP_OEMCP:
-			/* FIXME: determine current local and return according OEM */
-			return "CP437";
-		case CP_UTF8:
-			return "UTF-8";
-		default:
-			snprintf(cp, 10, "CP%d", codePage);
-			return cp;
+		snprintf(cp, 10, "CP%d", GetCurrentCodePage(codePage));
 	}
-	return NULL;
+	return cp;
 }
 
 #define BUF_LENGTH 1024
 
-static MgErr unix_convert_mbtow(const char *src, int32 len, WStrHandle *dest, uInt32 codePage)
+static MgErr unix_convert_mbtow(const char *src, int32 srcLen, WStrHandle *dest, uInt32 codePage)
 {
-	iconv_t cd = iconv_open("WCHAR_T", iconv_getcharset(codePage));
-	if (cd != (iconv_t)-1)
+	MgErr err =  mgNotSupported;
+	char *cp = iconv_getcharset(codePage);
+	if (cp)
 	{
-		MgErr err;
-		if (len < 0)
-			len = strlen(src);
-		err = NumericArrayResize(uB, 1, (UHandle*)dest, len * sizeof(wchar_t));
-		if (!err)
+		iconv_t cd = iconv_open("WCHAR_T", cp);
+		if (cd != (iconv_t)-1)
 		{
-			char *inbuf = (char*)src; 
-			wchar_t *outbuf = WStrBuf(*dest);
-			size_t retval, inleft = len, outleft = len * sizeof(wchar_t);
-			retval = iconv(cd, &inbuf, &inleft, (char**)&outbuf, &outleft);
-			if (retval == (size_t)-1)
+			MgErr err;
+			if (srcLen < 0)
+				srcLen = strlen(src);
+			err = NumericArrayResize(uB, 1, (UHandle*)dest, srcLen * sizeof(wchar_t));
+			if (!err)
+			{
+				char *inbuf = (char*)src; 
+				wchar_t *outbuf = WStrBuf(*dest);
+				size_t retval, inleft = srcLen, outleft = srcLen * sizeof(wchar_t);
+				retval = iconv(cd, &inbuf, &inleft, (char**)&outbuf, &outleft);
+				if (retval == (size_t)-1)
+					err = UnixToLVFileErr();
+				else
+					WStrLenSet(*dest, (srcLen * sizeof(wchar_t) - outleft) / sizeof(wchar_t));
+			}
+			if (iconv_close(cd) != 0 && !err)
+			{
 				err = UnixToLVFileErr();
-			else
-			    WStrLenSet(*dest, (len * sizeof(wchar_t) - outleft) / sizeof(uInt16));
+			}
 		}
-		if (iconv_close(cd) != 0 && !err)
-			err = UnixToLVFileErr();
-		return err;
+		else
+		{
+		    err = UnixToLVFileErr();
+		}
+		free(cp);
 	}
-	return UnixToLVFileErr();
+	return err;
+}
+
+static MgErr unix_convert(iconv_t cd, const char *src, int32 srcLen, UPtr dest, int32 *outLen)
+{
+	MgErr err = noErr;
+	char *inbuf = (char*)src, *outbuf;
+	size_t retval, cbinleft, cboutleft;
+
+	cbinleft = srcLen;
+
+	if (!dest || !*outLen)
+	{
+		char buffer[BUF_LENGTH],
+
+		*outLen = 0;
+		do
+		{
+			cboutleft = BUF_LENGTH;
+			outbuf = buffer;
+
+			retval = iconv(cd, &inbuf, &cbinleft, &outbuf, &cboutleft);
+			if (retval == (size_t)-1)
+			{
+				err = UnixToLVFileErr();
+				if (err == mFullErr)
+				{
+					*outLen += BUF_LENGTH - cboutleft;
+				}
+			}
+			else
+			{
+				*outLen += BUF_LENGTH - cboutleft;
+			}
+		}
+		while (err == mFullErr);
+	}
+	else
+	{
+		cboutleft = *outLen;
+		outbuf = (char*)dest;
+
+		retval = iconv(cd, &inbuf, &cbinleft, &outbuf, &cboutleft);
+		if (retval == (size_t)-1)
+			err = UnixToLVFileErr();
+		else
+			*outLen -= cboutleft;
+	}
+	return err;
 }
 
 static MgErr unix_convert_wtomb(const wchar_t *src, int32 srcLen, UPtr dest, int32 *outLen, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed)
 {
-	MgErr err;
-	iconv_t cd = iconv_open(iconv_getcharset(codePage), "WCHAR_T");
-
+	MgErr err =  mgNotSupported;
+	char *cp = iconv_getcharset(codePage);
 	Unused(defaultChar);
 	Unused(defaultCharWasUsed);
-
-	if (cd != (iconv_t)-1)
+	if (cp)
 	{
-		char *inbuf = (char*)src, *outbuf;
-		size_t retval, cbinleft, cboutleft;
-
-		if (srcLen == -1)
-			srcLen = wcslen(src);
-
-		cbinleft = srcLen * sizeof(wchar_t);
-
-		if (!dest || !*outLen)
+		iconv_t cd = iconv_open(cp, "WCHAR_T");
+		if (cd != (iconv_t)-1)
 		{
-			char buffer[BUF_LENGTH],
+			if (srcLen == -1)
+				srcLen = wcslen(src);
 
-			*outLen = 0;
-			do
-			{
-				cboutleft = BUF_LENGTH;
-				outbuf = buffer;
-
-				retval = iconv(cd, &inbuf, &cbinleft, &outbuf, &cboutleft);
-				if (retval == (size_t)-1)
-				{
-					err = UnixToLVFileErr();
-					if (err == mFullErr)
-					{
-						*outLen += BUF_LENGTH - cboutleft;
-					}
-				}
-				else
-				{
-					*outLen += BUF_LENGTH - cboutleft;
-				}
-
-			}
-			while (err == mFullErr);
+			err = unix_convert(cd, (const char*)src, srcLen * sizeof(wchar_t), (char*)dest, outLen);
+			if (iconv_close(cd) != 0 && !err)
+				err = UnixToLVFileErr();
 		}
 		else
 		{
-			cboutleft = *outLen;
-			outbuf = (char*)dest;
-
-			retval = iconv(cd, &inbuf, &cbinleft, &outbuf, &cboutleft);
-			if (retval == (size_t)-1)
-				err = UnixToLVFileErr();
-			else
-				*outLen -= cboutleft;
+		    err = UnixToLVFileErr();
 		}
- 
-		if (iconv_close(cd) != 0 && !err)
-			err = UnixToLVFileErr();
-		return err;
+		free(cp);
 	}
-	return UnixToLVFileErr();
+	return err;
 }
+
+static MgErr unix_convert_mbtomb(const char *src, int32 srcLen, uInt32 srccp, UPtr dest, int32 *outLen, uInt32 dstcp, char defaultChar, LVBoolean *defaultCharWasUsed)
+{
+	MgErr err =  mgNotSupported;
+	char *scp = iconv_getcharset(srccp),
+	     *dcp = iconv_getcharset(dstcp);
+	Unused(defaultChar);
+	Unused(defaultCharWasUsed);
+	if (dcp && scp)
+	{
+		if (srcLen == -1)
+			srcLen = strlen(src);
+		if (strcasecmp(scp, dcp))
+		{
+			iconv_t cd = iconv_open(dcp, scp);
+			if (cd != (iconv_t)-1)
+			{
+				err = unix_convert(cd, src, srcLen, (char*)dest, outLen);
+				if (iconv_close(cd) != 0 && !err)
+					err = UnixToLVFileErr();
+			}
+			else
+			{
+				err = UnixToLVFileErr();
+			}
+		}
+		else
+		{
+			
+		}
+	}
+	free(scp);
+	free(dcp);
+	return err;
+}
+
 #else // HAVE_ICONV
 /* We don't have a good way of converting from an arbitrary character set to wide char and back.
    Just do default mbcs to wide char and vice versa ??? */
-static MgErr unix_convert_mbtow(const char *src, int32 sLen, WStrHandle *dest, uInt32 codePage)
+static MgErr unix_convert_mbtow(const char *src, int32 srcLen, WStrHandle *dest, uInt32 codePage)
 {
 	size_t max, mLen;
 	const char *sPtr = src;
@@ -1822,7 +1967,7 @@ static MgErr unix_convert_mbtow(const char *src, int32 sLen, WStrHandle *dest, u
 
 	if (codePage == CP_UTF8)
 	{
-        err = utf8towchar(src, sLen, NULL, &wLen, 0);
+        err = utf8towchar(src, srcLen, NULL, &wLen, 0);
 	}
 	else
 	{
@@ -1832,9 +1977,9 @@ static MgErr unix_convert_mbtow(const char *src, int32 sLen, WStrHandle *dest, u
 #else
 		mbtowc(NULL, NULL, 0);
 #endif
-		if (sLen < 0)
-			sLen = strlen(src);
-		max = sLen;
+		if (srcLen < 0)
+			srcLen = strlen(src);
+		max = srcLen;
 	    while (!err && max > 0)
 	    {
 #ifdef HAVE_MBRTOWC
@@ -1860,7 +2005,7 @@ static MgErr unix_convert_mbtow(const char *src, int32 sLen, WStrHandle *dest, u
 		{
 			if (codePage == CP_UTF8)
 			{
-				err = utf8towchar(src, sLen, WStrBuf(*dest), NULL, wLen + 1);
+				err = utf8towchar(src, srcLen, WStrBuf(*dest), NULL, wLen + 1);
 			}
 			else
 			{
@@ -1871,7 +2016,7 @@ static MgErr unix_convert_mbtow(const char *src, int32 sLen, WStrHandle *dest, u
 #else
 				mbtowc(NULL, NULL, 0);
 #endif
-				max = sLen;
+				max = srcLen;
 				sPtr = src;
 				wLen = 0;
 				while (!err && max > 0)
@@ -1900,7 +2045,7 @@ static MgErr unix_convert_mbtow(const char *src, int32 sLen, WStrHandle *dest, u
 		}
 	}
 	if (!err && *dest)
-	    WStrLenSet(*dest, wLen * sizeof(wchar_t) / sizeof(uInt16)); 
+	    WStrLenSet(*dest, wLen); 
 	return err;
 }
 

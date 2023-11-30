@@ -537,15 +537,9 @@ static wchar_t testchar = 0x00B0;
 
 LibAPI(LVBoolean) utf8_is_current_mbcs()
 {
-    LVBoolean is_utf8 = LV_FALSE;
-    unsigned char *result = malloc(MB_CUR_MAX);
-    if (result)
-    {
-        int len = wctomb(NULL, testchar);
-        len = wctomb((char*)result, testchar);
-        if ((len == 2) && (result[0] == (unsigned char)0xC2) && (result[1] == (unsigned char)0xB0))
-            is_utf8 = LV_TRUE;
-        free(result);
-    }
-    return is_utf8;
+    char result[7] = {0};
+    int len = wctomb((char*)result, testchar);
+    if ((len == 2) && (result[0] == 0xC2) && (result[1] == 0xB0))
+        return LV_TRUE;
+    return LV_FALSE;
 }

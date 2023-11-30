@@ -195,7 +195,7 @@ LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName, uI
 #define CP_OEMCP                  1           // default to OEM  code page
 #define CP_UTF8                   65001       // UTF-8 translation
 
-LibAPI(uInt32) GetCurrentCodePage(LVBoolean acp);
+LibAPI(uInt32) GetCurrentCodePage(uInt32 codePage);
 LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string);
 LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle *dest, uInt32 codePage);
 LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, WStrHandle *dest, uInt32 codePage);
