@@ -78,7 +78,7 @@ extern "C" {
  #elif defined(_M_ALPHA)
   #define ProcessorType	kDECAlpha
  #elif defined(_ARM_)
-  #define ProcessorType 	kARM
+  #define ProcessorType kARM
  #else
   #error "We don't know the ProcessorType architecture"
  #endif

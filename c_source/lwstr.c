@@ -1196,7 +1196,6 @@ DebugAPI(MgErr) LStrPtrToLWPath(const UPtr string, int32 len, uInt32 codePage, L
    MBC string from the path. It could be UTF8 if the local encoding of the platform is set as such (Linux + MacOSX) */ 
 LibAPI(MgErr) UStrToLWPath(const LStrHandle path, LWPathHandle *lwstr, int32 reserve)
 {
-	DoDebugger();
 	return LStrPtrToLWPath(LStrBufH(path), LStrLenH(path), CP_UTF8, lwstr, reserve);
 }
 
@@ -1243,7 +1242,7 @@ LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, int32 rese
     return err;
 }
 
-MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *lwstr, int32 offset, uInt32 flags)
+DebugAPI(MgErr) LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *lwstr, int32 offset, uInt32 flags)
 {
 	MgErr err = noErr;
 	uInt16 type = lwstr ? LWPathTypeGet(*lwstr) : fNotAPath;
@@ -1293,7 +1292,6 @@ MgErr LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPathHandle *
 
 LibAPI(MgErr) UStrFromLWPath(LStrHandle *pathName, const LWPathHandle *lwstr, uInt32 flags)
 {
-	DoDebugger();
 	return LStrFromLWPath(pathName, CP_UTF8, lwstr, 0, flags);
 }
 
@@ -1490,9 +1488,15 @@ LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srcLen, uInt32 srccp, LStrHand
 	MgErr err = noErr;
 	srccp = GetCurrentCodePage(srccp);
 	dstcp = GetCurrentCodePage(dstcp);
+
+	if (srcLen == -1)
+		srcLen = StrLen(src);
+
 	if (srccp != dstcp)
 	{
+		// The source and destination locale are not the same, convert it
 #ifdef HAVE_ICONV
+		// ICONV can directly convert from one locale into a different one, so avoid the roundtrip from locale to widechar and back
 		int32 length = 0;
 		err = unix_convert_mbtomb(src, srcLen, srccp, NULL, &length, dstcp, defaultChar, defUsed);
 		if (!err)
@@ -1517,8 +1521,6 @@ LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srcLen, uInt32 srccp, LStrHand
 		return err;
 	}
 
-	if (srcLen == -1)
-		srcLen = StrLen(src);
 	if (srcLen > 0)
 	{
 		err = NumericArrayResize(uB, 1, (UHandle*)dest, srcLen);

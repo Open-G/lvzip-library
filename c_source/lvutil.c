@@ -261,8 +261,9 @@
   #define FCNTL_PARAM3_CAST(param)  (int32)(param)
  #else
   #define FCNTL_PARAM3_CAST(param)  (param)
- #define st_atimespec     st_atim
- #define st_mtimespec     st_mtim
+ #define st_atimespec     st_atim	/* Time of last access */
+ #define st_mtimespec     st_mtim	/* Time of last modification */
+ #define st_ctimespec     st_ctim	/* Time of last status change */
  #endif
 #elif MacOSX
  #include <CoreFoundation/CoreFoundation.h>
@@ -535,25 +536,26 @@ void bz_internal_error(int errcode)
 /* int64 100ns intervals from Jan 1 1601 GMT to Jan 1 1904 GMT */
 #define LV1904_FILETIME_OFFSET  0x0153b281e0fb4000
 #define SECS_TO_FT_MULT			10000000
+#define HUNDRED_NS_TO_U64       0x1AD7F29ABCB
 
-static void ATimeToFileTime(ATime128 *pt, FILETIME *pft)
+DebugAPI(void) ATimeToFileTime(ATime128 *pt, FILETIME *pft)
 {
 	LARGE_INTEGER li;
 	li.QuadPart = pt->u.f.val * SECS_TO_FT_MULT;
-	li.QuadPart += (pt->u.f.fract >> 32) * SECS_TO_FT_MULT / 0x100000000L;
+	li.QuadPart += pt->u.f.fract / HUNDRED_NS_TO_U64;
 	li.QuadPart += LV1904_FILETIME_OFFSET;
 	pft->dwHighDateTime = li.HighPart;
 	pft->dwLowDateTime = li.LowPart;
 }
-
-static void FileTimeToATime(FILETIME *pft, ATime128 *pt)
+  
+DebugAPI(void) FileTimeToATime(FILETIME *pft, ATime128 *pt)
 {
-	LARGE_INTEGER li;    
+	LARGE_INTEGER li;
 	li.LowPart = pft->dwLowDateTime;
 	li.HighPart = pft->dwHighDateTime;
 	li.QuadPart -= LV1904_FILETIME_OFFSET;
 	pt->u.f.val = li.QuadPart / SECS_TO_FT_MULT;
-	pt->u.f.fract = ((li.QuadPart - pt->u.f.val) * 0x100000000 / SECS_TO_FT_MULT) << 32;
+	pt->u.f.fract = (li.QuadPart % SECS_TO_FT_MULT) * HUNDRED_NS_TO_U64;
 }
 
 static MgErr Win32ToLVFileErr(DWORD winErr)
@@ -848,13 +850,13 @@ LibAPI(MgErr) Win32ResolveSymLink(LWPathHandle wSrc, LWPathHandle *pwTgt, int32 
 #endif
 #elif Unix || MacOSX
 /* seconds between Jan 1 1904 GMT and Jan 1 1970 GMT */
-#define dt1970re1904    2082844800L
+#define dt1970re1904    2082844800UL
 
 #if VxWorks
 // on VxWorks the stat time values are unsigned long integer
 static void VxWorksConvertFromATime(ATime128 *time, unsigned long *sTime)
 {
-	/* VxWorks uses unsignde integers and can't represent dates before Jan 1, 1970 */
+	/* VxWorks uses unsigned integers and can't represent dates before Jan 1, 1970 */
 	if (time->u.f.val > dt1970re1904)
 		*sTime = (unsigned long)(time->u.f.val - dt1970re1904);
 	else
@@ -867,7 +869,7 @@ static void VxWorksConvertToATime(unsigned long sTime, ATime128 *time)
 	time->u.f.fract = 0;
 }
 #else
-// on Mac/Linux kernel 2.6 and newer the stat time values are struct timeval values
+// on Mac/Linux kernel 2.6 and newer the utimes values are struct timeval values
 static void UnixConvertFromATime(ATime128 *time, struct timeval *sTime)
 {
 	/* The LabVIEW default default value is used to indicate to not update this value */
@@ -882,11 +884,11 @@ static void UnixConvertFromATime(ATime128 *time, struct timeval *sTime)
 	}
 }
 
+// on MacOSX/Linux kernel 2.6 and newer the stat time values are struct timespec values
 static void UnixConvertToATime(struct timespec *sTime, ATime128 *time)
 {
-	time->u.f.val = (int64_t)(sTime->tv_sec + dt1970re1904);
-	time->u.p.fractHi = (uint32_t)(sTime->tv_nsec * 4.294967296);
-	time->u.p.fractLo = 0;
+	time->u.f.val = (int64_t)sTime->tv_sec + dt1970re1904;
+	time->u.f.fract = (uint64_t)sTime->tv_nsec * 18446744074ULL;
 }
 #endif
 
@@ -1378,7 +1380,7 @@ static MgErr lvFile_FileAttr(LWPathHandle lwstr, int32 end, uInt32 *fileAttr)
 	MgErr err = mgNoErr;
 	LWChar ch = 0;
 
-	if (LWPathBuf(lwstr))
+	if (!LWPathBuf(lwstr))
 		return mgArgErr;
 
 	if (end > 0)
