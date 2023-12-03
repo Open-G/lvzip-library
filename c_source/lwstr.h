@@ -55,7 +55,7 @@ typedef char			LWChar;
 #define	LW(quote)		__LW(quote)
 
 
-#define LWPathSize(h)        (((h) && *(h)) ? (DSGetHandleSize((UHandle)h) - offsetof(LWPathRec, str)) / sizeof(LWChar) : 0)
+#define LWPathSize(h)        (((h) && *(h)) ? ((*(h))->size + sizeof(int32) + sizeof(LWChar)) : 0)
 
 #define LWPathLenGet(h)      (((h) && *(h) && (*(h))->size) ? (int32)(((*(h))->size - offsetof(LWPathRec, str) + sizeof(int32)) / sizeof(LWChar)) : 0)
 #define LWPathLenSet(h, l)   ((*(h))->size = (int32)(((l) * sizeof(LWChar)) + offsetof(LWPathRec, str) - sizeof(int32)), (*(h))->str[l] = 0)
@@ -153,11 +153,13 @@ DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot
 
 DebugAPI(MgErr) LWPathAppendSeperator(LWPathHandle pathName, int32 len);
 DebugAPI(MgErr) LWPathAppend(LWPathHandle pathName, int32 end, LWPathHandle *newPath, LWPathHandle relPath);
+DebugAPI(MgErr) LWPathAppendUStr(LWPathHandle *pathName, int32 end, const LStrHandle relString);
 DebugAPI(MgErr) LWPathGetFileTypeAndCreator(LWPathHandle pathName, ResType *fType, ResType *fCreator);
 DebugAPI(MgErr) LWPathZeroTerminate(LWPathHandle *pathName, int32 len);
 
 DebugAPI(MgErr) LWPathResize(LWPathHandle *buf, size_t numChar);
-DebugAPI(MgErr) LWPathDispose(LWPathHandle buf);
+DebugAPI(MgErr) LWPathCopy(LWPathHandle *dst, LWPathHandle src);
+DebugAPI(MgErr) LWPathDispose(LWPathHandle *lwstr);
 DebugAPI(MgErr) LWPathNCat(LWPathHandle *lwstr, int32 off, const LWChar *str, int32 strLen);
 
 typedef enum
@@ -182,7 +184,6 @@ LibAPI(MgErr) LPathFromText(CStr str, int32 len, Path *path, LVBoolean isDir);
 LibAPI(MgErr) LWPathGetPathType(LWPathHandle *pathName, int32 *type, int32 *depth);
 LibAPI(MgErr) LWPathParentPath(LWPathHandle *pathName, LStrHandle *fileName, LVBoolean *empty);
 LibAPI(MgErr) LWPathAppendLWPath(LWPathHandle *pathName, const LWPathHandle *relPath);
-LibAPI(MgErr) LWPathAppendUStr(LWPathHandle *pathName, int32 end, const LStrHandle relString);
 LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath, LWPathHandle *relPath);
 
 #define kFlattenUnicode	0x80

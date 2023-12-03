@@ -391,7 +391,7 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 	return err;
 }
 
-MgErr LWPathResize(LWPathHandle *lwstr, size_t numChar)
+DebugAPI(MgErr) LWPathResize(LWPathHandle *lwstr, size_t numChar)
 {
 	int32 len = (int32)(offsetof(LWPathRec, str) + (numChar + 1) * sizeof(LWChar));
 	if (*lwstr)
@@ -409,11 +409,45 @@ MgErr LWPathResize(LWPathHandle *lwstr, size_t numChar)
 	return mgNoErr;
 }
 
-MgErr LWPathDispose(LWPathHandle lwstr)
+DebugAPI(MgErr) LWPathCopy(LWPathHandle *dst, LWPathHandle src)
 {
-	if (lwstr)
-		return DSDisposeHandle((UHandle)lwstr);
-	return mgNoErr;
+	MgErr err = mgNoErr;
+	size_t size = LWPathSize(src);
+	if (size)
+	{
+		if (*dst)
+		{
+			err = DSSetHandleSize((UHandle)*dst, size);
+		}
+		else
+		{
+			*dst = (LWPathHandle)DSNewHandle(size);
+			if (!*dst)
+				err = mFullErr;
+		}
+		if (!err)
+		{
+			MoveBlock(*src, **dst, size);
+		}
+		LWPathBuf(*dst)[LWPathLenGet(*dst)] = 0;
+	}
+	else if (*dst)
+	{
+		DSDisposeHandle((UHandle)*dst);
+		*dst = NULL;
+	}
+	return err;
+}
+
+DebugAPI(MgErr) LWPathDispose(LWPathHandle *lwstr)
+{
+	MgErr err = mgNoErr;
+	if (lwstr && *lwstr)
+	{
+		err = DSDisposeHandle((UHandle)*lwstr);
+		*lwstr = NULL;
+	}
+	return err;
 }
 
 MgErr LWPathZeroTerminate(LWPathHandle *pathName, int32 len)
@@ -760,13 +794,19 @@ LibAPI(MgErr) LWPathParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVB
 	err = LStrFromLWPath(fileName, CP_UTF8, filePath, offset, kDefaultPath);
 	if (!err)
 	{
+		LWPathHandle temp = NULL;
+		err = LWPathCopy(&temp, *filePath);
+		if (!err)
+		{
 #if usesWinPath && !Pharlap
-		if (!srcLen && srcOff == 6)
-			LStrBuf(**fileName)[0] = kPathSeperator;
+			if (!srcLen && srcOff == 6)
+				LStrBuf(*temp)[0] = kPathSeperator;
 #endif
-		LWPathTypeSet(*filePath, srcType);
-		LWPathLenSet(*filePath, srcLen);
-		LWPathCntSet(*filePath, srcCnt);
+			LWPathTypeSet(temp, srcType);
+			LWPathLenSet(temp, srcLen);
+			LWPathCntSet(temp, srcCnt);
+			*filePath = temp;
+		}
 	}
 	return err;
 }
@@ -802,7 +842,7 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 	else if (!srcCnt && srcType == fAbsPath && relType == fRelPath)
 		xtrLen = 2;
 #else
-	if (srcType == fAbsPath && !IsSeperator(srcPtr[srcLen - 1]))
+	if (srcType == fAbsPath && (!srcLen || !IsSeperator(srcPtr[srcLen - 1])))
 		xtrLen = 1;
 #endif
 
@@ -827,7 +867,6 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 		if (relCnt)
 		{
 			srcPtr = LWPathBuf(tmpPath);
-//			srcLen = LWPathLenGet(tmpPath);
 			if (xtrLen == 1)
 			{
 				srcPtr[srcLen++] = kPathSeperator;
@@ -850,21 +889,33 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 	return err;
 }
 
-LibAPI(MgErr) LWPathAppendUStr(LWPathHandle *filePath, int32 end, const LStrHandle relString)
+DebugAPI(MgErr) LWPathAppendUStr(LWPathHandle *filePath, int32 end, const LStrHandle relString)
 {
 	LWPathHandle relPath = NULL;
 	MgErr err = LStrPtrToLWPath(LStrBuf(*relString), LStrLen(*relString), CP_UTF8, &relPath, 0);
 	if (!err)
 	{
 		err = LWPathAppend(filePath ? *filePath : NULL, end, filePath, relPath);
-		LWPathDispose(relPath);
+		LWPathDispose(&relPath);
 	}
 	return err;
 }
 
-LibAPI(MgErr) LWPathAppendLWPath(LWPathHandle *filePath, const LWPathHandle *relPath)
+LibAPI(MgErr) LWPathAppendLWPath(LWPathHandle *fileName, const LWPathHandle *relName)
 {
-	return LWPathAppend(filePath ? *filePath : NULL, -1, filePath, *relPath);
+	LWPathHandle tempName = NULL;
+	MgErr err = mgNoErr;
+
+	if (fileName)
+	{
+		err = LWPathCopy(&tempName, *fileName);
+	}
+	if (!err)
+	{
+		err = LWPathAppend(tempName, -1, fileName, *relName);
+	}
+	LWPathDispose(&tempName);
+	return err;
 }
 
 LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath, LWPathHandle *relPath)
