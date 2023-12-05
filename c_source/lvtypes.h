@@ -784,9 +784,11 @@ typedef CPStr FDirEntRec, *FDirEntPtr, **FDirEntHandle;
 #define kIsCompressed		0x0080
 #define kIsArchive		    0x0100  /* kIsFile and kRecognizedType should also be set */
     
-enum { openReadWrite, openReadOnly, openWriteOnly, openWriteOnlyTruncate }; /* open modes */
+enum { openNormal, openReplace, openCreate, openOpenOrCreate, openReplaceOrCreate}; /* open modes */
+enum { accessReadWrite, accessReadOnly, accessWriteOnly}; /* access modes */
 enum { denyReadWrite, denyWriteOnly, denyNeither}; /* deny modes */
-enum { createNone, createNormal, createAlways}; /* create modes */
+
+#define kNoBuffering	0x00010000
 
 enum { fStart = 1, fEnd, fCurrent };	/* seek modes */
 /*

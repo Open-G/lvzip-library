@@ -486,7 +486,7 @@ enum
     kEPMautoLoad
 };
 
-static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rsrc, uInt32 createMode, uInt32 openMode, uInt32 denyMode);
+static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rsrc, uInt32 openMode, uInt32 accessMode, uInt32 denyMode, uInt32 flags);
 static MgErr lvFile_GetSize(FileRefNum ioRefNum, int32 mode, int64 *size);
 static MgErr lvFile_SetSize(FileRefNum ioRefNum, int64 size);
 static MgErr lvFile_GetFilePos(FileRefNum ioRefNum, int64 *offset);
@@ -1080,7 +1080,7 @@ static void EndianizeRsrcMap(RsrcMapPtr m, int16 direction)
 
 static MgErr lvFile_OpenResFile(LWPathHandle pathName, RsrcHeaderPtr rsrcHdr, FileRefNum *refnum)
 {
-	MgErr err = lvFile_OpenFile(refnum, pathName, kOpenFileRsrcData, createNone, openReadOnly, denyWriteOnly);
+	MgErr err = lvFile_OpenFile(refnum, pathName, kOpenFileRsrcData, openNormal, accessReadOnly, denyWriteOnly, 0);
 	if (!err)
 	{
 		err = lvFile_SetFilePos(*refnum, 0, fStart);
@@ -3786,19 +3786,19 @@ static MgErr lvFile_Write(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount,
 static char *namedResourceFork = "/..namedfork/rsrc";
 #endif
 
-static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rsrc, uInt32 createMode, uInt32 openMode, uInt32 denyMode)
+ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rsrc, uInt32 openMode, uInt32 accessMode, uInt32 denyMode, uInt32 flags)
 {
     MgErr err = noErr;
 	uInt8 type = LWPathTypeGet(lwstr);
 	int32 len = LWPathLenGet(lwstr);
 #if usesPosixPath
-    char theMode[4];
+    int theMode;
+	int fd;
 #elif usesWinPath
     DWORD shareAcc, openAcc;
     DWORD createAcc = OPEN_EXISTING;
     int32 attempts = 3;
-	HANDLE hFile;
- #if !Pharlap
+#if !Pharlap
 	wchar_t *rsrcPostfix = NULL;
  #endif
 #endif
@@ -3838,17 +3838,33 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
 
     switch (openMode)
     {
-		case openReadOnly:
+		case openNormal:
+			createAcc = OPEN_EXISTING;
+			break;
+		case openReplace:
+			createAcc = TRUNCATE_EXISTING;
+			break;
+		case openCreate:
+			createAcc = CREATE_NEW;
+			break;
+		case openOpenOrCreate:
+			createAcc = OPEN_ALWAYS;
+			break;
+		case openReplaceOrCreate:
+			createAcc = CREATE_ALWAYS;
+			break;
+	}
+
+	switch (accessMode)
+    {
+		case accessReadWrite:
+			openAcc = GENERIC_READ | GENERIC_WRITE;
+			break;
+		case accessReadOnly:
 			openAcc = GENERIC_READ;
 			break;
-		case openWriteOnlyTruncate:
-			createAcc = TRUNCATE_EXISTING;
-			/* Intentionally falling through */
-		case openWriteOnly:
+		case accessWriteOnly:
 			openAcc = GENERIC_WRITE;
-			break;
-		case openReadWrite:
-			openAcc = GENERIC_READ | GENERIC_WRITE;
 			break;
 		default:
 			return mgArgErr;
@@ -3869,16 +3885,6 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
 			return mgArgErr;
     }
 
-    switch (createMode)
-    {
-		case createNormal:
-			createAcc = CREATE_NEW;
-			break;
-		case createAlways:
-			createAcc = CREATE_ALWAYS;
-			break;
-	 }
-
  #if !Pharlap
 	if (rsrcPostfix)
 	{
@@ -3888,7 +3894,7 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
 	/* Open the specified file. */
     while (!err)
 	{
-		hFile = CreateFileLW(lwstr, openAcc, shareAcc, 0, createAcc, FILE_ATTRIBUTE_NORMAL, 0);
+		HANDLE hFile = CreateFileLW(lwstr, openAcc, shareAcc, 0, createAcc, flags & kNoBuffering ? FILE_FLAG_NO_BUFFERING : FILE_ATTRIBUTE_NORMAL, 0);
 		if (hFile == INVALID_HANDLE_VALUE)
 		{
 			DWORD error = GetLastError();
@@ -3898,7 +3904,7 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
 		    }
 		    else
 			{
-				err = Win32ToLVFileErr(error);
+				return Win32ToLVFileErr(error);
 			}
 		}
 		else
@@ -3907,8 +3913,6 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
 			break;
 		}
 	}
-	if (err)
-		return err;
 
 #if !Pharlap
 	if (rsrcPostfix)
@@ -3924,34 +3928,41 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
  #endif
 		return mgArgErr;
 
-	if (!createMode)
-	{
-		switch (openMode)
-		{
-			case openWriteOnly:
-				/* Treat write-only as read-write, since we can't open a file for write-only
-				   using buffered i/o functions without truncating the file. */
-			case openReadWrite:
-				strcpy(theMode, "r+");
-				break;
-			case openReadOnly:
-				strcpy(theMode, "r");
-				break;
-			case openWriteOnlyTruncate:
-				strcpy(theMode, "w");
-				break;
-			default:
-				return mgArgErr;
-		}
+    switch (openMode)
+    {
+		case openNormal:
+			theMode = 0;
+			break;
+		case openReplace:
+			theMode = O_TRUNC;
+			break;
+		case openCreate:
+			theMode = O_CREAT | O_EXCL;
+			break;
+		case openOpenOrCreate:
+			theMode = O_CREAT;
+			break;
+		case openReplaceOrCreate:
+			theMode = O_CREAT | O_TRUNC;
+			break;
+		default:
+			return mgArgErr;
 	}
-	else if (createMode == createNormal)
-	{
-		strcpy(theMode, "r");
-	}
-	else
-	{
-		strcpy(theMode, "w+");
-	}
+
+	switch (accessMode)
+    {
+		case accessReadWrite:
+			theMode |= O_RDWR;
+			break;
+		case accessReadOnly:
+			theMode |= O_RDONLY;
+			break;
+		case accessWriteOnly:
+			theMode |= O_WRONLY;
+			break;
+		default:
+			return mgArgErr;
+    }
 
 	switch (denyMode)
 	{
@@ -3963,6 +3974,9 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
 			return mgArgErr;
 	}
 
+	if (flags & kNoBuffering)
+		theMode |= O_DIRECT;
+
  #if MacOSX
 	if (rsrc == kOpenFileRsrcResource)
 	{
@@ -3971,7 +3985,7 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
 			return err;
 	}
  #endif
-
+ #if 0
 	/* Test for file existence first to avoid creating file with mode "w". */
 	if (openMode == openWriteOnlyTruncate)
 	{
@@ -3980,59 +3994,48 @@ static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rs
 		if (err || !(fileAttr & kIsFile))
 			return fNotFound;
 	}
-
-	errno = 0;
-	*ioRefNum = fopen(LWPathBuf(lwstr), (char *)theMode);
-	if (!*ioRefNum)
-		return UnixToLVFileErr();
-
- #ifdef HAVE_FCNTL
-	/* Implement deny mode by range locking whole file */
-	if (denyMode == denyReadWrite || denyMode == denyWriteOnly)
-	{
-		struct flock lockInfo;
-
-		lockInfo.l_type = (openMode == openReadOnly) ? F_RDLCK : F_WRLCK;
-		lockInfo.l_whence = SEEK_SET;
-		lockInfo.l_start = 0;
-		lockInfo.l_len = 0;
-		if (fcntl(fileno(*ioRefNum), F_SETLK, FCNTL_PARAM3_CAST(&lockInfo)) == -1)
-		{
-			err = UnixToLVFileErr();
-		}
-	}
  #endif
-#endif
-	if (err)
+	errno = 0;
+	fd = open(LWPathBuf(lwstr), theMode, flags & 0666);
+	if (fd != -1)
 	{
-		lvFile_CloseFile(*ioRefNum);
-		DEBUGPRINTF(((CStr)"OpenFile: err = %ld, rsrc = %d", err, (int16)rsrc));
-	}
-	return err;
-}
+ #ifdef HAVE_FCNTL
+		/* Implement deny mode by range locking whole file */
+		if (denyMode == denyReadWrite || denyMode == denyWriteOnly)
+		{
+			struct flock lockInfo;
 
-LibAPI(MgErr) LVFile_CreateFile(LVRefNum *refnum, LWPathHandle *pathName, uInt32 rsrc, uInt32 openMode, uInt32 denyMode, LVBoolean always)
-{
-	MgErr err = LWPathZeroTerminate(pathName, -1);
-	if (!err)
-	{
-		FileRefNum ioRefNum = NULL;
-		err = lvFile_OpenFile(&ioRefNum, *pathName, rsrc, always ? createAlways : createNormal, openMode, denyMode);
+			lockInfo.l_type = (openMode == accessReadOnly) ? F_RDLCK : F_WRLCK;
+			lockInfo.l_whence = SEEK_SET;
+			lockInfo.l_start = 0;
+			lockInfo.l_len = 0;
+			if (fcntl(fd, F_SETLK, FCNTL_PARAM3_CAST(&lockInfo)) == -1)
+			{
+				err = UnixToLVFileErr();
+			}
+		}
+ #endif
 		if (!err)
 		{
-			err = lvzlibCreateRefnum(ioRefNum, refnum, FileMagic, LV_TRUE);
+			*ioRefNum = fdopen(fd, flags & 0666);
+			if (!*ioRefNum)
+			{
+				close(fd);
+				return UnixToLVFileErr();
+			}
 		}
 	}
+#endif
 	return err;
 }
 
-LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWPathHandle *pathName, uInt32 rsrc, uInt32 openMode, uInt32 denyMode)
+LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWPathHandle *pathName, uInt32 rsrc, uInt32 openMode, uInt32 accessMode, uInt32 denyMode, uInt32 flags)
 {
 	MgErr err = LWPathZeroTerminate(pathName, -1);
 	if (!err)
 	{
 		FileRefNum ioRefNum = NULL;
-		err = lvFile_OpenFile(&ioRefNum, *pathName, rsrc, createNone, openMode, denyMode);
+		err = lvFile_OpenFile(&ioRefNum, *pathName, rsrc, openMode, accessMode, denyMode, flags);
 		if (!err)
 		{
 			err = lvzlibCreateRefnum(ioRefNum, refnum, FileMagic, LV_TRUE);
