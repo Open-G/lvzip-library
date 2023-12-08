@@ -18,9 +18,9 @@
 
 CC=gcc
 
-CFLAGS=-O3 -g3 -DDEBUG -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2
+CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
-#CFLAGS=-g -DDEBUG
+#CFLAGS=-g3 -DDEBUG
 #CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
 #           -Wstrict-prototypes -Wmissing-prototypes
 

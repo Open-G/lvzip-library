@@ -816,16 +816,20 @@ enum { fAbsPath, fRelPath, fNotAPath, fUNCPath, nPathTypes};                    
 
 #if usesWinPath
  #define kPathSeperator			'\\'
+ #define kInvalidFileRefnum		INVALID_HANDLE_VALUE
  typedef HANDLE					FileRefNum;
 #else
  // We always use posix APIs on non-Windows platforms
  #define kPathSeperator			'/'
+ #define kInvalidFileRefnum		NULL
  typedef FILE*					FileRefNum;
 #endif
 #define kRelativePathPrefix		'.'
 #define kPosixPathSeperator		'/'
 
 Private(File);
+
+
 typedef struct PATHREF PathRef;
 typedef PathRef* Path;
 typedef const PathRef* ConstPath;

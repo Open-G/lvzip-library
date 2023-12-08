@@ -838,12 +838,19 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 
 #if usesWinPath
 	if (srcCnt && !IsSeperator(srcPtr[srcLen - 1]))
+	{
 		xtrLen = 1;
+	}
 	else if (!srcCnt && srcType == fAbsPath && relType == fRelPath)
+	{
 		xtrLen = 2;
+	}
 #else
-	if (srcType == fAbsPath && (!srcLen || !IsSeperator(srcPtr[srcLen - 1])))
+	if ((srcType != fNotAPath && srcLen && !IsSeperator(srcPtr[srcLen - 1])) ||
+		 srcType == fAbsPath && !srcLen)
+	{
 		xtrLen = 1;
+	}
 #endif
 
 	if (srcPath != tmpPath || relCnt)

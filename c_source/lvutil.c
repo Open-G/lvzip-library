@@ -25,6 +25,9 @@
 */
 
 #define ZLIB_INTERNAL
+
+#define _GNU_SOURCE
+
 #include "lvutil.h"
 #include "zlib.h"
 #include "ioapi.h"
@@ -261,9 +264,9 @@
   #define FCNTL_PARAM3_CAST(param)  (int32)(param)
  #else
   #define FCNTL_PARAM3_CAST(param)  (param)
- #define st_atimespec     st_atim	/* Time of last access */
- #define st_mtimespec     st_mtim	/* Time of last modification */
- #define st_ctimespec     st_ctim	/* Time of last status change */
+  #define st_atimespec     st_atim	/* Time of last access */
+  #define st_mtimespec     st_mtim	/* Time of last modification */
+  #define st_ctimespec     st_ctim	/* Time of last status change */
  #endif
 #elif MacOSX
  #include <CoreFoundation/CoreFoundation.h>
@@ -870,17 +873,17 @@ static void VxWorksConvertToATime(unsigned long sTime, ATime128 *time)
 }
 #else
 // on Mac/Linux kernel 2.6 and newer the utimes values are struct timeval values
-static void UnixConvertFromATime(ATime128 *time, struct timeval *sTime)
+static void UnixConvertFromATime(ATime128 *time, struct timespec *sTime)
 {
 	/* The LabVIEW default default value is used to indicate to not update this value */
 	if (time->u.f.val || time->u.f.fract)
 	{
 		sTime->tv_sec = (time_t)(time->u.f.val - dt1970re1904);
-		sTime->tv_usec = (int32_t)(time->u.p.fractHi / 4294.967296);
+		sTime->tv_nsec = (int32_t)(time->u.f.fract / 18446744074ULL);
 	}
 	else
 	{
-		sTime->tv_usec = UTIME_OMIT;
+		sTime->tv_nsec = UTIME_OMIT;
 	}
 }
 
@@ -1142,7 +1145,7 @@ static MgErr lvFile_OpenResFile(LWPathHandle pathName, RsrcHeaderPtr rsrcHdr, Fi
 
 static MgErr lvFile_GetFileTypeAndCreator(LWPathHandle pathName, ResType *type, ResType *creator)
 {
-	FileRefNum refnum = NULL;
+	FileRefNum refnum = kInvalidFileRefnum;
 	RsrcHeader rsrcHdr;
 	MgErr err = lvFile_OpenResFile(pathName, &rsrcHdr, &refnum);
 	if (!err)
@@ -1414,7 +1417,7 @@ static MgErr lvFile_FileAttr(LWPathHandle lwstr, int32 end, uInt32 *fileAttr)
 
 static MgErr lvFile_ListArchive(LWPathHandle pathName, LStrArrHdl *nameArr, FileTypeArrHdl *typeArr, uInt32 llbMode)
 {
-	FileRefNum refnum = NULL;
+	FileRefNum refnum = kInvalidFileRefnum;
 	RsrcHeader rsrcHeader;
 	MgErr err = lvFile_OpenResFile(pathName, &rsrcHeader, &refnum);
 	if (!err)
@@ -1929,11 +1932,6 @@ static MgErr lvFile_FileInfo(LWPathHandle pathName, uInt8 write, FileInfoPtr fil
 	char *path = NULL;
     struct stat statbuf;
 	uInt64 count = 0;
-#if VxWorks
-    struct utimbuf times;
-#else
-	struct timeval times[3];
-#endif
 #endif
 
 	if (type != fAbsPath && type != fUNCPath)
@@ -2071,6 +2069,13 @@ static MgErr lvFile_FileInfo(LWPathHandle pathName, uInt8 write, FileInfoPtr fil
 
 	if (write)
 	{
+		int ret;
+#if VxWorks
+		struct utimbuf times;
+#else
+		struct timespec times[3];
+#endif
+
 		if (fileInfo->winFlags)
 		{
 			if (!fileInfo->unixFlags)
@@ -2082,14 +2087,17 @@ static MgErr lvFile_FileInfo(LWPathHandle pathName, uInt8 write, FileInfoPtr fil
 		VxWorksConvertFromATime(&fileInfo->aDate, &times.actime);
 		VxWorksConvertFromATime(&fileInfo->mDate, &times.modtime);
         VxWorksConvertFromATime(&fileInfo->cDate, &statbuf.st_ctime);
-		if (utime(LWPathBuf(pathName), &times))
+		ret = utime(LWPathBuf(pathName), &times);
 #else
 		UnixConvertFromATime(&fileInfo->aDate, &times[0]);
 		UnixConvertFromATime(&fileInfo->mDate, &times[1]);
         UnixConvertFromATime(&fileInfo->cDate, &times[2]);
-		if (lutimes(path, times))
+		ret = utimensat(0, path, times, AT_SYMLINK_NOFOLLOW);
 #endif
+		if (ret == -1)
+		{
 			err = UnixToLVFileErr();
+		}
 #if !VxWorks
 		/*
 		 * Changing the ownership probably won't succeed, unless we're root
@@ -2605,23 +2613,29 @@ static MgErr lvFile_DeleteFile(LWPathHandle pathName, LVBoolean ignoreReadOnly)
 		}
 #else
 		struct stat statbuf;
-		if (!stat(path, &statbuf) && (statbuf.st_mode & 0222 != 0222))
+		if (!stat(path, &statbuf) && (statbuf.st_mode & 0220 != 0220))
 		{
-			if (chmod(path, statbuf.st_mode | 0222) && errno != ENOTSUP)
+			if (chmod(path, statbuf.st_mode | 0220) && errno != ENOTSUP)
+			{
 				err = UnixToLVFileErr();
+			}
 		}
 	}
 	if (!err)
 	{
-		File fd  = (File)fopen(path, "a+");  /* checks for write access to file */
-		if (fd)
+		int fd  = open(path, O_RDWR);  /* checks for write access to file */
+		if (fd != -1)
 		{
-			fclose((FILE *)fd);
+			close(fd);
 			if (unlink(path))	       /* checks for write access to parent of file */
+			{
 				err = UnixToLVFileErr();
+			}
 		}
 		else
+		{
 			err = fNoPerm;
+		}
 #endif
 	}
 	return err;
@@ -2761,7 +2775,8 @@ static MgErr lvFile_CopyFile(LWPathHandle pathFrom, LWPathHandle pathTo, uInt32 
 		if (!err)
 		{
 #if Unix
-			FileRefNum fromRefnum, toRefnum;
+			FileRefNum fromRefnum = kInvalidFileRefnum,
+				       toRefnum = kInvalidFileRefnum;
 			char databuf[8192];
 #endif
 			if ((flags & kFileOpReplaceMask) != kFileOpReplaceAlways)
@@ -2810,10 +2825,10 @@ static MgErr lvFile_CopyFile(LWPathHandle pathFrom, LWPathHandle pathTo, uInt32 
 				return err;
 			}
 #else
-			err = lvFile_OpenFile(&fromRefnum, pathFrom, kOpenFileRsrcData, createNone, openReadOnly, denyReadWrite);
+			err = lvFile_OpenFile(&fromRefnum, pathFrom, kOpenFileRsrcData, openNormal, accessReadOnly, denyWriteOnly, 0);
 			if (!err)
 			{
-				err = lvFile_OpenFile(&toRefnum, pathTo, kOpenFileRsrcData, createAlways, openWriteOnly, denyReadWrite);
+				err = lvFile_OpenFile(&toRefnum, pathTo, kOpenFileRsrcData, openCreate, accessWriteOnly, denyReadWrite, fileInfoFrom.unixFlags & 0777);
 				if (!err)
 				{
 					uInt32 count;
@@ -2965,8 +2980,7 @@ static MgErr lvFile_MoveFile(LWPathHandle pathFrom, LWPathHandle pathTo, uInt32 
 		err = lvFile_FileInfo(pathFrom, FALSE, &fileInfoFrom);
 		if (!err)
 		{
-			err = lvFile_FileInfo(pathTo, FALSE, &fileInfoTo);
-			if (!err)
+			if (!lvFile_FileInfo(pathTo, FALSE, &fileInfoTo))
 			{
 				switch (flags & kFileOpReplaceMask)
 				{
@@ -2982,84 +2996,27 @@ static MgErr lvFile_MoveFile(LWPathHandle pathFrom, LWPathHandle pathTo, uInt32 
 				}
 				err = lvFile_DeleteFile(pathTo, LV_TRUE);
 			}
+		}
+
+		if (!err)
+		{
 #if Win32
 			if (!MoveFileLW(pathFrom, pathTo))
+#else
+			spath = LWPathBuf(pathFrom);
+			tpath = LWPathBuf(pathTo);
+
+			if (rename(spath, tpath))
+#endif	
 			{
 				/* rename failed, try a real copy */
 				err = lvFile_CopyFile(pathFrom, pathTo, flags);
 				if (!err)
+				{
 					err = lvFile_DeleteFile(pathFrom, LV_TRUE);
-				flags &= ~kFileOpMaintainAttrs;
+				}
 			}
-#else
-			spath = LWPathBuf(pathFrom);
-			tpath = LWPathBuf(pathTo);
-			if (chmod(spath, fileInfoFrom.unixFlags | 0222) && errno != ENOTSUP)
-				err = UnixToLVFileErr();
 
-			if (!err)
-			{
-				struct stat statbuf;
-				if (!lstat(tpath, &statbuf))
-				{
-					/* If it is a link then resolve it and use the result as real target */
-					if (S_ISLNK(statbuf.st_mode))
-					{
-						LWPathHandle lwStrLink = NULL;
-						err = lvFile_ReadLink(pathTo, &lwStrLink, -1, NULL, NULL);
-						if (!err)
-						{
-							int32 rootLen = LWPtrRootLen(LWPathBuf(lwStrLink), LWPathLenGet(lwStrLink), -1, NULL);
-							if (rootLen >= 0)
-							{
-								LWPathDispose(&pathTo);
-								pathTo = lwStrLink;
-							}
-							else
-							{
-								int32 len = LWPtrParent(LWPathBuf(pathTo), LWPathLenGet(pathTo));
-								err = LWPathAppend(pathTo, len, NULL, lwStrLink);  
-								LWPathDispose(&lwStrLink);
-							}
-						}
-					}
-				}
-				else
-				{
-					err = UnixToLVFileErr();
-				}
-			}
-#if !VxWorks
-			if (!err && !access(tpath, F_OK))
-			{
-				err = fDupPath;
-			}
-#else
-			if (!err)
-			{
-				int fd = open(tpath, O_RDONLY, 0);
-				if (fd < 0)
-					err = fDupPath;
-				else
-					close(fd);
-			}
-#endif
-			if (!err)
-			{
-				if (rename(spath, tpath))
-				{
-					/* rename failed, try a real copy */
-					err = lvFile_CopyFile(pathFrom, pathTo, flags);
-					if (!err)
-						err = lvFile_DeleteFile(pathFrom, LV_TRUE);
-				}
-				if (!err)
-				{
-					if (chmod(tpath, fileInfoFrom.unixFlags));
-						err = UnixToLVFileErr();
-				}
-			}
-#endif	
 			if (!err & flags & kFileOpMaintainAttrs)
 			{
 				err = lvFile_FileInfo(pathTo, TRUE, &fileInfoFrom);
@@ -3429,6 +3386,10 @@ LibAPI(MgErr) LVFile_CreateDirectories(LWPathHandle *pathName, int16 permissions
 MgErr lvFile_CloseFile(FileRefNum ioRefNum)
 {
 	MgErr err = mgNoErr;
+	
+	if (ioRefNum == kInvalidFileRefnum)
+		return mgArgErr;
+
 #if usesWinPath
 	if (!CloseHandle(ioRefNum))
 	{
@@ -3792,8 +3753,8 @@ static char *namedResourceFork = "/..namedfork/rsrc";
 	uInt8 type = LWPathTypeGet(lwstr);
 	int32 len = LWPathLenGet(lwstr);
 #if usesPosixPath
-    int theMode;
-	int fd;
+    int fd, oFlags;
+	char *theMode, *path;
 #elif usesWinPath
     DWORD shareAcc, openAcc;
     DWORD createAcc = OPEN_EXISTING;
@@ -3805,7 +3766,7 @@ static char *namedResourceFork = "/..namedfork/rsrc";
 
 	if (!len || !ioRefNum || (type != fAbsPath && type != fUNCPath))
 		return mgArgErr;
-
+	
 #if usesWinPath
  #if Pharlap
 	if (rsrc)
@@ -3931,19 +3892,19 @@ static char *namedResourceFork = "/..namedfork/rsrc";
     switch (openMode)
     {
 		case openNormal:
-			theMode = 0;
+			oFlags = 0;
 			break;
 		case openReplace:
-			theMode = O_TRUNC;
+			oFlags = O_TRUNC;
 			break;
 		case openCreate:
-			theMode = O_CREAT | O_EXCL;
+			oFlags = O_CREAT | O_EXCL;
 			break;
 		case openOpenOrCreate:
-			theMode = O_CREAT;
+			oFlags = O_CREAT;
 			break;
 		case openReplaceOrCreate:
-			theMode = O_CREAT | O_TRUNC;
+			oFlags = O_CREAT | O_TRUNC;
 			break;
 		default:
 			return mgArgErr;
@@ -3952,13 +3913,20 @@ static char *namedResourceFork = "/..namedfork/rsrc";
 	switch (accessMode)
     {
 		case accessReadWrite:
-			theMode |= O_RDWR;
+			if (oFlags == O_CREAT | O_TRUNC)
+				theMode = "w+";
+			else
+				theMode = "r+";
+			oFlags |= O_RDWR;
+
 			break;
 		case accessReadOnly:
-			theMode |= O_RDONLY;
+			theMode = "r";
+			oFlags |= O_RDONLY;
 			break;
 		case accessWriteOnly:
-			theMode |= O_WRONLY;
+			theMode = "w";
+			oFlags |= O_WRONLY;
 			break;
 		default:
 			return mgArgErr;
@@ -3975,8 +3943,10 @@ static char *namedResourceFork = "/..namedfork/rsrc";
 	}
 
 	if (flags & kNoBuffering)
-		theMode |= O_DIRECT;
-
+	{
+		// TODO: Need to setup buffer to be page aligned
+		oFlags |= O_DIRECT;
+	}
  #if MacOSX
 	if (rsrc == kOpenFileRsrcResource)
 	{
@@ -3996,7 +3966,8 @@ static char *namedResourceFork = "/..namedfork/rsrc";
 	}
  #endif
 	errno = 0;
-	fd = open(LWPathBuf(lwstr), theMode, flags & 0666);
+	path = LWPathBuf(lwstr);
+	fd = open(path, oFlags, flags & 0666);
 	if (fd != -1)
 	{
  #ifdef HAVE_FCNTL
@@ -4005,10 +3976,11 @@ static char *namedResourceFork = "/..namedfork/rsrc";
 		{
 			struct flock lockInfo;
 
-			lockInfo.l_type = (openMode == accessReadOnly) ? F_RDLCK : F_WRLCK;
-			lockInfo.l_whence = SEEK_SET;
-			lockInfo.l_start = 0;
-			lockInfo.l_len = 0;
+			lockInfo.l_type = (accessMode == accessReadOnly) ? F_RDLCK : F_WRLCK;
+			lockInfo.l_whence = SEEK_SET;	// Start at beginning of file
+			lockInfo.l_start = 0;			// Offset from beginning of file
+			lockInfo.l_len = 0;				// Lock entire file
+			lockInfo.l_pid = getpid();		// Set process ID
 			if (fcntl(fd, F_SETLK, FCNTL_PARAM3_CAST(&lockInfo)) == -1)
 			{
 				err = UnixToLVFileErr();
@@ -4017,13 +3989,17 @@ static char *namedResourceFork = "/..namedfork/rsrc";
  #endif
 		if (!err)
 		{
-			*ioRefNum = fdopen(fd, flags & 0666);
+			*ioRefNum = fdopen(fd, theMode);
 			if (!*ioRefNum)
 			{
 				close(fd);
 				return UnixToLVFileErr();
 			}
 		}
+	}
+	else
+	{
+		err = UnixToLVFileErr();
 	}
 #endif
 	return err;
@@ -4034,7 +4010,7 @@ LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWPathHandle *pathName, uInt32 r
 	MgErr err = LWPathZeroTerminate(pathName, -1);
 	if (!err)
 	{
-		FileRefNum ioRefNum = NULL;
+		FileRefNum ioRefNum = kInvalidFileRefnum;
 		err = lvFile_OpenFile(&ioRefNum, *pathName, rsrc, openMode, accessMode, denyMode, flags);
 		if (!err)
 		{
