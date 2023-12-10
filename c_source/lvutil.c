@@ -490,10 +490,10 @@ enum
 };
 
 static MgErr lvFile_OpenFile(FileRefNum *ioRefNum, LWPathHandle lwstr, uInt32 rsrc, uInt32 openMode, uInt32 accessMode, uInt32 denyMode, uInt32 flags);
-static MgErr lvFile_GetSize(FileRefNum ioRefNum, int32 mode, int64 *size);
+static MgErr lvFile_GetSize(FileRefNum ioRefNum, LVBoolean remain, int64 *size);
 static MgErr lvFile_SetSize(FileRefNum ioRefNum, int64 size);
 static MgErr lvFile_GetFilePos(FileRefNum ioRefNum, int64 *offset);
-static MgErr lvFile_SetFilePos(FileRefNum ioRefNum, int64 offset, uInt16 mode);
+static MgErr lvFile_SetFilePos(FileRefNum ioRefNum, uInt32 mode, int64 offset);
 static MgErr lvFile_Read(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 static MgErr lvFile_Write(FileRefNum ioRefNum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 
@@ -3404,13 +3404,14 @@ MgErr lvFile_CloseFile(FileRefNum ioRefNum)
 	return err;
 }
 
-static MgErr lvFile_GetSize(FileRefNum ioRefNum, int32 mode, int64 *size)
+static MgErr lvFile_GetSize(FileRefNum ioRefNum, LVBoolean remainder, int64 *size)
 {
     MgErr err = mgNoErr;
 	FileOffset len, tell = { 0 };
 
 	if (0 == ioRefNum)
 		return mgArgErr;
+
 	len.q = 0;
 #if usesWinPath
 	tell.l.lo = SetFilePointer(ioRefNum, 0, (PLONG)&tell.l.hi, FILE_CURRENT);
@@ -3461,10 +3462,13 @@ static MgErr lvFile_GetSize(FileRefNum ioRefNum, int32 mode, int64 *size)
 		return UnixToLVFileErr();
 	}
 #endif
-	*size = len.q;
-	if (mode == fCurrent)
+	if (remainder)
 	{
-		*size -= tell.q;
+		*size = len.q - tell.q;
+	}
+	else
+	{
+		*size = len.q;
 	}
 	return err;
 }
@@ -3535,7 +3539,7 @@ static MgErr lvFile_SetSize(FileRefNum ioRefNum, int64 size)
 	return err;
 }
 
-static MgErr lvFile_SetFilePos(FileRefNum ioRefNum, int64 offset, uInt16 mode)
+static MgErr lvFile_SetFilePos(FileRefNum ioRefNum, uInt32 mode, int64 offset)
 {
 	MgErr err = mgNoErr;
 	FileOffset size, sought, tell = {0};
@@ -3545,6 +3549,7 @@ static MgErr lvFile_SetFilePos(FileRefNum ioRefNum, int64 offset, uInt16 mode)
 
 	if (!offset && (mode == fCurrent))
 		return noErr;
+
 #if usesWinPath
 	size.l.lo = GetFileSize(ioRefNum, (LPDWORD)&size.l.hi);
 	if (size.l.lo == INVALID_FILE_SIZE)
@@ -3666,6 +3671,84 @@ static MgErr lvFile_GetFilePos(FileRefNum ioRefNum, int64 *offset)
 	}
 #endif
 	*offset = tell.q;
+	return mgNoErr;
+}
+
+static MgErr lvFile_LockFile(FileRefNum ioRefNum, uInt32 mode, FileOffset *offset, FileOffset *length)
+{
+#if usesWinPath
+	OVERLAPPED overlapped = {0};
+#else
+	struct flock lock = {0};
+#endif
+
+	if (!ioRefNum)
+		return mgArgErr;
+
+#if usesWinPath
+	overlapped.Offset = offset->l.lo;
+	overlapped.OffsetHigh = offset->l.hi;
+	if (length->q <= 0)
+	{
+		MgErr err = lvFile_GetSize(ioRefNum, LV_FALSE, &length->q);
+		if (err)
+			return err;
+		length->q -= offset->q;
+	}
+	if (!LockFileEx(ioRefNum, mode ? LOCKFILE_EXCLUSIVE_LOCK : 0, 0, length->l.lo, length->l.hi, &overlapped))
+	{
+		return Win32GetLVFileErr();
+	}
+#else
+	lock.l_type = mode ? F_WRLCK : F_RDLCK;
+	lock.l_whence = SEEK_SET;
+	lock.l_start = offset->q;
+	lock.l_len = length->q;
+	lock.l_pid = getpid();
+	if (fcntl(fileno(ioRefNum), F_SETLK, &lock) == -1)
+	{
+		return UnixToLVFileErr();
+	}
+#endif
+	return mgNoErr;
+}
+
+static MgErr lvFile_UnlockFile(FileRefNum ioRefNum, FileOffset *offset, FileOffset *length)
+{
+#if usesWinPath
+	OVERLAPPED overlapped = {0};
+#else
+	struct flock lock = {0};
+#endif
+
+	if (!ioRefNum)
+		return mgArgErr;
+
+#if usesWinPath
+	overlapped.Offset = offset->l.lo;
+	overlapped.OffsetHigh = offset->l.hi;
+	if (length->q <= 0)
+	{
+		MgErr err = lvFile_GetSize(ioRefNum, LV_FALSE, &length->q);
+		if (err)
+			return err;
+		length->q -= offset->q;
+	}
+	if (!UnlockFileEx(ioRefNum, 0, length->l.lo, length->l.hi, &overlapped))
+	{
+		return Win32GetLVFileErr();
+	}
+#else
+	lock.l_type = F_UNLCK;
+	lock.l_whence = SEEK_SET;
+	lock.l_start = offset->q;
+	lock.l_len = length->q;
+	lock.l_pid = getpid();
+	if (fcntl(fileno(ioRefNum), F_SETLK, &lock) == -1)
+	{
+		return UnixToLVFileErr();
+	}
+#endif
 	return mgNoErr;
 }
 
@@ -4031,13 +4114,13 @@ LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum)
 	return err;
 }
 
-LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, int32 mode, FileOffset *size)
+LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, LVBoolean remainder, FileOffset *size)
 {
 	FileRefNum ioRefNum;
 	MgErr err = lvzlibGetRefnum(refnum, (voidp*)&ioRefNum, FileMagic);
 	if (!err)
 	{
-		err = lvFile_GetSize(ioRefNum, mode ? fCurrent : fStart, &size->q);
+		err = lvFile_GetSize(ioRefNum, remainder, &size->q);
 	}
 	return err;
 }
@@ -4053,17 +4136,6 @@ LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size)
 	return err;
 }
 
-LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *offset, uInt16 mode)
-{
-	FileRefNum ioRefNum;
-	MgErr err = lvzlibGetRefnum(refnum, (voidp*)&ioRefNum, FileMagic);
-	if (!err)
-	{
-		err = lvFile_SetFilePos(ioRefNum, offset->q, mode);
-	}
-	return err;
-}
-
 LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *offset)
 {
 	FileRefNum ioRefNum;
@@ -4071,6 +4143,39 @@ LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *offset)
 	if (!err)
 	{
 		err = lvFile_GetFilePos(ioRefNum, &offset->q);
+	}
+	return err;
+}
+
+LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, uInt32 mode, FileOffset *offset)
+{
+	FileRefNum ioRefNum;
+	MgErr err = lvzlibGetRefnum(refnum, (voidp*)&ioRefNum, FileMagic);
+	if (!err)
+	{
+		err = lvFile_SetFilePos(ioRefNum, mode, offset->q);
+	}
+	return err;
+}
+
+LibAPI(MgErr) LVFile_LockFile(LVRefNum *refnum, uInt32 mode, FileOffset *offset, FileOffset *length)
+{
+	FileRefNum ioRefNum;
+	MgErr err = lvzlibGetRefnum(refnum, (voidp*)&ioRefNum, FileMagic);
+	if (!err)
+	{
+		err = lvFile_LockFile(ioRefNum, mode, offset, length);
+	}
+	return err;
+}
+
+LibAPI(MgErr) LVFile_UnlockFile(LVRefNum *refnum, FileOffset *offset, FileOffset *length)
+{
+	FileRefNum ioRefNum;
+	MgErr err = lvzlibGetRefnum(refnum, (voidp*)&ioRefNum, FileMagic);
+	if (!err)
+	{
+		err = lvFile_UnlockFile(ioRefNum, offset, length);
 	}
 	return err;
 }

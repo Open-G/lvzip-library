@@ -158,10 +158,12 @@ enum { /* values for rsrc parameter */
 
 LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWPathHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 accessMode, uInt32 denyMode, uInt32 flags);
 LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum);
-LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, int32 mode, FileOffset *size);
+LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, LVBoolean remain, FileOffset *size);
 LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size);
-LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *off);
-LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, FileOffset *off, uInt16 mode);
+LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *offset);
+LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, uInt32 mode, FileOffset *offset);
+LibAPI(MgErr) LVFile_LockFile(LVRefNum *refnum, uInt32 mode, FileOffset *offset, FileOffset *length);
+LibAPI(MgErr) LVFile_UnlockFile(LVRefNum *refnum, FileOffset *offset, FileOffset *length);
 LibAPI(MgErr) LVFile_Read(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 

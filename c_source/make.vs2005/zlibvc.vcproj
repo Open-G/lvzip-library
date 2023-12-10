@@ -273,7 +273,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying shared library"
-				CommandLine="copy /Y /B &quot;$(TargetDir)$(TargetFileName)&quot; &quot;C:\Program Files (x86)\National Instruments\LabVIEW 7.1\user.lib\_OpenG.lib\lvzip&#x0D;&#x0A;copy /Y /B &quot;$(TargetDir)$(TargetFileName)&quot; $(InputDir)..\..\source&#x0D;&#x0A;"
+				CommandLine="copy /Y /B &quot;$(TargetDir)$(TargetFileName)&quot; &quot;C:\Program Files (x86)\National Instruments\LabVIEW 7.0\user.lib\_OpenG.lib\lvzip&#x0D;&#x0A;copy /Y /B &quot;$(TargetDir)$(TargetFileName)&quot; $(InputDir)..\..\source&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
