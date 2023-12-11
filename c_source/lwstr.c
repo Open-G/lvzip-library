@@ -493,7 +493,7 @@ DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot
 		\\?\UNC\server\share\rtest\file	   8	  21	 unc	3	+2
 
 		rtest/file						   0	   0	 rel	2	+1
-		.\rtest\file					   0	   0	 rel	2	+1
+		./rtest/file					   0	   0	 rel	2	+1
 		/                                  0       1     abs    0   
 		/dir/rtest/file					   0	   1	 abs	3   +1
 		//server/share/rtest/file		   0	  15	 unc	3	+2
@@ -827,14 +827,23 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 		  relRoot = LWPtrRootLen(relPtr, relLen, relOff, NULL),
 		  relCnt = LWPathCntGet(relPath);
 
+	
+	if (relRoot == relOff)
+	{
+		/* if the relative path is empty we do want to consider it an empty relative path */
+		relType = fRelPath;
+	}
+	else if (relType == fRelPath)
+	{
+		/* If relative path then relOff should be adjusted to relRoot to skip possible relative prefix */
+		relOff = relRoot;
+	}
 
 	/* If either path is invalid or start path is not empty and relative path is not relative, we have a problem */
 	if ((srcType == fNotAPath) || (relType == fNotAPath) || (srcCnt && relType != fRelPath))
+	{
 		return mgArgErr;
-
-	/* If relative path then relOff should be adjusted to relRoot to skip possible relative prefix */
-	if (relType == fRelPath)
-		relOff = relRoot;
+	}
 
 #if usesWinPath
 	if (srcCnt && !IsSeperator(srcPtr[srcLen - 1]))
@@ -862,7 +871,7 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 		if (srcPath != tmpPath && (srcCnt || relType == fRelPath))
 		{
 			// We have a new destination path with a valid source path, copy it over
-			MoveBlock(*srcPath, *tmpPath, offsetof(LWPathRec, str) + srcLen * sizeof(LWChar));
+			MoveBlock(*srcPath, *tmpPath, (*srcPath)->size + sizeof(int32));
 		}
 		else if (!srcCnt && relType != fRelPath)
 		{
