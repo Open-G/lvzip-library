@@ -163,7 +163,6 @@ LibAPI(MgErr) LVFile_SetSize(LVRefNum *refnum, FileOffset *size);
 LibAPI(MgErr) LVFile_GetFilePos(LVRefNum *refnum, FileOffset *offset);
 LibAPI(MgErr) LVFile_SetFilePos(LVRefNum *refnum, uInt32 mode, FileOffset *offset);
 LibAPI(MgErr) LVFile_LockFile(LVRefNum *refnum, uInt32 mode, FileOffset *offset, FileOffset *length);
-LibAPI(MgErr) LVFile_UnlockFile(LVRefNum *refnum, FileOffset *offset, FileOffset *length);
 LibAPI(MgErr) LVFile_Read(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, UPtr buffer);
 

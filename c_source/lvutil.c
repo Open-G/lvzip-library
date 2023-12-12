@@ -3678,6 +3678,7 @@ static MgErr lvFile_LockFile(FileRefNum ioRefNum, uInt32 mode, FileOffset *offse
 {
 #if usesWinPath
 	OVERLAPPED overlapped = {0};
+	BOOL ret;
 #else
 	struct flock lock = {0};
 #endif
@@ -3695,51 +3696,31 @@ static MgErr lvFile_LockFile(FileRefNum ioRefNum, uInt32 mode, FileOffset *offse
 			return err;
 		length->q -= offset->q;
 	}
-	if (!LockFileEx(ioRefNum, mode ? LOCKFILE_EXCLUSIVE_LOCK : 0, 0, length->l.lo, length->l.hi, &overlapped))
+	if (mode == denyNeither)
+	{
+		ret = UnlockFileEx(ioRefNum, 0, length->l.lo, length->l.hi, &overlapped);
+	}
+	else
+	{
+		ret = LockFileEx(ioRefNum, mode == denyReadWrite ? LOCKFILE_EXCLUSIVE_LOCK : 0, 0, length->l.lo, length->l.hi, &overlapped);
+	}
+	if (!ret)
 	{
 		return Win32GetLVFileErr();
 	}
 #else
-	lock.l_type = mode ? F_WRLCK : F_RDLCK;
-	lock.l_whence = SEEK_SET;
-	lock.l_start = offset->q;
-	lock.l_len = length->q;
-	lock.l_pid = getpid();
-	if (fcntl(fileno(ioRefNum), F_SETLK, &lock) == -1)
+	switch (mode)
 	{
-		return UnixToLVFileErr();
+		case denyReadWrite:
+			lock.l_type = F_WRLCK | F_RDLCK;
+			break;
+		case denyWriteOnly:
+			lock.l_type = F_WRLCK;
+			break;
+		case denyNeither:
+			lock.l_type = F_UNLCK;
+			break;
 	}
-#endif
-	return mgNoErr;
-}
-
-static MgErr lvFile_UnlockFile(FileRefNum ioRefNum, FileOffset *offset, FileOffset *length)
-{
-#if usesWinPath
-	OVERLAPPED overlapped = {0};
-#else
-	struct flock lock = {0};
-#endif
-
-	if (!ioRefNum)
-		return mgArgErr;
-
-#if usesWinPath
-	overlapped.Offset = offset->l.lo;
-	overlapped.OffsetHigh = offset->l.hi;
-	if (length->q <= 0)
-	{
-		MgErr err = lvFile_GetSize(ioRefNum, LV_FALSE, &length->q);
-		if (err)
-			return err;
-		length->q -= offset->q;
-	}
-	if (!UnlockFileEx(ioRefNum, 0, length->l.lo, length->l.hi, &overlapped))
-	{
-		return Win32GetLVFileErr();
-	}
-#else
-	lock.l_type = F_UNLCK;
 	lock.l_whence = SEEK_SET;
 	lock.l_start = offset->q;
 	lock.l_len = length->q;
@@ -4165,17 +4146,6 @@ LibAPI(MgErr) LVFile_LockFile(LVRefNum *refnum, uInt32 mode, FileOffset *offset,
 	if (!err)
 	{
 		err = lvFile_LockFile(ioRefNum, mode, offset, length);
-	}
-	return err;
-}
-
-LibAPI(MgErr) LVFile_UnlockFile(LVRefNum *refnum, FileOffset *offset, FileOffset *length)
-{
-	FileRefNum ioRefNum;
-	MgErr err = lvzlibGetRefnum(refnum, (voidp*)&ioRefNum, FileMagic);
-	if (!err)
-	{
-		err = lvFile_UnlockFile(ioRefNum, offset, length);
 	}
 	return err;
 }
