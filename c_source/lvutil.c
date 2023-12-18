@@ -535,32 +535,27 @@ void bz_internal_error(int errcode)
 }
 #endif
 
-#if Win32
 /* int64 100ns intervals from Jan 1 1601 GMT to Jan 1 1904 GMT */
 #define LV1904_FILETIME_OFFSET  0x0153b281e0fb4000
 #define SECS_TO_FT_MULT			10000000
 #define HUNDRED_NS_TO_U64       0x1AD7F29ABCB
 
-DebugAPI(void) ATimeToFileTime(ATime128 *pt, FILETIME *pft)
+LibAPI(void) ATimeToFileTime(ATime128 *pt, uInt64 *pft)
 {
-	LARGE_INTEGER li;
-	li.QuadPart = pt->u.f.val * SECS_TO_FT_MULT;
-	li.QuadPart += pt->u.f.fract / HUNDRED_NS_TO_U64;
-	li.QuadPart += LV1904_FILETIME_OFFSET;
-	pft->dwHighDateTime = li.HighPart;
-	pft->dwLowDateTime = li.LowPart;
+	*pft = pt->u.f.val * SECS_TO_FT_MULT;
+	*pft += pt->u.f.fract / HUNDRED_NS_TO_U64;
+	*pft += LV1904_FILETIME_OFFSET;
 }
   
-DebugAPI(void) FileTimeToATime(FILETIME *pft, ATime128 *pt)
+LibAPI(void) FileTimeToATime(uInt64 *pft, ATime128 *pt)
 {
-	LARGE_INTEGER li;
-	li.LowPart = pft->dwLowDateTime;
-	li.HighPart = pft->dwHighDateTime;
-	li.QuadPart -= LV1904_FILETIME_OFFSET;
-	pt->u.f.val = li.QuadPart / SECS_TO_FT_MULT;
-	pt->u.f.fract = (li.QuadPart % SECS_TO_FT_MULT) * HUNDRED_NS_TO_U64;
+	uInt64 temp = *pft;
+	temp -= LV1904_FILETIME_OFFSET;
+	pt->u.f.val = temp / SECS_TO_FT_MULT;
+	pt->u.f.fract = (temp % SECS_TO_FT_MULT) * HUNDRED_NS_TO_U64;
 }
 
+#if Win32
 static MgErr Win32ToLVFileErr(DWORD winErr)
 {
     switch (winErr)
@@ -1873,12 +1868,12 @@ static int lutimens(const char *path, struct timespec times_in[3])
 static uInt16 UnixFlagsFromWindows(uInt16 attr)
 {
 	uInt16 flags = attr & kWinFileInfoReadOnly ?  0444 : 0666;
-	if (attr & kWinFileInfoDirectory)
+	if (attr & kWinFileInfoReparsePoint)
+		flags |= S_IFLNK;
+	else if (attr & kWinFileInfoDirectory)
 		flags |= S_IFDIR;
 	else if (attr & kWinFileInfoDevice)
 		flags |= S_IFCHR;
-	else if (attr & kWinFileInfoReparsePoint)
-		flags |= S_IFLNK;
 	else
 		flags |= S_IFREG; 
 	return flags;
@@ -1960,11 +1955,11 @@ static MgErr lvFile_FileInfo(LWPathHandle pathName, uInt8 write, FileInfoPtr fil
 		if (write)
 		{
 			if (fileInfo->cDate.u.f.val)
-				ATimeToFileTime(&fileInfo->cDate, &fi.ftCreationTime);
+				ATimeToFileTime(&fileInfo->cDate, (uInt64*)&fi.ftCreationTime);
 			if (fileInfo->mDate.u.f.val)
-				ATimeToFileTime(&fileInfo->mDate, &fi.ftLastWriteTime);
+				ATimeToFileTime(&fileInfo->mDate, (uInt64*)&fi.ftLastWriteTime);
 			if (fileInfo->aDate.u.f.val)
-				ATimeToFileTime(&fileInfo->aDate, &fi.ftLastAccessTime);
+				ATimeToFileTime(&fileInfo->aDate, (uInt64*)&fi.ftLastAccessTime);
 			handle = CreateFileLW(pathName, FILE_WRITE_ATTRIBUTES, 0, NULL, OPEN_EXISTING, fi.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? FILE_FLAG_BACKUP_SEMANTICS : FILE_ATTRIBUTE_NORMAL, NULL);
 			if (handle != INVALID_HANDLE_VALUE)
 			{
@@ -1991,9 +1986,9 @@ static MgErr lvFile_FileInfo(LWPathHandle pathName, uInt8 write, FileInfoPtr fil
 		{
 			fileInfo->uid = 0xFFFFFFFF;
 			fileInfo->gid = 0xFFFFFFFF;
-			FileTimeToATime(&fi.ftCreationTime, &fileInfo->cDate);
-			FileTimeToATime(&fi.ftLastWriteTime, &fileInfo->mDate);
-			FileTimeToATime(&fi.ftLastAccessTime, &fileInfo->aDate);
+			FileTimeToATime((uInt64*)&fi.ftCreationTime, &fileInfo->cDate);
+			FileTimeToATime((uInt64*)&fi.ftLastWriteTime, &fileInfo->mDate);
+			FileTimeToATime((uInt64*)&fi.ftLastAccessTime, &fileInfo->aDate);
 			fileInfo->rfSize = 0;
 			fileInfo->winFlags = Lo16(fi.dwFileAttributes);
 			fileInfo->unixFlags = UnixFlagsFromWindows(fileInfo->winFlags);

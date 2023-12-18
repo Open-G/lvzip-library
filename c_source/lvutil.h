@@ -90,6 +90,9 @@ LibAPI(MgErr) LVFile_Rename(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32
 LibAPI(MgErr) LVFile_Copy(LWPathHandle *pathFrom, LWPathHandle *pathTo, uInt32 flags);
 LibAPI(MgErr) LVFile_CreateDirectories(LWPathHandle *path, int16 permissions);
 
+LibAPI(void) ATimeToFileTime(ATime128 *pt, uInt64 *pft);
+LibAPI(void) FileTimeToATime(uInt64 *pft, ATime128 *pt);
+
 /* Windows portion of the flags parameter */
 #define kWinFileInfoReadOnly             0x00000001  
 #define kWinFileInfoHidden               0x00000002  
