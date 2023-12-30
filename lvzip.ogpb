@@ -31,12 +31,12 @@ Display Name="OpenG LabVIEW ZIP Library"
 Description="The lvzip package contains several routines for operating on zip files.\0D\0A"
 Summary="OpenG Zip Tools"
 License="BSD (VIs), LGPL (Shared Library)"
-Copyright="1995-2017 Mark Adler, Jean-loup Gailly\0A1998-2014 Gilles Vollant\0A2002 - 2009 Christophe Salzmann, Jim Kring\0A2002 - 2023 Rolf Kalbermatter"
+Copyright="1995-2023 Jean-loup Gailly and Mark Adler\0A1998-2017 Gilles Vollant\0A2009-2010 Mathias Svensson\0A2010-2017 Nathan Moinvaziri\0A2002-2009 Christophe Salzmann, Jim Kring\0A2002-2023 Rolf Kalbermatter"
 Distribution="OpenG Toolkit"
 Vendor=OpenG.org
 URL=http://wiki.openg.org/oglib_lvzip
 Packager="Rolf Kalbermatter <rolf.kalbermatter@gmail.com>"
-Release Notes="Version 5.0 Beta1: Upgraded to latest zlib 1.3 sources and implemented a complete file manager layer to support long file paths as well as unicode file names.\0AVersion 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
+Release Notes="Version 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager layer to support long file paths as well as unicode file names.\0AVersion 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
 Demo=FALSE
 System Package=FALSE
 Sub Package=FALSE
@@ -80,7 +80,7 @@ NameMode=2
 PPFix=ogtk
 Doc Groups=""
 
-[File Group 1]
+[Documents]
 Source Dir=source
 DirMode=0
 NameMode=0
@@ -90,7 +90,7 @@ Replace Mode=Always
 Num Files=1
 File 0=readme.txt
 
-[File Group 0]
+[SubMenus]
 Source Dir=source/submenus
 DirMode=0
 NameMode=0
@@ -100,8 +100,8 @@ Replace Mode=Always
 Num Files=1
 File 0=*.mnu
 
-[File Group 2]
-Source Dir=built/lvzip/fileutil.llb
+[FileUtils]
+Source Dir=source/fileutil.llb
 DirMode=257
 NameMode=0
 PPFix=""
@@ -111,8 +111,8 @@ Num Files=2
 File 0=*.vi
 File 1=*.ctl
 
-[File Group 3]
-Source Dir=built/lvzip/lvzip.llb
+[ArchiveFunctions]
+Source Dir=source/lvzip.llb
 DirMode=257
 NameMode=0
 PPFix=""
@@ -122,8 +122,8 @@ Num Files=2
 File 0=*.vi
 File 1=*.ctl
 
-[File Group 4]
-Source Dir=built/lvzip/macbin.llb
+[MacBinary]
+Source Dir=source/macbin.llb
 DirMode=0
 NameMode=0
 PPFix=""
@@ -133,8 +133,8 @@ Num Files=2
 File 0=*.vi
 File 1=*.ctl
 
-[File Group 5]
-Source Dir=built/lvzip/stringutil.llb
+[StringUtils]
+Source Dir=source/stringutil.llb
 DirMode=0
 NameMode=0
 PPFix=""
@@ -143,7 +143,7 @@ Replace Mode=Always
 Num Files=1
 File 0=*.vi
 
-[File Group 6]
+[32-bit DLL]
 Source Dir="c_source/make.vs2005/Win32/DLL Release"
 DirMode=0
 NameMode=0
@@ -154,7 +154,7 @@ Exclusive_OS="Windows NT,Windows 9x"
 Num Files=1
 File 0=*.dll
 
-[File Group 7]
+[64-bit DLL]
 Source Dir="c_source/make.vs2005/x64/DLL Release"
 DirMode=0
 NameMode=0
@@ -165,7 +165,7 @@ Exclusive_OS="Windows NT,Windows x64"
 Num Files=1
 File 0=*.dll
 
-[File Group 8]
+[32-bit Linux so]
 Source Dir=c_source/Linux_x86
 DirMode=0
 NameMode=0
@@ -176,7 +176,7 @@ Exclusive_OS=Linux
 Num Files=1
 File 0=*.so
 
-[File Group 9]
+[64-bit Linux so]
 Source Dir=c_source/Linux_x64
 DirMode=0
 NameMode=0
@@ -187,7 +187,7 @@ Exclusive_OS="Linux x64"
 Num Files=1
 File 0=*.so
 
-[File Group 10]
+[RT Images]
 Source Dir="RT Images"
 DirMode=0
 NameMode=0
@@ -197,6 +197,16 @@ Replace Mode=Exclude
 Exclusive_OS="Windows NT,Windows 9x"
 Num Files=1
 File 0=ogsetup.exe
+
+[Examples]
+Source Dir=source/examples
+DirMode=257
+NameMode=0
+PPFix=""
+Target Dir=<application>/examples/OpenG/lvzip
+Replace Mode=Always
+Num Files=1
+File 0=*.*
 
 [File Group 11]
 Source Dir="Dynamic Palette MNUs"
