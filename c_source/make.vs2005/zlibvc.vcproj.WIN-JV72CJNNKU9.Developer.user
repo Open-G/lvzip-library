@@ -65,7 +65,7 @@
 			Name="DLL Debug|Win32"
 			>
 			<DebugSettings
-				Command="C:\Program Files (x86)\National Instruments\LabVIEW 7.1\LabVIEW.exe"
+				Command="C:\Program Files (x86)\National Instruments\LabVIEW 7.0\LabVIEW.exe"
 				WorkingDirectory=""
 				CommandArguments=""
 				Attach="false"
