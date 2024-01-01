@@ -24,7 +24,7 @@ Files 14="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-string compress.vi"
 [Package Name]
 Name=oglib_lvzip
 Version=5.0
-Release=Beta3
+Release=rc1
 Display Name="OpenG LabVIEW ZIP Library"
 
 [Description]
@@ -76,8 +76,6 @@ Source Dir=""
 Target Dir=""
 Passwords.<size(s)>=0
 Documentation=""
-NameMode=2
-PPFix=ogtk
 Doc Groups=""
 
 [Documents]
@@ -101,7 +99,7 @@ Num Files=1
 File 0=*.mnu
 
 [FileUtils]
-Source Dir=source/fileutil.llb
+Source Dir=built/lvzip/fileutil.llb
 DirMode=257
 NameMode=0
 PPFix=""
@@ -112,7 +110,7 @@ File 0=*.vi
 File 1=*.ctl
 
 [ArchiveFunctions]
-Source Dir=source/lvzip.llb
+Source Dir=built/lvzip/lvzip.llb
 DirMode=257
 NameMode=0
 PPFix=""
@@ -123,7 +121,7 @@ File 0=*.vi
 File 1=*.ctl
 
 [MacBinary]
-Source Dir=source/macbin.llb
+Source Dir=built/lvzip/macbin.llb
 DirMode=0
 NameMode=0
 PPFix=""
@@ -134,7 +132,7 @@ File 0=*.vi
 File 1=*.ctl
 
 [StringUtils]
-Source Dir=source/stringutil.llb
+Source Dir=built/lvzip/stringutil.llb
 DirMode=0
 NameMode=0
 PPFix=""
@@ -199,7 +197,7 @@ Num Files=1
 File 0=ogsetup.exe
 
 [Examples]
-Source Dir=source/examples
+Source Dir=built/lvzip/examples
 DirMode=257
 NameMode=0
 PPFix=""
