@@ -1,7 +1,7 @@
 /*
    refnum.h -- module to handle refnums for our library objects
 
-   Copyright (C) 2017-2023 Rolf Kalbermatter
+   Copyright (C) 2017-2024 Rolf Kalbermatter
 
    All rights reserved.
 

@@ -1,7 +1,7 @@
 /*
    lvapi.c -- LabVIEW interface for LabVIEW ZIP library
 
-   Copyright (C) 2009-2023 Rolf Kalbermatter
+   Copyright (C) 2009-2024 Rolf Kalbermatter
 
    All rights reserved.
 

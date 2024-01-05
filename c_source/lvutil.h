@@ -1,7 +1,7 @@
 /*
    lvutil.h -- support functions for LabVIEW integration
 
-   Copyright (C) 2002-2023 Rolf Kalbermatter
+   Copyright (C) 2002-2024 Rolf Kalbermatter
 
    All rights reserved.
 

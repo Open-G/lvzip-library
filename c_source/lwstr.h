@@ -1,7 +1,7 @@
 /*
    lwstr.h -- widechar/shortchar unicode string support functions for LabVIEW integration
 
-   Copyright (C) 2017-2023 Rolf Kalbermatter
+   Copyright (C) 2017-2024 Rolf Kalbermatter
 
    All rights reserved.
 

@@ -36,7 +36,7 @@
 #define VERSION_MAJOR            5
 #define VERSION_MINOR            0
 #define VERSION_REVISION         0
-#define VERSION_BUILD            156
+#define VERSION_BUILD            159
 
 #define VER_FILEFLAGSMASK        VS_FFI_FILEFLAGSMASK
 #define VER_FILEOS               VOS_DOS_WINDOWS16
@@ -54,7 +54,7 @@
 #define VER_FILESUBTYPE          VFT2_UNKNOWN
 #define VER_FILEDESCRIPTION_STR  "LabVIEW zlib data compression library"
 #define VER_INTERNALNAME_STR     "lvzlib"
-#define VER_LEGALCOPYRIGHT_YEARS "\2511995-2017"
+#define VER_LEGALCOPYRIGHT_YEARS "\2511995-2024"
 #define VER_LEGALCOPYRIGHT_STR   VER_LEGALCOPYRIGHT_YEARS " " VER_COMPANYNAME_STR
 #define VER_ORIGINALFILENAME_STR "lvzlib.dll"
 #define VER_FILEVERSION          VER_FILE_VERSION

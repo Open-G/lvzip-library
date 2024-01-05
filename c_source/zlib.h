@@ -38,11 +38,11 @@
 extern "C" {
 #endif
 
-#define ZLIB_VERSION "1.3"
+#define ZLIB_VERSION "1.3.1"
 #define ZLIB_VERNUM 0x1300
 #define ZLIB_VER_MAJOR 1
 #define ZLIB_VER_MINOR 3
-#define ZLIB_VER_REVISION 0
+#define ZLIB_VER_REVISION 1
 #define ZLIB_VER_SUBREVISION 0
 
 /*

@@ -1,7 +1,7 @@
 /*
    utf.h - Support routines for Unicode text format conversions between the different sizes
 
-   Copyright (C) 2015-2023 Rolf Kalbermatter
+   Copyright (C) 2015-2024 Rolf Kalbermatter
 
    All rights reserved.
 

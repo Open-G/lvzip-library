@@ -2,7 +2,7 @@
    iomem.c -- Memory base function header for compress/uncompress .zip files
    using zlib + zip or unzip API
 
-   Copyright (C) 2007-2023 Rolf Kalbermatter
+   Copyright (C) 2007-2024 Rolf Kalbermatter
 
    All rights reserved.
 
