@@ -1301,9 +1301,11 @@ extern int ZEXPORT zipOpenNewFileInZip4_64(zipFile file, const char *filename, c
     uint16_t size_extrafield_global, const char *comment, uint16_t method, int level, int raw, int windowBits, int memLevel,
     int strategy, const char *password, ZIP_UNUSED uint32_t crc_for_crypting, uint16_t version_madeby, uint16_t flag_base, int zip64)
 {
-    uint8_t aes = 0;
+    uint8_t aes
 #ifdef HAVE_AES
-    aes = 1;
+    = 1;
+#else
+	= 0;
 #endif
     return zipOpenNewFileInZip_internal(file, filename, zipfi, extrafield_local, size_extrafield_local, extrafield_global,
         size_extrafield_global, comment, flag_base, zip64, method, level, raw, windowBits, memLevel, strategy, password, aes,
@@ -1846,12 +1848,17 @@ extern int ZEXPORT zipCloseFileInZipRaw(zipFile file, uint32_t uncompressed_size
 
 extern int ZEXPORT zipCloseFileInZip(zipFile file)
 {
-    return zipCloseFileInZipRaw(file, 0, 0);
+    return zipCloseFileInZipRaw64(file, 0, 0);
 }
 
 extern int ZEXPORT zipClose(zipFile file, const char *global_comment)
 {
-    return zipClose2(file, global_comment, VERSIONMADEBY, NULL);
+	return zipClose2(file, global_comment, VERSIONMADEBY, NULL);
+}
+
+extern int ZEXPORT zipCloseEx(zipFile file, const char *global_comment, voidpf *output)
+{
+	return zipClose2(file, global_comment, VERSIONMADEBY, output);
 }
 
 extern int ZEXPORT zipClose2(zipFile file, const char *global_comment, uint16_t version_madeby, voidpf *output)
@@ -2018,7 +2025,8 @@ extern int ZEXPORT zipClose2(zipFile file, const char *global_comment, uint16_t 
             err = ZIP_ERRNO;
     }
 
-	*output = zi->z_filefunc.zfile_func64.opaque;
+	if (output)
+		*output = zi->z_filefunc.zfile_func64.opaque;
 
     if ((ZCLOSE64(zi->z_filefunc, zi->filestream) != 0) && (err == ZIP_OK))
         err = ZIP_ERRNO;

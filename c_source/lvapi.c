@@ -1,7 +1,7 @@
 /* 
    lvapi.c -- LabVIEW interface for LabVIEW ZIP library
 
-   Copyright (C) 2009-2023 Rolf Kalbermatter
+   Copyright (C) 2009-2024 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -37,10 +37,6 @@
 
 #ifdef HAVE_BZIP2
 #include "bzip2/bzlib.h"
-#endif
-
-#ifndef VERSIONMADEBY
-# define VERSIONMADEBY   (0x0) /* platform depedent */
 #endif
 
 #if Win32
@@ -148,7 +144,10 @@ static MgErr lvzlib_zipOpen(const LWPathHandle pathName, int append, LStrHandle 
 		}
 		if (err)
 		{
-			zipClose(node, NULL);
+			LStrHandle stream = NULL;
+			zipCloseEx(node, NULL, (voidp *)&stream);
+			if (stream)
+				DSDisposeHandle((UHandle)stream);
 		}
 	}
 	return err;
@@ -285,7 +284,7 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const char *globalComment, LStrH
 	if (!err)
 	{
         *refnum = kNotARefNum;
-		err = LibToMgErr(zipClose2(node, globalComment, VERSIONMADEBY, (voidpf*)stream));
+		err = LibToMgErr(zipCloseEx(node, globalComment, (voidpf *)stream));
 	}
 	return err;
 }
@@ -311,8 +310,11 @@ static MgErr lvzlib_unzOpen(const LWPathHandle pathName, zlib_filefunc64_def* fi
 	{
 		err = lvzlibCreateRefnum(node, refnum, UnzMagic, LV_FALSE);
 		if (err)
-		{
-			unzClose(node);
+		{	
+			LStrHandle stream = NULL;
+			unzClose2(node, (voidpf *)&stream);
+			if (stream)
+				DSDisposeHandle((UHandle)stream);
 		}
 	}
 	return err;
@@ -355,6 +357,8 @@ LibAPI(MgErr) lvzlib_unzClose(LVRefNum *refnum, LStrHandle *stream)
 	if (!err)
 	{
 		*refnum = kNotARefNum;
+		if (*stream)
+			DSDisposeHandle((UHandle)*stream);
 		err = LibToMgErr(unzClose2(node, (voidpf*)stream));
 	}
 	return err;

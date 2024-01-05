@@ -555,7 +555,8 @@ extern int ZEXPORT unzClose2(unzFile file, voidpf *output)
     if (s->filestream_with_CD != NULL)
         ZCLOSE64(s->z_filefunc, s->filestream_with_CD);
 
-	*output = s->z_filefunc.zfile_func64.opaque;
+	if (output)
+		*output = s->z_filefunc.zfile_func64.opaque;
 
 	s->filestream = NULL;
     s->filestream_with_CD = NULL;
@@ -1734,7 +1735,7 @@ extern int ZEXPORT unzGoToNextFile2(unzFile file, unz_file_info64 *pfile_info, c
     s->num_file += 1;
 
     err = unzGetCurrentFileInfoInternal(file, &s->cur_file_info, &s->cur_file_info_internal,
-            filename, filename_size, extrafield,extrafield_size, comment, comment_size);
+            filename, filename_size, extrafield, extrafield_size, comment, comment_size);
 
     s->current_file_ok = (err == UNZ_OK);
     if ((err == UNZ_OK) && (pfile_info != NULL))

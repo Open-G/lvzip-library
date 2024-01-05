@@ -1,7 +1,7 @@
 /*
    refnum.h -- module to handle refnums for our library objects
 
-   Copyright (C) 2017-2023 Rolf Kalbermatter
+   Copyright (C) 2017-2024 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -69,18 +69,21 @@ static int32 lvzlipCleanup(UPtr ptr)
 	MgErr err =	MCDisposeCookie(gCookieJar, pNode->refnum, (MagicCookieInfo)&pNode);
 	if (!err && pNode->u.node)
 	{
+		LStrHandle stream = NULL;
 		switch (pNode->magic)
 		{
 			case UnzMagic:
-				err = LibToMgErr(unzClose(pNode->u.node));
+				err = LibToMgErr(unzClose2(pNode->u.node, (voidpf *)&stream));
 				break;
 			case ZipMagic:
-				err = LibToMgErr(zipClose(pNode->u.node, NULL));
+				err = LibToMgErr(zipCloseEx(pNode->u.node, NULL, (voidpf *)&stream));
 				break;
 			case FileMagic:
 				err = lvFile_CloseFile(pNode->u.node);
 				break;
 		}
+		if (stream)
+			DSDisposeHandle((UHandle)stream);
 	}
 	return err;
 }
