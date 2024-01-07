@@ -24,7 +24,7 @@ Files 14="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-string compress.vi"
 [Package Name]
 Name=oglib_lvzip
 Version=5.0
-Release=rc1
+Release=rc2
 Display Name="OpenG LabVIEW ZIP Library"
 
 [Description]
@@ -51,7 +51,7 @@ restart labview after install=FALSE
 skip mass compile after install=FALSE
 
 [Platform]
-Exclusive_LabVIEW_Version=>=7.1
+Exclusive_LabVIEW_Version=>=8.6
 Exclusive_LabVIEW_System=All
 Exclusive_OS="Windows NT,Windows x64,Linux,Linux x64"
 

@@ -60,8 +60,9 @@ Call-Back VI 1="build_support/Call-Back VI - Rem namespace from Window Title.vi"
 VI 1="fileutil.llb/FILE VI Tree.vi"
 VI 2="lvzip.llb/ZLIB VI Tree.vi"
 VI 3="macbin.llb/MACBIN VI Tree.vi"
-VI 4="examples/Update Open Office Document.vi"
-VI 5="examples/View Archive Content.vi"
+VI 4="examples/View Archive Content.vi"
+VI 5="examples/Update Open Office Document.vi"
+VI 6="examples/Update Open Office Document2.vi"
 
 [Dynamic VIs]
 ###########################################################=""
