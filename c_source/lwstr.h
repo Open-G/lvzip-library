@@ -136,11 +136,14 @@ typedef struct LWSTRREC
 #endif
 
 #if Win32 && !Pharlap
-#define HasDOSDevicePrefix(str, len)                                                                                                       \
- ((len >= 4 && str[0] == kPathSeperator && str[1] == kPathSeperator && (str[2] == '?' || str[2] == '.') && str[3] == kPathSeperator) ?     \
+#define HasNTFSDevicePrefix(str, len)                                                                                                       \
+ ((len >= 4 && str[0] == kPathSeperator && (str[1] == kPathSeperator || str[1] == '?') && (str[2] == '?' || str[2] == '.') && str[3] == kPathSeperator) ?     \
   ((len >= 8 && (str[4] == 'u' || str[4] == 'U') && (str[5] == 'n' || str[5] == 'N') && (str[6] == 'c' || str[6] == 'C') && str[7] == kPathSeperator) ? 8 : 4) : 0)
+#define HasNTFSSessionPrefix(str, len)                                                                                                       \
+ ((len >= 4 && str[0] == kPathSeperator && str[1] == '?' && str[2] == '?' && str[3] == kPathSeperator) ? 4 : 0)
 #else
-#define HasDOSDevicePrefix(str, len)   0
+#define HasNTFSDevicePrefix(str, len)   0
+#define HasNTFSSessionPrefix(str, len)  0
 #endif
 
 DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *type);

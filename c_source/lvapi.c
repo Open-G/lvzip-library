@@ -113,12 +113,12 @@ LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size)
  *  refnum: An archive file reference
  *
  ****************************************************************************************************/
-static MgErr lvzlib_zipOpen(const LWPathHandle pathName, int append, LStrHandle *globalcomment,
-                            zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+static MgErr lvzlib_zipOpen(const LWPathHandle pathName, int append, uint64_t disk_size,
+							LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
 	MgErr err = fNotFound;
 	const char *comment;
-	zipFile node = zipOpen3_64(LWPathBuf(pathName), append, 0, &comment, filefuncs);
+	zipFile node = zipOpen3_64(LWPathBuf(pathName), append, disk_size, &comment, filefuncs);
 	if (*globalcomment)
 		LStrLen(**globalcomment) = 0;
 	*refnum = kNotARefNum;
@@ -153,7 +153,7 @@ static MgErr lvzlib_zipOpen(const LWPathHandle pathName, int append, LStrHandle 
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathName, int append, LStrHandle *globalcomment, LVRefNum *refnum)
+LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathName, int append, uint64_t disk_size, LStrHandle *globalcomment, LVRefNum *refnum)
 {
 	MgErr err = LWPathZeroTerminate(pathName, -1);
 	if (!err)
@@ -164,16 +164,16 @@ LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathName, int append, LStrHandle *g
 #else
 		fill_fopen64_filefunc(&filefuncs);
 #endif
-		err = lvzlib_zipOpen(*pathName, append, globalcomment, &filefuncs, refnum);
+		err = lvzlib_zipOpen(*pathName, append, disk_size, globalcomment, &filefuncs, refnum);
 	}
 	return err;
 }
 
-LibAPI(MgErr) lvzlib_zipOpenS(LStrHandle *memory, int append, LStrHandle *globalcomment, LVRefNum *refnum)
+LibAPI(MgErr) lvzlib_zipOpenS(LStrHandle *memory, int append, uint64_t disk_size, LStrHandle *globalcomment, LVRefNum *refnum)
 {
 	zlib_filefunc64_def filefuncs;
 	fill_mem_filefunc(&filefuncs, memory);
-	return lvzlib_zipOpen(NULL, append, globalcomment, &filefuncs, refnum);
+	return lvzlib_zipOpen(NULL, append, disk_size, globalcomment, &filefuncs, refnum);
 }
 
 /****************************************************************************************************

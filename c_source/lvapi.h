@@ -40,8 +40,8 @@ LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len);
 LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size);
 
 /* exported zip functions */
-LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathname, int append, LStrHandle *globalcomment, LVRefNum *refnum);
-LibAPI(MgErr) lvzlib_zipOpenS(LStrHandle *memory, int append, LStrHandle *globalcomment, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathname, int append, uint64_t disk_size, LStrHandle *globalcomment, LVRefNum *refnum);
+LibAPI(MgErr) lvzlib_zipOpenS(LStrHandle *memory, int append, uint64_t disk_size, LStrHandle *globalcomment, LVRefNum *refnum);
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
 						   const LStrHandle extrafield_local, const LStrHandle extrafield_global, LStrHandle comment,
 						   int method, int level, int raw, int windowBits, int memLevel, int strategy,

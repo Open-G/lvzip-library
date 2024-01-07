@@ -97,7 +97,7 @@ static int32 LWPtrUNCOffset(const LWChar *ptr, int32 offset, int32 len)
 DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *type)
 {
 	if (offset < 0)
-		offset = HasDOSDevicePrefix(ptr, len);
+		offset = HasNTFSDevicePrefix(ptr, len);
 
 	if (len > offset)
 	{
@@ -181,7 +181,7 @@ static int32 WStrUNCOffset(const wchar_t *ptr, int32 offset, int32 len)
 DebugAPI(int32) WStrRootLen(const wchar_t *ptr, int32 len, int32 offset, uInt8 *type)
 {
 	if (offset < 0)
-		offset = HasDOSDevicePrefix(ptr, len);
+		offset = HasNTFSDevicePrefix(ptr, len);
 
 	if (len > offset)
 	{
@@ -313,7 +313,7 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 	if (srcLen != len || LWPtrCompare(gNotAPath, srcPtr, srcLen))
 	{
 		int32 xtrLen = 0,
-			  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
+			  srcOff = HasNTFSDevicePrefix(srcPtr, srcLen),
 			  srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, &type);
 
 #if Unix || MacOSX
@@ -598,6 +598,10 @@ DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot
 #if usesWinPath
 		if (type == fAbsPath)
 		{
+			int prefix = HasNTFSSessionPrefix(tgtPtr, tgtOff);
+			if (prefix)
+				tgtPtr[1] = kPathSeperator;
+
 			if (tgtPtr[tgtOff - 1] == ':')
 			{	
 				/* Append \ to naked drive spec */
@@ -652,7 +656,7 @@ MgErr LWPathNCat(LWPathHandle *lwstr, int32 offset, const LWChar *str, int32 str
 		lwsncpy(srcPtr + offset, str, strLen);
 		strLen += offset;
 
-		offset = HasDOSDevicePrefix(srcPtr, strLen);
+		offset = HasNTFSDevicePrefix(srcPtr, strLen);
 		rootLen = LWPtrRootLen(srcPtr, strLen, offset, &type);
 
 		LWPathLenSet(*lwstr, strLen);
@@ -710,7 +714,7 @@ LibAPI(MgErr) LWPathParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVB
 	uInt8 srcType = fNotAPath;
 	uInt16 srcCnt = LWPathCntGet(*filePath);
 	int32 offset, srcLen = LWPathLenGet(*filePath),
-		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
+		  srcOff = HasNTFSDevicePrefix(srcPtr, srcLen),
 	      srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, &srcType);
 
 	// Remove path seperator at end
@@ -819,11 +823,11 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 	uInt8 srcType = LWPathTypeGet(srcPath), relType = LWPathTypeGet(relPath);
 	int32 xtrLen = 0,
 		  srcLen = end >= 0 ? end : LWPathLenGet(srcPath),
-		  srcOff = HasDOSDevicePrefix(srcPtr, srcLen),
+		  srcOff = HasNTFSDevicePrefix(srcPtr, srcLen),
 		  srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, NULL),
 		  srcCnt = end >= 0 ? LWPtrDepth(srcPtr, end, srcOff, srcRoot) : LWPathCntGet(srcPath),
 		  relLen = LWPathLenGet(relPath),
-		  relOff = HasDOSDevicePrefix(relPtr, relLen),
+		  relOff = HasNTFSDevicePrefix(relPtr, relLen),
 		  relRoot = LWPtrRootLen(relPtr, relLen, relOff, NULL),
 		  relCnt = LWPathCntGet(relPath);
 
@@ -946,10 +950,10 @@ LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath,
 		LWChar *startp = LWPathBuf(*startPath),
 			   *endp = LWPathBuf(*endPath);
 		int32 startLen = LWPathLenGet(*startPath),
-			  startOff = HasDOSDevicePrefix(startp, startLen),
+			  startOff = HasNTFSDevicePrefix(startp, startLen),
 			  startRoot = LWPtrRootLen(startp, startLen, startOff, &startType),
 			  endLen = LWPathLenGet(*endPath),
-			  endOff = HasDOSDevicePrefix(endp, endLen),
+			  endOff = HasNTFSDevicePrefix(endp, endLen),
 			  endRoot = LWPtrRootLen(endp, endLen, endOff, &endType); 
 
 		if (startType == fAbsPath || endType != fAbsPath && relPath)
@@ -1034,7 +1038,7 @@ LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int3
 	{
 		uInt8 pathType = fNotAPath;
 	
-		offset = HasDOSDevicePrefix(src, srcLen),
+		offset = HasNTFSDevicePrefix(src, srcLen),
 		after = LWPtrRootLen(src, srcLen, offset, &pathType);
 
 		if (flags & kFlattenUnicode)
@@ -1326,7 +1330,7 @@ DebugAPI(MgErr) LStrFromLWPath(LStrHandle *pathName, uInt32 codePage, const LWPa
 #else /* Windows and not Pharlap */
 			if (!offset && !(flags & kKeepDOSDevice))
 			{
-				offset = HasDOSDevicePrefix(ptr, len);
+				offset = HasNTFSDevicePrefix(ptr, len);
 				if (offset == 8)
 					offset = 6;
 			}
@@ -1709,7 +1713,7 @@ static void TerminateLStr(LStrHandle *dest, int32 numBytes)
 static int32 ConvertToPosixWString(wchar_t *src, int32 srcLen, uInt8 *type, wchar_t *dst)
 {
 	wchar_t *ptr = dst;
-	int32 len = 0, offset = HasDOSDevicePrefix(src, srcLen);
+	int32 len = 0, offset = HasNTFSDevicePrefix(src, srcLen);
 
 	WStrRootLen(src, srcLen, offset, type);
 

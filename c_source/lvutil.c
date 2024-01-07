@@ -2215,8 +2215,11 @@ static MgErr Win32CreateHardLink(LWPathHandle lwFileName, LWPathHandle lwExistin
 #ifndef SYMBOLIC_LINK_FLAG_DIRECTORY
 #define SYMBOLIC_LINK_FLAG_DIRECTORY (0x1)
 #endif
+#ifndef SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE
+#define SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE (0x2)
+#endif
 
-static BOOL AcquireSymlinkPriv(void)
+static BOOL Win32ControlSymlinkPriv(BOOL fEnable)
 {
 	HANDLE hToken;
 	TOKEN_PRIVILEGES TokenPriv;
@@ -2227,9 +2230,9 @@ static BOOL AcquireSymlinkPriv(void)
 		return TRUE;
 
 	TokenPriv.PrivilegeCount = 1;
-	TokenPriv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	TokenPriv.Privileges[0].Attributes = fEnable ? SE_PRIVILEGE_ENABLED : 0;
 
-	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken))
+	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken))
 		return FALSE;
 
 	result = AdjustTokenPrivileges(hToken, FALSE, &TokenPriv, 0, NULL, NULL) && GetLastError() == ERROR_SUCCESS;
@@ -2244,6 +2247,12 @@ static MgErr Win32CreateSymbolicLink(LWPathHandle lwSymlinkFileName, LWPathHandl
 {
 	MgErr err = mgNotSupported;
 	static tCreateSymbolicLink pCreateSymbolicLink = NULL;
+	DWORD isDir, attrs = GetFileAttributesLW(lwTargetFileName);
+	if (attrs != INVALID_FILE_ATTRIBUTES)
+		isDir = (attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
+	else
+		isDir = (dwFlags & SYMBOLIC_LINK_FLAG_DIRECTORY) == SYMBOLIC_LINK_FLAG_DIRECTORY;
+	
 	if (!(dwFlags & 0x8000) && !pCreateSymbolicLink)
 	{
 		HMODULE hLib = LoadLibrary("kernel32.dll");
@@ -2253,27 +2262,23 @@ static MgErr Win32CreateSymbolicLink(LWPathHandle lwSymlinkFileName, LWPathHandl
 			FreeLibrary(hLib);
 		}
 	}
+
 	if (!(dwFlags & 0x8000) && pCreateSymbolicLink)
 	{
-		if (!pCreateSymbolicLink(LWPathBuf(lwSymlinkFileName), LWPathBuf(lwTargetFileName), dwFlags))
+		if (!pCreateSymbolicLink(LWPathBuf(lwSymlinkFileName), LWPathBuf(lwTargetFileName), isDir))
 			err = Win32GetLVFileErr();
 		else
 			err = noErr;
 	}
 	else
 	{
-		BOOL isRelative = TRUE, isDirectory = FALSE;
+		BOOL isRelative = TRUE;
 		HANDLE hFile;
 		BOOL (WINAPI *deletefunc)() = DeleteFileW;
-		DWORD openMode = CREATE_NEW, openFlags = FILE_FLAG_OPEN_REPARSE_POINT,
-			  attrs = GetFileAttributesLW(lwTargetFileName);
+		DWORD openMode = CREATE_NEW, openFlags = FILE_FLAG_OPEN_REPARSE_POINT;
 
-		if (attrs != INVALID_FILE_ATTRIBUTES)
-			isDirectory = (attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY;
-		else
-			isDirectory = (dwFlags & SYMBOLIC_LINK_FLAG_DIRECTORY) == SYMBOLIC_LINK_FLAG_DIRECTORY;
 
-	    if (isDirectory)
+	    if (isDir)
 		{
 		    if (!CreateDirectoryLW(lwSymlinkFileName, lpsa))
 			{
@@ -2294,7 +2299,7 @@ static MgErr Win32CreateSymbolicLink(LWPathHandle lwSymlinkFileName, LWPathHandl
 			PREPARSE_DATA_BUFFER buffer = (PREPARSE_DATA_BUFFER)DSNewPClr(bytes);
 			if (buffer)
 			{
-				int32 offset = HasDOSDevicePrefix(lpTargetFileName, length);
+				int32 offset = HasNTFSDevicePrefix(lpTargetFileName, length);
 				switch (offset)
 				{
 					case 0:
@@ -2412,8 +2417,8 @@ static MgErr lvFile_CreateLink(LWPathHandle src, LWPathHandle tgt, uInt32 flags)
 				err = UnixToLVFileErr();
 		}
 #elif Win32 && !Pharlap
-		// Need to acquire backup privileges in order to be able to call symlink kernel entry points
-		Win32ModifyBackupPrivilege(TRUE);
+		// Need to acquire privileges in order to be able to call symlink kernel entry points
+		Win32ControlSymlinkPriv(TRUE);
 		if (flags & kLinkHard)
 		{
 			err = Win32CreateHardLink(src, tgt, NULL);
@@ -2422,7 +2427,7 @@ static MgErr lvFile_CreateLink(LWPathHandle src, LWPathHandle tgt, uInt32 flags)
 		{
 			err = Win32CreateSymbolicLink(src, tgt, NULL, flags & kLinkDir ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0);
 		}
- 		Win32ModifyBackupPrivilege(FALSE);
+ 		Win32ControlSymlinkPriv(FALSE);
 #endif
 	}
 	return  err;
@@ -3200,7 +3205,7 @@ static MgErr lvFile_MoveToTrash(LWPathHandle pathName, uInt32 flags)
 			if (SUCCEEDED(hr))
 			{
 				WCHAR *temp = LWPathBuf(pathName);
-				int32 offset = HasDOSDevicePrefix(temp, LWPathLenGet(pathName));
+				int32 offset = HasNTFSDevicePrefix(temp, LWPathLenGet(pathName));
 				
 				hr = SHCreateItemFromParsingName(temp + offset, NULL, &IID_IShellItem, &pSI);
 				if (SUCCEEDED(hr))

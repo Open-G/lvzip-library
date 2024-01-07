@@ -102,12 +102,12 @@ LibAPI(void) FileTimeToATime(uInt64 *pft, ATime128 *pt);
 #define kWinFileInfoDevice               0x00000040  
 #define kWinFileInfoNormal               0x00000080  
 #define kWinFileInfoTemporary            0x00000100  
-#define kWinFileInfoSparseFile           0x00000200  
+//#define kWinFileInfoSparseFile           0x00000200  
 #define kWinFileInfoReparsePoint         0x00000400  
 #define kWinFileInfoCompressed           0x00000800  
 #define kWinFileInfoOffline              0x00001000  
 #define kWinFileInfoNotIndexed           0x00002000  
-#define kWinFileInfoEncrypted            0x00004000  
+//#define kWinFileInfoEncrypted            0x00004000  
 
 /* Mac extended flags */
 #define kMacFileInfoNoDump               0x00000001	   /* do not dump file, opposite from Windows archive flag */
