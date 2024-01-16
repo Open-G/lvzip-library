@@ -155,7 +155,7 @@ DebugAPI(Bool32) LWPtrIsOfType(const LWChar *ptr, int32 len, int32 offset, uInt8
 DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot, LWPathHandle *pathName, int32 tgtOff, uInt8 type);
 
 DebugAPI(MgErr) LWPathAppendSeperator(LWPathHandle pathName, int32 len);
-DebugAPI(MgErr) LWPathAppend(LWPathHandle pathName, int32 end, LWPathHandle *newPath, LWPathHandle relPath);
+DebugAPI(MgErr) LWPathAppend(LWPathHandle pathName, int32 end, LWPathHandle *newPath, LWChar *relPtr, int32 relLen);
 DebugAPI(MgErr) LWPathAppendUStr(LWPathHandle *pathName, int32 end, const LStrHandle relString);
 DebugAPI(MgErr) LWPathGetFileTypeAndCreator(LWPathHandle pathName, ResType *fType, ResType *fCreator);
 DebugAPI(MgErr) LWPathZeroTerminate(LWPathHandle *pathName, int32 len);

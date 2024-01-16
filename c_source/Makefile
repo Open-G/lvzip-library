@@ -24,7 +24,7 @@ CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2
 #CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
 #           -Wstrict-prototypes -Wmissing-prototypes
 
-CINDIR=/usr/local/lv70/cintools
+CINDIR=/usr/local/natist/LabVIEW-8.6/cintools
 #SFLAGS=-03 -fPIC $(CC_ARCH_SPEC) -g3 -DDEBUG -fvisibility=hidden -Wnonnull -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2 -DBZ_NO_STDIO -Ibzip2 -L$(CINDIR)
 SFLAGS=-O3 -fPIC $(CC_ARCH_SPEC) -fvisibility=hidden -Wnonnull -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2 -DBZ_NO_STDIO -Ibzip2 -L$(CINDIR)
 LDFLAGS=-Wl,-soname=$(SHAREDLIBM)

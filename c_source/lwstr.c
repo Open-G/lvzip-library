@@ -141,6 +141,10 @@ DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *
 #endif
 		else
 		{
+			while (ptr[offset] == '.' && IsSeperator(ptr[offset + 1]))
+			{
+				offset += 2;
+			}
 			if (type)
 				*type = fRelPath;
 		}
@@ -272,9 +276,18 @@ int32 LWPtrNextElement(const LWChar *ptr, int32 len, int32 off)
 	return off;
 }
 
+int32 LWPtrUpMatches(const LWChar *ptr, int32 len, int32 off)
+{
+	while ((off + 2) <= len && ptr[off] == '.' && ptr[off + 1] == '.' && ((off + 2) == len || IsSeperator(ptr[off + 2])))
+	{
+		off += 3;
+	}
+	return off <= len ? off : len;
+}
+
 int32 LWPtrParentInternal(const LWChar *ptr, int32 len, int32 rootLen)
 {
-	while (len && len-- > rootLen && !IsSeperator(ptr[len]));
+	while (--len > rootLen && !IsSeperator(ptr[len]));
 	return len;
 }
 
@@ -427,7 +440,7 @@ DebugAPI(MgErr) LWPathCopy(LWPathHandle *dst, LWPathHandle src)
 		}
 		if (!err)
 		{
-			MoveBlock(*src, **dst, size);
+			MoveBlock(*src, **dst, size - sizeof(LWChar));
 		}
 		LWPathBuf(*dst)[LWPathLenGet(*dst)] = 0;
 	}
@@ -629,7 +642,6 @@ DebugAPI(MgErr) LWPtrNormalize(const LWChar *srcPtr, int32 srcLen, int32 srcRoot
 	return noErr;
 }
 
-
 MgErr LWPathNCat(LWPathHandle *lwstr, int32 offset, const LWChar *str, int32 strLen)
 {
 	MgErr err;
@@ -815,32 +827,41 @@ LibAPI(MgErr) LWPathParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVB
 	return err;
 }
 
-MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPathHandle relPath)
+MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWChar *relPtr, int32 relLen)
 {
 	MgErr err = mgNoErr;
 	LWPathHandle tmpPath = newPath ? *newPath : srcPath;
-	LWChar *srcPtr = LWPathBuf(srcPath), *relPtr = LWPathBuf(relPath);
-	uInt8 srcType = LWPathTypeGet(srcPath), relType = LWPathTypeGet(relPath);
+	LWChar *srcPtr = LWPathBuf(srcPath);
+	uInt8 relType = fNotAPath, srcType = LWPathTypeGet(srcPath);
 	int32 xtrLen = 0,
 		  srcLen = end >= 0 ? end : LWPathLenGet(srcPath),
 		  srcOff = HasNTFSDevicePrefix(srcPtr, srcLen),
 		  srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, NULL),
 		  srcCnt = end >= 0 ? LWPtrDepth(srcPtr, end, srcOff, srcRoot) : LWPathCntGet(srcPath),
-		  relLen = LWPathLenGet(relPath),
 		  relOff = HasNTFSDevicePrefix(relPtr, relLen),
-		  relRoot = LWPtrRootLen(relPtr, relLen, relOff, NULL),
-		  relCnt = LWPathCntGet(relPath);
+		  relRoot = LWPtrRootLen(relPtr, relLen, relOff, &relType),
+		  relCnt = LWPtrDepth(relPtr, relLen, relOff, relRoot);
 
-	
-	if (relRoot == relOff)
+	if (relRoot >= relLen)
 	{
-		/* if the relative path is empty we do want to consider it an empty relative path */
+		/* if the relative path is empty we do want to consider it definitely an empty relative path */
 		relType = fRelPath;
 	}
 	else if (relType == fRelPath)
 	{
-		/* If relative path then relOff should be adjusted to relRoot to skip possible relative prefix */
-		relOff = relRoot;
+		relOff = LWPtrUpMatches(relPtr, relLen, relRoot);
+		if (relOff > relRoot)
+		{
+			int32 i, cnt = (relOff - relRoot + 1) / 3;
+			for (i = 0; i < cnt && srcLen > srcRoot; i++)
+			{
+				srcLen = LWPtrParentInternal(srcPtr, srcLen, srcRoot);
+			}
+			if (i < cnt)
+				return mgArgErr;
+			srcCnt -= cnt;
+			relCnt -= cnt;
+		}
 	}
 
 	/* If either path is invalid or start path is not empty and relative path is not relative, we have a problem */
@@ -875,12 +896,12 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 		if (srcPath != tmpPath && (srcCnt || relType == fRelPath))
 		{
 			// We have a new destination path with a valid source path, copy it over
-			MoveBlock(*srcPath, *tmpPath, (*srcPath)->size + sizeof(int32));
+			MoveBlock(*srcPath, *tmpPath, srcLen * sizeof(LWChar) + 2 * sizeof(int32));
 		}
 		else if (!srcCnt && relType != fRelPath)
 		{
 			// No source path and the incoming path is not a relative path, so copy over 
-			MoveBlock(*relPath, *tmpPath, (*relPath)->size + sizeof(int32));
+			MoveBlock(relPtr, *tmpPath, relLen + sizeof(int32));
 		}
 
 		/* If empty relative path, there is nothing to append */
@@ -891,10 +912,9 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 			{
 				srcPtr[srcLen++] = kPathSeperator;
 			}
-			
-			MoveBlock(relPtr + relOff, srcPtr + srcLen, (relLen - relOff) * sizeof(LWChar));
-			srcLen += relLen - relOff;
-
+			relLen -= relOff;
+			MoveBlock(relPtr + relOff, srcPtr + srcLen, relLen * sizeof(LWChar));
+			srcLen += relLen;
 #if usesWinPath
 			if (!err && xtrLen == 2)
 			{
@@ -902,9 +922,11 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWPat
 				srcPtr[srcLen++] = kPathSeperator;
 			}
 #endif
-			LWPathCntSet(tmpPath, srcCnt + relCnt);
 		}
+		LWPathCntSet(tmpPath, srcCnt + relCnt);
 		LWPathLenSet(tmpPath, srcLen);
+		if (newPath)
+			*newPath = tmpPath;
 	}
 	return err;
 }
@@ -915,27 +937,24 @@ DebugAPI(MgErr) LWPathAppendUStr(LWPathHandle *filePath, int32 end, const LStrHa
 	MgErr err = LStrPtrToLWPath(LStrBuf(*relString), LStrLen(*relString), CP_UTF8, &relPath, 0);
 	if (!err)
 	{
-		err = LWPathAppend(filePath ? *filePath : NULL, end, filePath, relPath);
+		err = LWPathAppend(*filePath, end, filePath, LWPathBuf(relPath), LWPathLenGet(relPath));
 		LWPathDispose(&relPath);
 	}
 	return err;
 }
 
-LibAPI(MgErr) LWPathAppendLWPath(LWPathHandle *fileName, const LWPathHandle *relName)
+LibAPI(MgErr) LWPathAppendLWPath(LWPathHandle *filePath, const LWPathHandle *relPath)
 {
-	LWPathHandle tempName = NULL;
-	MgErr err = mgNoErr;
+	return LWPathAppend(*filePath, -1, filePath, LWPathBuf(*relPath), LWPathLenGet(*relPath));
+}
 
-	if (fileName)
-	{
-		err = LWPathCopy(&tempName, *fileName);
-	}
-	if (!err)
-	{
-		err = LWPathAppend(tempName, -1, fileName, *relName);
-	}
-	LWPathDispose(&tempName);
-	return err;
+int32 LWPathNameCompare(LWChar *path1, LWChar *path2, int32 len)
+{
+#if Win32
+	return _wcsnicmp(path1, path2, len);
+#else
+	return strncmp(path2, path2, len);
+#endif
 }
 
 LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath, LWPathHandle *relPath)
@@ -945,7 +964,7 @@ LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath,
 	{
 		int16 startCnt = LWPathCntGet(*startPath),
 			  endCnt = LWPathCntGet(*endPath),
-			  level, length, totalLength, remainingEndCount;
+			  level, notchesUp;
 		uInt8 startType = fNotAPath, endType = fNotAPath;
 		LWChar *startp = LWPathBuf(*startPath),
 			   *endp = LWPathBuf(*endPath);
@@ -956,61 +975,50 @@ LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath,
 			  endOff = HasNTFSDevicePrefix(endp, endLen),
 			  endRoot = LWPtrRootLen(endp, endLen, endOff, &endType); 
 
-		if (startType == fAbsPath || endType != fAbsPath && relPath)
+		if (startType == fAbsPath && endType == fAbsPath && relPath)
 		{
 			for (level = startCnt; level > 0; level--)
 			{
+				if (level < startCnt)
+				{
+					startRoot = LWPtrNextElement(startp, startLen, startOff);
+					endRoot = LWPtrNextElement(endp, endLen, endOff);
+				}
+				if (startRoot < 0 || endRoot < 0 || startRoot - startOff != endRoot - endOff)
+					break;
+				if (LWPathNameCompare(startp + startOff, endp + endOff, startRoot - startOff))
+					break;
+				startOff = startRoot + 1;
+				endOff = endRoot + 1;
+			}
+			if (level < startCnt)
+			{
+				notchesUp = level;
+				endCnt -= startCnt - level;
+		
+				err = LWPathResize(relPath, notchesUp * 3 + endLen - endOff);
+				if (!err)
+				{
+					MoveBlock(endp + endOff, LWPathBuf(*relPath) + notchesUp * 3, endLen - endOff);
+					for (level = 0; level < notchesUp; level++)
+					{
+						*endp++ = '.';
+						*endp++ = '.';
+						*endp++ = kPathSeperator;
+					}
+					LWPathCntSet(*relPath, endCnt + notchesUp);
+					LWPathLenSet(*relPath, notchesUp * 3 + endLen - endOff);
+					LWPathTypeSet(*relPath, fRelPath);
+				}
+			}
+			else
+			{
+				// We can't create a relative path between two absolute paths on different volumes/shares
 			}
 		}
 	}
 	return err;
 }
-
-/*
-TH_REENTRANT MgErr FRelPath(Path start, Path end, Path relPath)
-	{
-	int16 startCount, endCount, level, notchesUp;
-	int16 length, totalLength, remainingEndCount, i, err;
-	uChar *startp, *endp;
-
-	if (!(FIsAbsPath(start) && FIsAbsPath(end) && relPath))
-		return mgArgErr;
-	startCount = PathCnt(start);
-	endCount = PathCnt(end);
-	startp = PathBuf(start);
-	endp = PathBuf(end);
-	for(level=startCount; level>0; level--) {
-		if(!FileNameEqual(startp, endp))
-			break;
-		startp += PStrLen(startp) + 1;
-		endp += PStrLen(endp) + 1;
-		}
-	notchesUp = level;
-	length = 0;
-	remainingEndCount = endCount-(startCount-level);
-	for(level = remainingEndCount; level>0; level--) {
-		length += *endp+1;
-		endp += *endp+1;
-		}
-	totalLength = length + notchesUp + sizeof(PathType(start)) + sizeof(PathCnt(start));
-	if(totalLength > AZGetHandleSize(relPath)) {
-		endp -= (int32)PathBuf(end);
-		if(err= AZSetHandleSize(relPath, totalLength))
-			return err;
-		endp += (int32)PathBuf(end);
-		MoveBlock(endp-length, PathBuf(relPath)+notchesUp, length);
-		}
-	else {
-		MoveBlock(endp-length, PathBuf(relPath)+notchesUp, length);
-		AZSetHandleSize(relPath, totalLength);
-		}
-	PathType(relPath) = fRelPath;
-	PathCnt(relPath) = remainingEndCount+notchesUp;
-	for(i=0, endp=PathBuf(relPath); i<notchesUp; i++)
-		*endp++ = 0;
-	return 0;
-	}
-*/
 
 #define kFlatPathCode	RTToL('P','T','H','0')
 
@@ -1028,18 +1036,18 @@ Call with fp==NULL to preflight for size information.
 */
 LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int32 *length)
 {
-	LWChar *src = LWPathBuf(*pathName);
-	int32 srcLen = LWPathLenGet(*pathName);
-	int32 offset = 0, after = 0, extLen = 0, len = length && *length ? *length - 12 : 0;
-	uInt8 pathFlags = 0;
 	MgErr err = noErr;
+	LWChar *srcPtr = LWPathBuf(*pathName);
+	int32 srcLen = LWPathLenGet(*pathName);
+	int32 srcOff = 0, srcRoot = 0, extLen = 0, bufLen = length && *length ? *length - 12 : 0;
+	uInt8 pathFlags = 0;
+	uInt8 pathType = LWPathTypeGet(*pathName);
+	uInt16 cnt = 0;
 	
-	if (*pathName)
+	if (srcLen)
 	{
-		uInt8 pathType = fNotAPath;
-	
-		offset = HasNTFSDevicePrefix(src, srcLen),
-		after = LWPtrRootLen(src, srcLen, offset, &pathType);
+		srcOff = HasNTFSDevicePrefix(srcPtr, srcLen);
+		srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, &pathType);
 
 		if (flags & kFlattenUnicode)
 		{
@@ -1057,31 +1065,34 @@ LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int3
 				/* /path/path => \04path\04path, do nothing */
 				break;
 			case fRelPath:
+				/* for each up level add an extra byte */
+				srcOff = LWPtrUpMatches(srcPtr, srcLen, srcRoot);
+				extLen += (srcOff - srcRoot + 1) / 3;
 				/* path\path => \04path\04path, add an extra len for the first Pascal length */
-				/* path/path => \04path\04path, add an extra len for the first Pascal length */
+				/* path/path => \04patsh\04path, add an extra len for the first Pascal length */
 				extLen++;
 				break;
 			case fNotAPath:
-				len = -1;
+				bufLen = -1;
 				break;
 			case fUNCPath:
 				extLen = 3;
 #if Win32 && !Pharlap
-				if (!offset)
+				if (!srcOff)
 #endif
 				{
 					/* \\server\share\path => \016//server/share\04path, add an extra len for first Pascal length */
 					/* //server/share/path => \016//server/share\04path, add an extra len for first Pascal length */
-					offset = 2;
+					srcOff = 2;
 				}
 				break;
 		}	
-		if (!len)
+		if (!bufLen)
 		{
 #if Win32 && !Pharlap
-			err = WideCStrToMultiByteBuf(src + offset, srcLen - offset, NULL, &len, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
+			err = WideCStrToMultiByteBuf(srcPtr + srcOff, srcLen - srcOff, NULL, &bufLen, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
 #else
-			err = ConvertCStringBuf(src + offset, srcLen - offset, GetCurrentCodePage(CP_ACP), NULL, &len, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
+			err = ConvertCStringBuf(srcPtr + srcOff, srcLen - srcOff, GetCurrentCodePage(CP_ACP), NULL, &bufLen, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
 #endif
 		}
 	}
@@ -1091,82 +1102,86 @@ LibAPI(MgErr) LWPathFlatten(LWPathHandle *pathName, uInt32 flags, UPtr dst, int3
 
 		SetALong(ptr, kFlatPathCode);
 		ptr += 4;
-		SetALong(ptr, 4 + extLen + len);
+		SetALong(ptr, 4 + extLen + bufLen);
 		LToStd(ptr);
 		ptr += 4;
+		*ptr++ = pathFlags;
+		*ptr++ = pathType;
 
-		if (*pathName)
+		if (srcLen && bufLen > 0)
 		{
-			uInt16 cnt = 0;
+			UPtr end, lPtr;
 
-			*ptr++ = pathFlags;
-			*ptr++ = LWPathTypeGet(*pathName);
-			if (len > 0)
+			// Skip cnt for now
+			ptr += 2;
+
+			if (extLen)
 			{
-				UPtr end, lPtr;
-
-				// Skip cnt for now
-				ptr += 2;
-
-				if (extLen)
+				switch (pathType)
 				{
-					ptr++; // Skip length byte for now
-					if (extLen == 3)
-					{
+					case fRelPath:
+						ClearMem(ptr, extLen * sizeof(LWChar));
+						ptr += extLen;
+						break;
+					case fUNCPath:
+						ptr++; // Skip length byte for now
 						*ptr++ = kPathSeperator;
 						*ptr++ = kPathSeperator;
-					}
+						break;
+					default:
+						ptr++; // Skip length byte for now
 				}
+			}
 #if Win32 && !Pharlap
-				err = WideCStrToMultiByteBuf(src + offset, srcLen - offset, ptr, &len, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
+			err = WideCStrToMultiByteBuf(srcPtr + srcOff, srcLen - srcOff, ptr, &bufLen, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
 #else
-				err = ConvertCStringBuf(src + offset, srcLen - offset, GetCurrentCodePage(CP_ACP), ptr, &len, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
+			err = ConvertCStringBuf(srcPtr + srcOff, srcLen - srcOff, GetCurrentCodePage(CP_ACP), ptr, &bufLen, pathFlags ? CP_UTF8 : GetCurrentCodePage(CP_ACP), 0, NULL);
 #endif
 #if Win32
-				if (!extLen)
-				{
-					ptr[1] = ptr[0];
-				}
-#endif
-				ptr = dst + 4;
-				SetALong(ptr, 4 + extLen + len);
-				LToStd(ptr);
-				
-				ptr = dst + 12;
-				end = ptr + extLen + len;
-
-				if (extLen == 3)
-				{
-					lPtr = ptr;
-					ptr += extLen; // Skip over the length byte and the two seperators
-					// search two separators for UNC server and share
-					for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
-					*ptr++ = kPathSeperator;
-					offset++;
-					for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
-					*lPtr = (uInt8)(ptr - lPtr - 1);
-					cnt++;
-				}
-				
-				while (ptr < end)
-				{
-					lPtr = ptr++; // Skip over the length byte
-					for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
-					*lPtr = (uInt8)(ptr - lPtr - 1);
-					cnt++;
-				}
-				ptr = dst + 10;
+			if (!extLen)
+			{
+				ptr[1] = ptr[0];
 			}
-			SetAWord(ptr, cnt);
-			WToStd(ptr);
+#endif
+			ptr = dst + 4;
+			SetALong(ptr, 4 + extLen + bufLen);
+			LToStd(ptr);
+			
+			ptr = dst + 12;
+			end = ptr + extLen + bufLen;
+
+			if (pathType == fRelPath)
+			{
+				cnt = (uInt16)(extLen - 1);
+				ptr += (extLen - 1);
+			}
+			else if (pathType == fUNCPath)
+			{
+				lPtr = ptr;
+				ptr += extLen; // Skip over the length byte and the two seperators
+				// search two separators for UNC server and share
+				for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
+				*ptr++ = kPathSeperator;
+				srcOff++;
+				for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
+				*lPtr = (uInt8)(ptr - lPtr - 1);
+				cnt++;
+			}
+				
+			while (ptr < end)
+			{
+				lPtr = ptr++; // Skip over the length byte
+				for (;ptr < end && *ptr && !IsSeperator(*ptr); ptr++);
+				*lPtr = (uInt8)(ptr - lPtr - 1);
+				cnt++;
+			}
+			ptr = dst + 10;
 		}
-		else
-		{
-			SetALong(ptr, 0L);
-		}
+		SetAWord(ptr, cnt);
+		WToStd(ptr);
 	}
 	if (length)
-		*length = 12 + (extLen + len > 0 ? extLen + len : 0);
+		*length = 12 + extLen + bufLen;
 	return noErr;
 }
 
@@ -1279,7 +1294,7 @@ LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, int32 rese
 	MgErr err = FGetPathType(pathName, &type);
 	if (!err)
 	{
-		if (type != fNotAPath || FDepth(pathName))
+		if (type != fNotAPath && FDepth(pathName))
 		{
 			LStrPtr lstr;
 		    int32 bufLen = -1;

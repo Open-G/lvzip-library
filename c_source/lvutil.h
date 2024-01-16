@@ -133,7 +133,8 @@ typedef struct {				/* off */
 	uInt16 unixFlags;			/* 82: Unix compatible flags */
 	uInt32 macFlags;			/* 84: MacOSX extra file flags */
 	uInt32 fileType;			/* 88: LabVIEW file type flags */
-} FileInfoRec, *FileInfoPtr;	/* 92: Total length */
+	uInt32 nLink;				/* 92: LabVIEW file type flags */
+} FileInfoRec, *FileInfoPtr;	/* 96: Total length */
 
 /* Retrieve file information from the path */
 LibAPI(MgErr) LVFile_FileInfo(LWPathHandle *path, uInt8 write, FileInfoPtr fileInfo);
