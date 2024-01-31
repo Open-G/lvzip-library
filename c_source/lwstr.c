@@ -92,7 +92,7 @@ static int32 LWPtrUNCOffset(const LWChar *ptr, int32 offset, int32 len)
 }
 
 /* Returns:
-   >= 0 for a valid absolute path, with 0 being the canonical root path and > 0 indicating the length of the first path element
+   >= 0 for a valid path, with 0 being the canonical root path and > 0 indicating the length of the first path element
  */
 DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *type)
 {
@@ -285,18 +285,12 @@ int32 LWPtrUpMatches(const LWChar *ptr, int32 len, int32 off)
 	return off <= len ? off : len;
 }
 
-int32 LWPtrParentInternal(const LWChar *ptr, int32 len, int32 rootLen)
+int32 LWPtrParent(const LWChar *ptr, int32 len, int32 rootLen)
 {
+	if (rootLen < 0)
+		rootLen = LWPtrRootLen(ptr, len, -1, NULL);
 	while (--len > rootLen && !IsSeperator(ptr[len]));
 	return len;
-}
-
-int32 LWPtrParent(const LWChar *ptr, int32 len)
-{
-	int32 rootLen = LWPtrRootLen(ptr, len, -1, NULL);
-	if (rootLen >= -1)
-		return LWPtrParentInternal(ptr, len, rootLen);
-	return -1;
 }
 
 int32 LWPtrDepth(const LWChar *ptr, int32 len, int32 offset, int32 rootLen)
@@ -305,10 +299,14 @@ int32 LWPtrDepth(const LWChar *ptr, int32 len, int32 offset, int32 rootLen)
 
 	while (len && len > rootLen)
 	{
-		len = LWPtrParentInternal(ptr, len, rootLen);
+		len = LWPtrParent(ptr, len, rootLen);
 		i++;
 	}
-	return len > offset ? i + 1 : i;
+#if Win32
+	return (len > offset) ? i + 1 : i;
+#else
+	return (len > (offset + 1)) ? i + 1 : i;
+#endif
 }
 
 Bool32 LWPtrIsOfType(const LWChar *ptr, int32 len, int32 offset, uInt8 isType)
@@ -318,7 +316,21 @@ Bool32 LWPtrIsOfType(const LWChar *ptr, int32 len, int32 offset, uInt8 isType)
 	return (type == isType);
 }
 
-DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *lwstr, int32 reserve)
+#if DEBUG
+int32 LWPathLenSet(LWPathHandle h, int32 numChar)
+{
+	int32 len = LWPathHdlSzNumChr(numChar);
+	if (!h || !*h || DSGetHandleSize((UHandle)h) < len)
+	{
+		DoDebugger();
+	}
+	(*(h))->size = LWPathByteSize(numChar);
+	(*(h))->str[numChar] = 0;
+	return len;
+}
+#endif
+
+DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *lwstr, int32 extraChar)
 {
 	MgErr err = noErr;
 	int32 len = ((sizeof(gNotAPath) / sizeof(LWChar)) - 1);
@@ -330,7 +342,7 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 			  srcRoot = LWPtrRootLen(srcPtr, srcLen, srcOff, &type);
 
 #if Unix || MacOSX
-		if (!srcLen || (srcLen == 1 && srcPtr[0] == kPathSeperator))
+		if (!srcLen || (srcLen == 1 && srcPtr[srcOff] == kPathSeperator))
 		{
 			srcLen = 0;
 			// we want to make the path at least contain a seperater
@@ -366,7 +378,7 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 		}
 #endif
 #endif
-		err = LWPathResize(lwstr, srcLen + xtrLen + reserve);
+		err = LWPathResize(lwstr, srcLen + xtrLen, extraChar);
 		if (!err)
 		{
 			if (xtrLen)
@@ -378,7 +390,7 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 				LWPathNCat(lwstr, 0, L"\\\\?\\UNC\\", xtrLen);
 #endif
 #else
-				LWPathNCat(lwstr, 0, "/", xtrLen);
+				LWPathNCat(lwstr, 0, "//", xtrLen);
 #endif
 			}
 
@@ -392,7 +404,7 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 	else
 	{
 		srcLen = 0;
-		err = LWPathResize(lwstr, 0);
+		err = LWPathResize(lwstr, 0, 0);
 	}
 	if (!err)
 	{
@@ -404,12 +416,13 @@ DebugAPI(MgErr) LWPtrToLWPath(const LWChar *srcPtr, int32 srcLen, LWPathHandle *
 	return err;
 }
 
-DebugAPI(MgErr) LWPathResize(LWPathHandle *lwstr, size_t numChar)
+DebugAPI(MgErr) LWPathResize(LWPathHandle *lwstr, size_t numChar, size_t extraChar)
 {
-	int32 len = (int32)(offsetof(LWPathRec, str) + (numChar + 1) * sizeof(LWChar));
+	int32 tmp, len = LWPathHdlSzNumChr(numChar + extraChar);
 	if (*lwstr)
 	{
-		if (DSGetHandleSize((UHandle)*lwstr) < len)
+		tmp = DSGetHandleSize((UHandle)*lwstr);
+		if (tmp < len)
 			DSSetHandleSize((UHandle)*lwstr, len);
 	}
 	else
@@ -417,6 +430,7 @@ DebugAPI(MgErr) LWPathResize(LWPathHandle *lwstr, size_t numChar)
 		*lwstr = (LWPathHandle)DSNewHandle(len);
 		if (!*lwstr)
 			return mFullErr;
+		/* only initialize the path header */
 		ClearMem((UPtr)(**lwstr), offsetof(LWPathRec, str));
 	}
 	return mgNoErr;
@@ -425,8 +439,8 @@ DebugAPI(MgErr) LWPathResize(LWPathHandle *lwstr, size_t numChar)
 DebugAPI(MgErr) LWPathCopy(LWPathHandle *dst, LWPathHandle src)
 {
 	MgErr err = mgNoErr;
-	size_t size = LWPathSize(src);
-	if (size)
+	size_t size = LWPathHdlSzHandle(src);
+	if (size >= LWPathByteLength(0))
 	{
 		if (*dst)
 		{
@@ -446,6 +460,10 @@ DebugAPI(MgErr) LWPathCopy(LWPathHandle *dst, LWPathHandle src)
 	}
 	else if (*dst)
 	{
+#if DEBUG
+		if (size > 0)
+			DoDebugger();
+#endif
 		DSDisposeHandle((UHandle)*dst);
 		*dst = NULL;
 	}
@@ -466,7 +484,7 @@ DebugAPI(MgErr) LWPathDispose(LWPathHandle *lwstr)
 MgErr LWPathZeroTerminate(LWPathHandle *pathName, int32 len)
 {
 	int32 newLen = len < 0 ? LWPathLenGet(*pathName) : len;
-	MgErr err = LWPathResize(pathName, newLen);
+	MgErr err = LWPathResize(pathName, newLen, 0);
 	if (!err && newLen >= 0)
 	{
 		LWPathLenSet(*pathName, newLen);
@@ -656,7 +674,7 @@ MgErr LWPathNCat(LWPathHandle *lwstr, int32 offset, const LWChar *str, int32 str
 	if (offset && !IsSeperator(srcPtr[offset - 1]) && !IsSeperator(str[0]))
 		xtrLen = 1;
 
-	err = LWPathResize(lwstr, offset + strLen + xtrLen);
+	err = LWPathResize(lwstr, offset + strLen + xtrLen, 0);
 	if (!err)
 	{
 		uInt8 type;
@@ -687,12 +705,11 @@ MgErr LWPathAppendSeperator(LWPathHandle lwstr, int32 len)
 
 	if (!IsSeperator(LWPathBuf(lwstr)[len - 1]))
 	{
-		err =  LWPathResize(&lwstr, len + 2);
+		err =  LWPathResize(&lwstr, len, 1);
 		if (!err)
 		{
-			LWPathBuf(lwstr)[len] = kPathSeperator;
-			LWPathLenSet(lwstr, ++len);
-			LWPathBuf(lwstr)[len] = 0;
+			LWPathBuf(lwstr)[len++] = kPathSeperator;
+			LWPathLenSet(lwstr, len);
 		}
 	}
 	return err;
@@ -734,7 +751,7 @@ LibAPI(MgErr) LWPathParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVB
 		LWPathLenSet(*filePath, --srcLen);
 
 	// If the path is empty, invalid or just containing the relative path prefix, there is nothing we can do with this path
-	if ((srcLen <= srcOff) || (srcType == fNotAPath) ||
+	if ((srcLen <= srcOff) || (srcType == fNotAPath) || !srcCnt ||
 		((srcType == fRelPath) && (srcLen == srcRoot + 1) && (srcPtr[srcRoot] == kRelativePathPrefix)))
 		return mgArgErr;
 
@@ -744,10 +761,13 @@ LibAPI(MgErr) LWPathParentPath(LWPathHandle *filePath, LStrHandle *fileName, LVB
 	srcCnt--;
 	if (srcRoot < srcLen)
 	{
-		offset = LWPtrParentInternal(srcPtr, srcLen, srcRoot);
+		offset = LWPtrParent(srcPtr, srcLen, srcRoot);
 		if (empty)
+#if usesWinPath
 			*empty = (LVBoolean)(srcOff >= offset);
-
+#else
+			*empty = (LVBoolean)(srcRoot >= offset);
+#endif
 		/*															cntin	root	cntout
 			C:\test				C:\				test				  2		 3		   1
 			C:\test\test		C:\test			test				  3		 3		   2
@@ -855,7 +875,7 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWCha
 			int32 i, cnt = (relOff - relRoot + 1) / 3;
 			for (i = 0; i < cnt && srcLen > srcRoot; i++)
 			{
-				srcLen = LWPtrParentInternal(srcPtr, srcLen, srcRoot);
+				srcLen = LWPtrParent(srcPtr, srcLen, srcRoot);
 			}
 			if (i < cnt)
 				return mgArgErr;
@@ -871,7 +891,7 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWCha
 	}
 
 #if usesWinPath
-	if (srcCnt && !IsSeperator(srcPtr[srcLen - 1]))
+	if (relCnt && srcCnt && !IsSeperator(srcPtr[srcLen - 1]))
 	{
 		xtrLen = 1;
 	}
@@ -887,16 +907,13 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWCha
 	}
 #endif
 
-	if (srcPath != tmpPath || relCnt)
-	{
-		err = LWPathResize(&tmpPath, srcLen + relLen - relOff + xtrLen);
-	}
+	err = LWPathResize(&tmpPath, srcLen + relLen - relOff + xtrLen, 0);
 	if (!err)
 	{
 		if (srcPath != tmpPath && (srcCnt || relType == fRelPath))
 		{
 			// We have a new destination path with a valid source path, copy it over
-			MoveBlock(*srcPath, *tmpPath, srcLen * sizeof(LWChar) + 2 * sizeof(int32));
+			MoveBlock(*srcPath, *tmpPath, srcLen * sizeof(LWChar) + offsetof(LWPathRec, str));
 		}
 		else if (!srcCnt && relType != fRelPath)
 		{
@@ -925,7 +942,7 @@ MgErr LWPathAppend(LWPathHandle srcPath, int32 end, LWPathHandle *newPath, LWCha
 		}
 		LWPathCntSet(tmpPath, srcCnt + relCnt);
 		LWPathLenSet(tmpPath, srcLen);
-		if (newPath)
+		if (newPath && *newPath != tmpPath)
 			*newPath = tmpPath;
 	}
 	return err;
@@ -996,7 +1013,7 @@ LibAPI(MgErr) LWPathRelativePath(LWPathHandle *startPath, LWPathHandle *endPath,
 				notchesUp = level;
 				endCnt -= startCnt - level;
 		
-				err = LWPathResize(relPath, notchesUp * 3 + endLen - endOff);
+				err = LWPathResize(relPath, notchesUp * 3 + endLen - endOff, 0);
 				if (!err)
 				{
 					MoveBlock(endp + endOff, LWPathBuf(*relPath) + notchesUp * 3, endLen - endOff);
@@ -1210,7 +1227,7 @@ LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName, uI
 
 		return err;
 	}
-	return LWPathResize(pathName, 0);
+	return LWPathResize(pathName, 0, 0);
 }
 
 static ResType LWPathFileTypeFromExt(LWPathHandle lwstr)
@@ -1266,7 +1283,7 @@ DebugAPI(MgErr) LStrPtrToLWPath(const UPtr string, int32 len, uInt32 codePage, L
 #elif Unix || MacOSX || Pharlap
 		err = ConvertCString(string, len, codePage, (LStrHandle*)&temp, CP_UTF8, '?', NULL);
 #else
-		err = MultiByteCStrToWideString(string, len, (WStrHandle*)&temp, codePage);
+		err = MultiByteCStrToWideString(string, len, codePage, (WStrHandle*)&temp);
 #endif
 	}
 	if (!err)
@@ -1302,7 +1319,7 @@ LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, int32 rese
 			err = FPathToText(pathName, (LStrPtr)&bufLen);
 			if (!err)
 			{
-				lstr = (LStrPtr)DSNewPClr(sizeof(int32) + bufLen);
+				lstr = (LStrPtr)DSNewPtr(sizeof(int32) + bufLen);
 				if (!lstr)
 					return mFullErr;
 				LStrLen(lstr) = bufLen;
@@ -1315,7 +1332,7 @@ LibAPI(MgErr) LPathToLWPath(const Path pathName, LWPathHandle *lwstr, int32 rese
 		}
 		else
 		{
-			err = LWPathResize(lwstr, 0);
+			err = LWPathResize(lwstr, 0, 0);
 			if (!err)
 			{
 				LWPathLenSet(*lwstr, 0);
@@ -1547,7 +1564,7 @@ static MgErr ConvertCStringBuf(ConstCStr src, int32 srcLen, uInt32 srccp, UPtr p
 		err = unix_convert_mbtomb(src, srcLen, srccp, ptr, length, dstcp, defaultChar, defUsed);
 #else
 		WStrHandle ustr = NULL;
-		err = MultiByteCStrToWideString(src, srcLen, &ustr, srccp);
+		err = MultiByteCStrToWideString(src, srcLen, srccp, &ustr);
 		if (!err && ustr)
 		{
 			err = WideCStrToMultiByteBuf(LWStrBuf(ustr), LWStrLen(ustr), ptr, length, dstcp, defaultChar, defUsed);
@@ -1597,7 +1614,7 @@ LibAPI(MgErr) ConvertCString(ConstCStr src, int32 srcLen, uInt32 srccp, LStrHand
 		}
 #else
 		WStrHandle ustr = NULL;
-		err = MultiByteCStrToWideString(src, srcLen, &ustr, srccp);
+		err = MultiByteCStrToWideString(src, srcLen, srccp, &ustr);
 		if (!err && ustr)
 		{
 			err = WideStringToMultiByte(ustr, dest, dstcp, defaultChar, defUsed);
@@ -1842,7 +1859,7 @@ MgErr CStrToPosixPath(ConstCStr src, int32 len, uInt32 srccp, LStrHandle *dest, 
 	if (src && len && dest)
 	{
 		WStrHandle temp = NULL;
-		MgErr err = MultiByteCStrToWideString(src, len, &temp, srccp);
+		MgErr err = MultiByteCStrToWideString(src, len, srccp, &temp);
 		if (!err)
 		{
 			uInt8 type = fNotAPath;
@@ -2248,7 +2265,7 @@ static MgErr unix_convert_wtomb(const wchar_t *src, int32 srclen, UPtr dest, int
 #endif
 #endif
 
-LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle *dest, uInt32 codePage)
+LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, uInt32 codePage, WStrHandle *dest)
 {
 	if (*dest)
 		WStrLenSet(*dest, 0);
@@ -2302,9 +2319,9 @@ LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle 
 	return mgNoErr;
 }
 
-LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, WStrHandle *dest, uInt32 codePage)
+LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, uInt32 codePage, WStrHandle *dest)
 {
-	return MultiByteCStrToWideString(LStrBuf(*src), LStrLen(*src), dest, codePage);
+	return MultiByteCStrToWideString(LStrBuf(*src), LStrLen(*src), codePage, dest);
 }
 
 LibAPI(MgErr) ZeroTerminateLString(LStrHandle *dest)

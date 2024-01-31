@@ -65,7 +65,7 @@
 			Name="DLL Debug|Win32"
 			>
 			<DebugSettings
-				Command="C:\Program Files (x86)\National Instruments\LabVIEW 7.0\LabVIEW.exe"
+				Command="C:\Program Files (x86)\National Instruments\LabVIEW 8.6\LabVIEW.exe"
 				WorkingDirectory=""
 				CommandArguments=""
 				Attach="false"
@@ -93,7 +93,7 @@
 			Name="DLL Debug|x64"
 			>
 			<DebugSettings
-				Command=""
+				Command="C:\Program Files\National Instruments\LabVIEW 2009\LabVIEW.exe"
 				WorkingDirectory=""
 				CommandArguments=""
 				Attach="false"
@@ -106,7 +106,7 @@
 				SQLDebugging=""
 				Environment=""
 				EnvironmentMerge="true"
-				DebuggerFlavor=""
+				DebuggerFlavor="0"
 				MPIRunCommand=""
 				MPIRunArguments=""
 				MPIRunWorkingDirectory=""

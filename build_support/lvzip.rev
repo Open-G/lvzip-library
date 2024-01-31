@@ -1,7 +1,7 @@
 [lvzip.ogbld]
 Version=5.0.0
-Build_Number=70
-Build_Date="18-12-2023 0:35:16"
+Build_Number=94
+Build_Date="16-1-2024 22:42:34"
 Status=OK
 Warnings=1
 Log_File=/Z/openg-lvzip/openg-lvzip/built/lvzip.log

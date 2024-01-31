@@ -54,12 +54,29 @@ typedef char			LWChar;
 #endif
 #define	LW(quote)		__LW(quote)
 
+typedef struct LWPATHREC
+{
+	int32 size;			/* In order to be able to pass this as a byte array/string handle we always use size in bytes */
+						/* The real buffer is at least one character (1 or 2 bytes) longer for the terminating NULL character */
+	int8 flags;			/* If highest significant bit is set we have a Unicode path */
+	int8 type;			/* LabVIEW path structure uses an int16 for path type stored in big endian format in the flattened stream */
+	int16 pathCnt;		/* Number of path segements in the path */
+	LWChar str[1];		/* actual path, widechar in windows, 8 bits in all other platforms */
+} LWPathRec, *LWPathPtr, **LWPathHandle;
 
-#define LWPathSize(h)        (((h) && *(h)) ? ((*(h))->size + sizeof(int32) + sizeof(LWChar)) : 0)
+/* The size of the actual path and path header + the size integer */
+#define LWPathByteLength(n)	 (int32)(((n) * sizeof(LWChar)) + offsetof(LWPathRec, str))
+#define LWPathHdlSzHandle(h) (((h) && *(h)) ? (int32)((*(h))->size + sizeof(int32) + sizeof(LWChar)) : 0)
+/* The size of the actual path and path header + the size integer + and extra zero termination character */
+#define LWPathHdlSzNumChr(n) LWPathByteLength(n + 1)
 
+#define LWPathByteSize(n)	 (int32)(((n) * sizeof(LWChar)) + offsetof(LWPathRec, str) - sizeof(int32))
 #define LWPathLenGet(h)      (((h) && *(h) && (*(h))->size) ? (int32)(((*(h))->size - offsetof(LWPathRec, str) + sizeof(int32)) / sizeof(LWChar)) : 0)
-#define LWPathLenSet(h, l)   ((*(h))->size = (int32)(((l) * sizeof(LWChar)) + offsetof(LWPathRec, str) - sizeof(int32)), (*(h))->str[l] = 0)
-
+#ifndef DEBUG
+#define LWPathLenSet(h, n)   ((*(h))->size = LWPathByteSize(n), (*(h))->str[n] = 0)
+#else
+int32 LWPathLenSet(LWPathHandle h, int32 n);
+#endif
 #define LWPathCntGet(h)      (((h) && *(h)) ? (*(h))->pathCnt : 0)
 #define LWPathCntSet(h, c)   (((h) && *(h)) ? (*(h))->pathCnt = (uInt16)(c) : 0)
 #define LWPathCntInc(h)      (((h) && *(h)) ? ++((*(h))->pathCnt) : 0)
@@ -89,16 +106,6 @@ typedef char			LWChar;
 #endif /* struct alignment set */
 
 #define kFlagUnicode	0x80
-
-typedef struct LWPATHREC
-{
-	int32 size;			/* In order to be able to pass this as a byte array/string handle we always use size in bytes */
-						/* The real buffer is at least one character (1 or 2 bytes) longer for the terminating NULL character */
-	int8 flags;			/* If highest significant bit is set we have a Unicode path */
-	int8 type;			/* LabVIEW path structure uses an int16 for path type stored in big endian format in the flattened stream */
-	int16 pathCnt;		/* Number of path segements in the path */
-	LWChar str[1];		/* actual path, widechar in windows, 8 bits in all other platforms */
-} LWPathRec, *LWPathPtr, **LWPathHandle;
 
 typedef struct WSTRREC
 {
@@ -147,8 +154,7 @@ typedef struct LWSTRREC
 #endif
 
 DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *type);
-DebugAPI(int32) LWPtrParentInternal(const LWChar *ptr, int32 len, int32 rootLen);
-DebugAPI(int32) LWPtrParent(const LWChar *ptr, int32 len);
+DebugAPI(int32) LWPtrParent(const LWChar *ptr, int32 len, int32 rootLen);
 DebugAPI(int32) LWPtrDepth(const LWChar *ptr, int32 len, int32 offset, int32 rootLen);
 DebugAPI(int32) LWPtrNextElement(const LWChar *ptr, int32 len, int32 start);
 DebugAPI(Bool32) LWPtrIsOfType(const LWChar *ptr, int32 len, int32 offset, uInt8 isType);
@@ -160,7 +166,7 @@ DebugAPI(MgErr) LWPathAppendUStr(LWPathHandle *pathName, int32 end, const LStrHa
 DebugAPI(MgErr) LWPathGetFileTypeAndCreator(LWPathHandle pathName, ResType *fType, ResType *fCreator);
 DebugAPI(MgErr) LWPathZeroTerminate(LWPathHandle *pathName, int32 len);
 
-DebugAPI(MgErr) LWPathResize(LWPathHandle *buf, size_t numChar);
+DebugAPI(MgErr) LWPathResize(LWPathHandle *buf, size_t numChar, size_t extraChar);
 DebugAPI(MgErr) LWPathCopy(LWPathHandle *dst, LWPathHandle src);
 DebugAPI(MgErr) LWPathDispose(LWPathHandle *lwstr);
 DebugAPI(MgErr) LWPathNCat(LWPathHandle *lwstr, int32 off, const LWChar *str, int32 strLen);
@@ -201,8 +207,8 @@ LibAPI(MgErr) LWPathUnflatten(UPtr ptr, int32 length, LWPathHandle *pathName, uI
 
 LibAPI(uInt32) GetCurrentCodePage(uInt32 codePage);
 LibAPI(LVBoolean) HasExtendedASCII(LStrHandle string);
-LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, WStrHandle *dest, uInt32 codePage);
-LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, WStrHandle *dest, uInt32 codePage);
+LibAPI(MgErr) MultiByteCStrToWideString(ConstCStr src, int32 srclen, uInt32 codePage, WStrHandle *dest);
+LibAPI(MgErr) MultiByteToWideString(const LStrHandle src, uInt32 codePage, WStrHandle *dest);
 LibAPI(MgErr) WideStringToMultiByte(const WStrHandle src, LStrHandle *dest, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
 LibAPI(MgErr) WideCStrToMultiByte(const wchar_t *src, int32 srclen, LStrHandle *dest, int32 offset, uInt32 codePage, char defaultChar, LVBoolean *defaultCharWasUsed);
 

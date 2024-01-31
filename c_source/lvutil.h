@@ -78,7 +78,6 @@ typedef union
 #define kListArchiveTopLvl		1
 #define kListArchiveAll			2
 
-
 /* Check if the file pathName points to has a resource fork, only on Mac */
 LibAPI(MgErr) LVFile_HasResourceFork(LWPathHandle *pathName, LVBoolean *hasResFork, FileOffset *size);
 
@@ -140,7 +139,6 @@ typedef struct {				/* off */
 LibAPI(MgErr) LVFile_FileInfo(LWPathHandle *path, uInt8 write, FileInfoPtr fileInfo);
 
 /* Creation flags */
-#define kLinkSoft       0x00
 #define kLinkHard       0x01
 #define kLinkDir		0x02
 

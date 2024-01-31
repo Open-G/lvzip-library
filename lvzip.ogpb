@@ -23,8 +23,8 @@ Files 14="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-string compress.vi"
 
 [Package Name]
 Name=oglib_lvzip
-Version=5.0
-Release=rc2
+Version=5.0.0
+Release=rc1
 Display Name="OpenG LabVIEW ZIP Library"
 
 [Description]
