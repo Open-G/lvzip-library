@@ -24,14 +24,14 @@ Files 14="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-string compress.vi"
 [Package Name]
 Name=oglib_lvzip
 Version=5.0.0
-Release=rc1
+Release=1
 Display Name="OpenG LabVIEW ZIP Library"
 
 [Description]
 Description="The lvzip package contains several routines for operating on zip files.\0D\0A"
 Summary="OpenG Zip Tools"
 License="BSD (VIs), LGPL (Shared Library)"
-Copyright="1995-2023 Jean-loup Gailly and Mark Adler\0A1998-2017 Gilles Vollant\0A2009-2010 Mathias Svensson\0A2010-2017 Nathan Moinvaziri\0A2002-2009 Christophe Salzmann, Jim Kring\0A2002-2023 Rolf Kalbermatter"
+Copyright="1995-2023 Jean-loup Gailly and Mark Adler\0A1998-2017 Gilles Vollant\0A2009-2010 Mathias Svensson\0A2010-2017 Nathan Moinvaziri\0A2002-2009 Christophe Salzmann, Jim Kring\0A2002-2024 Rolf Kalbermatter"
 Distribution="OpenG Toolkit"
 Vendor=OpenG.org
 URL=http://wiki.openg.org/oglib_lvzip
@@ -62,7 +62,7 @@ PostInstall=PostInstall.vi
 PreUninstall=PreUninstall.vi
 PostUninstall=""
 Verify=""
-PreBuild=""
+PreBuild=PreBuild.vi
 PostBuild=""
 
 [Dependencies]
@@ -88,16 +88,6 @@ Replace Mode=Always
 Num Files=1
 File 0=readme.txt
 
-[SubMenus]
-Source Dir=source/submenus
-DirMode=0
-NameMode=0
-PPFix=""
-Target Dir=<OpenG.lib>/lvzip
-Replace Mode=Always
-Num Files=1
-File 0=*.mnu
-
 [FileUtils]
 Source Dir=built/lvzip/fileutil.llb
 DirMode=257
@@ -105,9 +95,8 @@ NameMode=0
 PPFix=""
 Target Dir=<OpenG.lib>/lvzip/fileutil.llb
 Replace Mode=Always
-Num Files=2
-File 0=*.vi
-File 1=*.ctl
+Num Files=1
+File 0=*.*
 
 [ArchiveFunctions]
 Source Dir=built/lvzip/lvzip.llb
@@ -116,9 +105,8 @@ NameMode=0
 PPFix=""
 Target Dir=<OpenG.lib>/lvzip/lvzip.llb
 Replace Mode=Always
-Num Files=2
-File 0=*.vi
-File 1=*.ctl
+Num Files=1
+File 0=*.*
 
 [MacBinary]
 Source Dir=built/lvzip/macbin.llb
@@ -127,9 +115,8 @@ NameMode=0
 PPFix=""
 Target Dir=<OpenG.lib>/lvzip/macbin.llb
 Replace Mode=Always
-Num Files=2
-File 0=*.vi
-File 1=*.ctl
+Num Files=1
+File 0=*.*
 
 [StringUtils]
 Source Dir=built/lvzip/stringutil.llb
@@ -139,7 +126,17 @@ PPFix=""
 Target Dir=<OpenG.lib>/lvzip/stringutil.llb
 Replace Mode=Always
 Num Files=1
-File 0=*.vi
+File 0=*.*
+
+[SubMenus]
+Source Dir=source/submenus
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<OpenG.lib>/lvzip
+Replace Mode=Always
+Num Files=1
+File 0=*.mnu
 
 [32-bit DLL]
 Source Dir="c_source/make.vs2005/Win32/DLL Release"
@@ -206,27 +203,7 @@ Replace Mode=Always
 Num Files=1
 File 0=*.*
 
-[File Group 11]
-Source Dir="Dynamic Palette MNUs"
-DirMode=0
-NameMode=0
-PPFix=""
-Target Dir=<menus>/Categories/OpenG
-Replace Mode=Always
-Num Files=1
-File 0=oglib_lvzip.mnu
-
-[File Group 12]
-Source Dir="Dynamic Palette MNUs"
-DirMode=0
-NameMode=0
-PPFix=""
-Target Dir=<user.lib>/_dynamicpalette_dirs/file
-Replace Mode=Always
-Num Files=1
-File 0=oglib_lvzip.mnu
-
-[File Group 13]
+[Dynamic Palette]
 Source Dir="Dynamic Palette MNUs"
 DirMode=0
 NameMode=0
@@ -235,4 +212,24 @@ Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
 Replace Mode=Always
 Num Files=1
 File 0=oglib_lvzip.mnu
+
+[Dynamic File Palette 1]
+Source Dir="Dynamic Palette MNUs"
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
+Replace Mode=Always
+Num Files=1
+File 0=oglib_fileutil.mnu
+
+[Dynamic File Palette 2]
+Source Dir="Dynamic Palette MNUs"
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<user.lib>/_dynamicpalette_dirs/file
+Replace Mode=Always
+Num Files=1
+File 0=oglib_fileutil.mnu
 
