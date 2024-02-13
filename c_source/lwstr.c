@@ -1955,14 +1955,15 @@ static MgErr unix_convert(iconv_t cd, const char *src, int32 srcLen, UPtr dest, 
 	MgErr err = noErr;
 	char *inbuf = (char*)src, *outbuf;
 	size_t retval, cbinleft, cboutleft;
+	int32 cboutlen = 0;
 
 	cbinleft = srcLen;
 
 	if (!dest || !*outLen)
 	{
-		char buffer[BUF_LENGTH],
+		char buffer[BUF_LENGTH];
+		cboutlen = 0;
 
-		*outLen = 0;
 		do
 		{
 			cboutleft = BUF_LENGTH;
@@ -1974,27 +1975,32 @@ static MgErr unix_convert(iconv_t cd, const char *src, int32 srcLen, UPtr dest, 
 				err = UnixToLVFileErr();
 				if (err == mFullErr)
 				{
-					*outLen += BUF_LENGTH - cboutleft;
+					cboutlen += BUF_LENGTH - cboutleft;
 				}
 			}
 			else
 			{
-				*outLen += BUF_LENGTH - cboutleft;
+				cboutlen += BUF_LENGTH - cboutleft;
 			}
 		}
 		while (err == mFullErr);
 	}
 	else
 	{
-		cboutleft = *outLen;
+		cboutlen = cboutleft = *outLen;
 		outbuf = (char*)dest;
 
 		retval = iconv(cd, &inbuf, &cbinleft, &outbuf, &cboutleft);
 		if (retval == (size_t)-1)
+		{
 			err = UnixToLVFileErr();
+		}
 		else
-			*outLen -= cboutleft;
+		{
+			cboutlen -= cboutleft;
+		}
 	}
+	*outLen = cboutlen;
 	return err;
 }
 
@@ -2010,11 +2016,15 @@ static MgErr unix_convert_wtomb(const wchar_t *src, int32 srcLen, UPtr dest, int
 		if (cd != (iconv_t)-1)
 		{
 			if (srcLen == -1)
+			{
 				srcLen = wcslen(src);
+			}
 
 			err = unix_convert(cd, (const char*)src, srcLen * sizeof(wchar_t), (char*)dest, outLen);
 			if (iconv_close(cd) != 0 && !err)
+			{
 				err = UnixToLVFileErr();
+			}
 		}
 		else
 		{
@@ -2032,10 +2042,13 @@ static MgErr unix_convert_mbtomb(const char *src, int32 srcLen, uInt32 srccp, UP
 	     *dcp = iconv_getcharset(dstcp);
 	Unused(defaultChar);
 	Unused(defaultCharWasUsed);
+
 	if (dcp && scp)
 	{
 		if (srcLen == -1)
+		{
 			srcLen = strlen(src);
+		}
 		if (strcasecmp(scp, dcp))
 		{
 			iconv_t cd = iconv_open(dcp, scp);
@@ -2043,7 +2056,9 @@ static MgErr unix_convert_mbtomb(const char *src, int32 srcLen, uInt32 srccp, UP
 			{
 				err = unix_convert(cd, src, srcLen, (char*)dest, outLen);
 				if (iconv_close(cd) != 0 && !err)
+				{
 					err = UnixToLVFileErr();
+				}
 			}
 			else
 			{
@@ -2052,7 +2067,10 @@ static MgErr unix_convert_mbtomb(const char *src, int32 srcLen, uInt32 srccp, UP
 		}
 		else
 		{
-			
+			if (*outLen > srcLen + 1)
+				*outLen = srcLen + 1;
+			if (dest)
+				memcpy(dest, src, *outLen);
 		}
 	}
 	free(scp);

@@ -533,13 +533,15 @@ LibAPI(MgErr) wchartoutf8(const wchar_t *src, int32 slen, uInt8 *dest, int32 *of
 #endif
 }
 
-static wchar_t testchar = 0x00B0;
+static wchar_t testchar = 0x00DF;
 
 LibAPI(LVBoolean) utf8_is_current_mbcs()
 {
-    char result[7] = {0};
+    unsigned char result[7] = {0};
     int len = wctomb((char*)result, testchar);
-    if ((len == 2) && (result[0] == 0xC2) && (result[1] == 0xB0))
+    if ((len == 2) && (result[0] == 0xC3) && (result[1] == 0x9F))
+	{
         return LV_TRUE;
-    return LV_FALSE;
+	}
+	return LV_FALSE;
 }

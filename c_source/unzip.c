@@ -80,7 +80,7 @@
 
 const char unz_copyright[] = " unzip 1.2.0 Copyright 1998-2017 - https://github.com/nmoinvaz/minizip";
 
-/* unz_file_info_internal contain internal info about a file in zipfile*/
+/* unz_file_info64_internal contain internal info about a file in zipfile*/
 typedef struct unz_file_info64_internal_s
 {
     uint64_t offset_curfile;            /* relative offset of local header 8 bytes */
@@ -92,7 +92,7 @@ typedef struct unz_file_info64_internal_s
 #endif
 } unz_file_info64_internal;
 
-/* file_in_zip_read_info_s contain internal information about a file in zipfile */
+/* file_in_zip64_read_info_s contain internal information about a file in zipfile */
 typedef struct
 {
     uint8_t *read_buffer;               /* internal buffer for compressed data */
@@ -127,7 +127,7 @@ typedef struct
     int      raw;
 } file_in_zip64_read_info_s;
 
-/* unz64_s contain internal information about the zipfile */
+/* unz64_internal contain internal information about the zipfile */
 typedef struct
 {
     zlib_filefunc64_32_def z_filefunc;
@@ -321,7 +321,7 @@ static int unzSearchCentralDir64(const zlib_filefunc64_32_def *pzlib_filefunc_de
         return UNZ_ERRNO;
     if (value32 != ZIP64ENDLOCHEADERMAGIC)
         return UNZ_ERRNO;
-    /* Number of the disk with the start of the zip64 end of  central directory */
+    /* Number of the disk with the start of the zip64 end of central directory */
     if (unzReadUInt32(pzlib_filefunc_def, filestream, &value32) != UNZ_OK)
         return UNZ_ERRNO;
     /* Relative offset of the zip64 end of central directory record */

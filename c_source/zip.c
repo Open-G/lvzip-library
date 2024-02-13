@@ -580,7 +580,7 @@ static uint64_t zipSearchCentralDir64(const zlib_filefunc64_32_def *pzlib_filefu
         return 0;
     if (value32 != ZIP64ENDLOCHEADERMAGIC)
         return 0;
-    /* Number of the disk with the start of the zip64 end of  central directory */
+    /* Number of the disk with the start of the zip64 end of central directory */
     if (zipReadUInt32(pzlib_filefunc_def, filestream, &value32) != ZIP_OK)
         return 0;
     /* Relative offset of the zip64 end of central directory record */
