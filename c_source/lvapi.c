@@ -1,7 +1,7 @@
 /* 
    lvapi.c -- LabVIEW interface for LabVIEW ZIP library
 
-   Copyright (C) 2009-2018 Rolf Kalbermatter
+   Copyright (C) 2009-2024 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -31,146 +31,17 @@
 #include "zip.h"
 #include "unzip.h"
 #include "lvapi.h"
+#include "iomem.h"
+#include "refnum.h"
+#include "Resource.h"
 
 #ifdef HAVE_BZIP2
 #include "bzip2/bzlib.h"
 #endif
 
-#ifndef VERSIONMADEBY
-# define VERSIONMADEBY   (0x0) /* platform depedent */
-#endif
-
 #if Win32
 #define snprintf _snprintf
 #endif
-
-#define FLAGS_UTF8  0x0800
-
-static MgErr LibToMgErr(int err)
-{
-	if (err < 0)
-	{
-		switch (err)
-		{
-			case Z_ERRNO:
-			case UNZ_BADZIPFILE:
-				return fNotFound;
-			case UNZ_END_OF_LIST_OF_FILE:
-				return fEOF;
-			case UNZ_PARAMERROR:
-				return mgArgErr;
-			case UNZ_INTERNALERROR:
-			case UNZ_CRCERROR:
-				return fIOErr;
-		}
-	}
-	return mgNoErr;
-}
-
-typedef struct
-{
-	union
-	{
-		voidp node;
-	} u;
-	uInt32 magic;
-	LVRefNum refnum;
-} FileNode;
-	
-#define ZipMagic RTToL('Z','I','P','!')
-#define UnzMagic RTToL('U','N','Z','!')
-
-static MagicCookieJar gCookieJar = NULL;
-
-static int32 lvzlipCleanup(UPtr ptr)
-{
-	FileNode *pNode = (FileNode*)ptr;
-	MgErr err =	MCDisposeCookie(gCookieJar, pNode->refnum, (MagicCookieInfo)&pNode);
-	if (!err && pNode->u.node)
-	{
-		switch (pNode->magic)
-		{
-			case UnzMagic:
-				err = LibToMgErr(unzClose(pNode->u.node));
-				break;
-			case ZipMagic:
-				err = LibToMgErr(zipClose(pNode->u.node, NULL));
-				break;
-		}
-	}
-	return err;
-}
-
-static MgErr lvzlibCreateRefnum(voidp node, LVRefNum *refnum, uInt32 magic, LVBoolean autoreset)
-{
-	FileNode *pNode;
-	if (!gCookieJar)
-	{
-		gCookieJar = MCNewBigJar(sizeof(FileNode*));
-		if (!gCookieJar)
-			return mFullErr;
-	}
-	pNode = (FileNode*)DSNewPClr(sizeof(FileNode));
-	if (!pNode)
-		return mFullErr;
-
-	*refnum = MCNewCookie(gCookieJar, (MagicCookieInfo)&pNode);
-	if (*refnum)
-	{
-		pNode->u.node = node;
-		pNode->magic = magic;
-		pNode->refnum = *refnum;
-		RTSetCleanupProc(lvzlipCleanup, (UPtr)pNode, autoreset ? kCleanOnIdle : kCleanExit);
-	}
-	else
-	{
-		DSDisposePtr((UPtr)pNode);
-	}
-	return *refnum ? mgNoErr : mFullErr;
-}
-
-static MgErr lvzlibGetRefnum(LVRefNum *refnum, voidp *node, uInt32 magic)
-{
-	FileNode *pNode;
-	MgErr err = MCGetCookieInfo(gCookieJar, *refnum, (MagicCookieInfo)&pNode);
-	if (!err)
-	{
-		if (pNode->magic == magic)
-		{
-			*node = pNode->u.node;
-		}
-		else
-		{
-			err = mgArgErr;
-		}
-	}
-	return err;
-}
-
-static MgErr lvzlibDisposeRefnum(LVRefNum *refnum, voidp *node, uInt32 magic)
-{
-	FileNode *pNode;
-	MgErr err = MCGetCookieInfo(gCookieJar, *refnum, (MagicCookieInfo)&pNode);
-	if (!err)
-	{
-		if (pNode->magic == magic)
-		{
-			err = MCDisposeCookie(gCookieJar, *refnum, (MagicCookieInfo)&pNode);
-			if (!err)
-			{
-				RTSetCleanupProc(lvzlipCleanup, (UPtr)pNode, kCleanRemove);
-				if (node)
-					*node = pNode->u.node;
-				DSDisposePtr((UPtr)pNode);
-			}
-		}
-		else
-		{
-			err = mgArgErr;
-		}
-	}
-	return err;
-}
 
 static char version[250] = {0};
 
@@ -178,7 +49,7 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 {
 	if (!version[0])
 	{
-		snprintf(version, sizeof(version), "LabVIEW ZIP library, version: 4.2, Dec 2018\n"
+		snprintf(version, sizeof(version), ABOUT_PRODUCTTITLE "\n"
 		                                   "zlib version: %s, build flags: 0x%lX\n"
 										   "minizip version: 1.2.0, September 16th, 2017\n"
 										   "aes version: 2013\n"
@@ -187,9 +58,9 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 #endif
                                            , lvzip_zlibVersion(), lvzip_zlibCompileFlags()
 #ifdef HAVE_BZIP2
-                                           , BZ2_bzlibVersion())
+                                           , BZ2_bzlibVersion()
 #endif
-                                           ;
+                                           );
 	}
 	return version;
 }
@@ -242,19 +113,18 @@ LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size)
  *  refnum: An archive file reference
  *
  ****************************************************************************************************/
-LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globalcomment,
-                             zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+static MgErr lvzlib_zipOpen(const LWPathHandle pathName, int append, uint64_t disk_size,
+							LStrHandle *globalcomment, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
+	MgErr err = fNotFound;
 	const char *comment;
-	zipFile node = zipOpen3_64(pathname, append, 0, &comment, filefuncs);
-
-	*refnum = kNotARefNum;
+	zipFile node = zipOpen3_64(LWPathBuf(pathName), append, disk_size, &comment, filefuncs);
 	if (*globalcomment)
 		LStrLen(**globalcomment) = 0;
-
+	*refnum = kNotARefNum;
 	if (node)
 	{
-		MgErr err = lvzlibCreateRefnum(node, refnum, ZipMagic, LV_FALSE);
+		err = lvzlibCreateRefnum(node, refnum, ZipMagic, LV_FALSE);
 		if (!err && comment)
 		{
 			int32 len = (int32)StrLen((ConstCStr)comment);
@@ -263,7 +133,7 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 				err = NumericArrayResize(uB, 1, (UHandle*)globalcomment, len);
 				if (!err)
 				{
-					MoveBlock((ConstUPtr)comment, LStrBuf(**globalcomment), len);
+					MoveBlock(comment, LStrBuf(**globalcomment), len);
 					LStrLen(**globalcomment) = len;
 				}
 				else
@@ -274,11 +144,36 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
 		}
 		if (err)
 		{
-			zipClose(node, NULL);
+			LStrHandle stream = NULL;
+			zipCloseEx(node, NULL, (voidp *)&stream);
+			if (stream)
+				DSDisposeHandle((UHandle)stream);
 		}
-		return err;
 	}
-	return fNotFound;
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_zipOpenLW(LWPathHandle *pathName, int append, uint64_t disk_size, LStrHandle *globalcomment, LVRefNum *refnum)
+{
+	MgErr err = LWPathZeroTerminate(pathName, -1);
+	if (!err)
+	{
+		zlib_filefunc64_def filefuncs;
+#if WIN32
+		fill_win32_filefunc64W(&filefuncs);
+#else
+		fill_fopen64_filefunc(&filefuncs);
+#endif
+		err = lvzlib_zipOpen(*pathName, append, disk_size, globalcomment, &filefuncs, refnum);
+	}
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_zipOpenS(LStrHandle *memory, int append, uint64_t disk_size, LStrHandle *globalcomment, LVRefNum *refnum)
+{
+	zlib_filefunc64_def filefuncs;
+	fill_mem_filefunc(&filefuncs, memory);
+	return lvzlib_zipOpen(NULL, append, disk_size, globalcomment, &filefuncs, refnum);
 }
 
 /****************************************************************************************************
@@ -299,19 +194,20 @@ LibAPI(MgErr) lvzlib_zipOpen(const void *pathname, int append, LStrHandle *globa
  *  memLevel:
  *  strategy:
  *  password:
- *  crecForCrypting:
- *  version:
+ *  crcForCrypting:
  *  flags:
  *  zip64:
+ *  aes:
  *
  ****************************************************************************************************/
 LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, const zip_fileinfo* zipfi,
-						   const LStrHandle extrafield_local, const LStrHandle extrafield_global,
-						   LStrHandle comment, int method, int level, int raw, int windowBits,
-						   int memLevel, int strategy, const char* password, uInt32 crcForCrypting, uInt32 version, uInt32 flags, int zip64)
+						   const LStrHandle extrafield_local, const LStrHandle extrafield_global, LStrHandle comment, 
+						   int method, int level, int raw, int windowBits, int memLevel, int strategy, const char* password,
+						   uInt32 crcForCrypting, uInt32 flags, int zip64, int aes)
 {
 	zipFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, ZipMagic);
+	Unused(crcForCrypting);
 	if (!err)
 	{
 		err = ZeroTerminateLString(&filename);
@@ -320,11 +216,11 @@ LibAPI(MgErr) lvzlib_zipOpenNewFileInZip(LVRefNum *refnum, LStrHandle filename, 
 			err = ZeroTerminateLString(&comment);
 			if (!err)
 			{
-				err = LibToMgErr(zipOpenNewFileInZip4_64(node, (const char*)LStrBufH(filename), zipfi,
+				err = LibToMgErr(zipOpenNewFileInZip5(node, (const char*)LStrBufH(filename), zipfi,
 						         LStrBufH(extrafield_local), (uint16_t)LStrLenH(extrafield_local),
 								 LStrBufH(extrafield_global), (uint16_t)LStrLenH(extrafield_global),
-								 (const char*)LStrBufH(comment), (uint16_t)method, level, raw, windowBits, memLevel,
-								 strategy, password[0] ? password : NULL, crcForCrypting, (uint16_t)version, (uint16_t)flags, zip64));
+								 (const char*)LStrBufH(comment), (uint16_t)flags, zip64, (uint16_t)method, level, raw,
+								 windowBits, memLevel, strategy, password[0] ? password : NULL, aes));
 			}
 		}
 	}
@@ -388,7 +284,7 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const char *globalComment, LStrH
 	if (!err)
 	{
         *refnum = kNotARefNum;
-		err = LibToMgErr(zipClose2(node, globalComment, VERSIONMADEBY, (voidpf*)stream));
+		err = LibToMgErr(zipCloseEx(node, globalComment, (voidpf *)stream));
 	}
 	return err;
 }
@@ -405,20 +301,45 @@ LibAPI(MgErr) lvzlib_zipClose(LVRefNum *refnum, const char *globalComment, LStrH
  *  refnum: An archive extraction file reference
  *
  ****************************************************************************************************/
-LibAPI(MgErr) lvzlib_unzOpen(const void *pathname, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
+static MgErr lvzlib_unzOpen(const LWPathHandle pathName, zlib_filefunc64_def* filefuncs, LVRefNum *refnum)
 {
-	unzFile node = unzOpen2_64(pathname, filefuncs);
+	MgErr err = fNotFound;
+	unzFile node = unzOpen2_64(LWPathBuf(pathName), filefuncs);
 	*refnum = kNotARefNum;
 	if (node)
 	{
-		MgErr err = lvzlibCreateRefnum(node, refnum, UnzMagic, LV_FALSE);
+		err = lvzlibCreateRefnum(node, refnum, UnzMagic, LV_FALSE);
 		if (err)
-		{
-			unzClose(node);
+		{	
+			LStrHandle stream = NULL;
+			unzClose2(node, (voidpf *)&stream);
+			if (stream)
+				DSDisposeHandle((UHandle)stream);
 		}
-		return err;
 	}
-	return fNotFound;
+	return err;
+}
+
+LibAPI(MgErr) lvzlib_unzOpenLW(LWPathHandle *pathName, LVRefNum *refnum)
+{
+	MgErr err = LWPathZeroTerminate(pathName, -1);
+	if (!err)
+	{
+		zlib_filefunc64_def filefuncs;
+#if WIN32
+		fill_win32_filefunc64W(&filefuncs);
+#else
+		fill_fopen64_filefunc(&filefuncs);
+#endif
+		err = lvzlib_unzOpen(*pathName, &filefuncs, refnum);
+	}
+	return err;
+}
+LibAPI(MgErr) lvzlib_unzOpenS(LStrHandle *memory, LVRefNum *refnum)
+{
+	zlib_filefunc64_def filefuncs;
+	fill_mem_filefunc(&filefuncs, memory); 
+	return lvzlib_unzOpen(NULL, &filefuncs, refnum);
 }
 
 /****************************************************************************************************
@@ -436,6 +357,8 @@ LibAPI(MgErr) lvzlib_unzClose(LVRefNum *refnum, LStrHandle *stream)
 	if (!err)
 	{
 		*refnum = kNotARefNum;
+		if (*stream)
+			DSDisposeHandle((UHandle)*stream);
 		err = LibToMgErr(unzClose2(node, (voidpf*)stream));
 	}
 	return err;
@@ -600,7 +523,7 @@ LibAPI(MgErr) lvzlib_unzLocateFile(LVRefNum *refnum, LStrHandle fileName, int iC
 	return err;
 }
 
-MgErr lvzlib_unzLocateFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment, int iCaseSensitivity)
+LibAPI(MgErr) lvzlib_unzLocateFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment, int iCaseSensitivity)
 {
 	unzFile node;
 	MgErr err = lvzlibGetRefnum(refnum, &node, UnzMagic);

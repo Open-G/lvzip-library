@@ -157,12 +157,12 @@ extern "C" {
 #endif
 
 Handle EncodeMacbinary(FSSpec *file);
-OSErr	EncodeMacbinaryFile(FSSpec *file);
-OSErr EncodeMacbinaryFiles(FSSpec *file, FSSpec*	outfile);
+OSStatus EncodeMacbinaryFile(FSSpec *file);
+OSStatus EncodeMacbinaryFiles(FSSpec *file, FSSpec*	outfile);
 
-OSErr	DecodeMacBinary(Handle data, FSSpec *destination);
-OSErr 	DecodeMacBinaryFile(FSSpec *source);
-OSErr	DecodeMacBinaryFiles(FSSpec* inputfile,FSSpec*	outputfile);
+OSStatus DecodeMacBinary(Handle data, FSSpec *destination);
+OSStatus DecodeMacBinaryFile(FSSpec *source);
+OSStatus DecodeMacBinaryFiles(FSSpec* inputfile,FSSpec*	outputfile);
 Boolean	FSpIsMacBinary(FSSpec *file);
 
 #ifdef __cplusplus

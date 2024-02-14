@@ -31,11 +31,11 @@ extern "C" {
 
 /***************************************************************************/
 
-#define zdecode(pkeys,pcrc_32_tab,c) \
-    (update_keys(pkeys,pcrc_32_tab, c ^= decrypt_byte(pkeys)))
+#define zdecode(pkeys, pcrc_32_tab, c) \
+    (update_keys(pkeys, pcrc_32_tab, c ^= decrypt_byte(pkeys)))
 
-#define zencode(pkeys,pcrc_32_tab,c,t) \
-    (t = decrypt_byte(pkeys), update_keys(pkeys,pcrc_32_tab,c), t^(c))
+#define zencode(pkeys, pcrc_32_tab, c, t) \
+    (t = decrypt_byte(pkeys), update_keys(pkeys, pcrc_32_tab, c), t^(c))
 
 /***************************************************************************/
 

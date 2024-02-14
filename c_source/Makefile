@@ -18,14 +18,15 @@
 
 CC=gcc
 
-CFLAGS=-O3 -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2
+CFLAGS=g3 -DDEBUG -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2
 #CFLAGS=-O -DMAX_WBITS=14 -DMAX_MEM_LEVEL=7
-#CFLAGS=-g -DDEBUG
+#CFLAGS=-g3 -DDEBUG
 #CFLAGS=-O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
 #           -Wstrict-prototypes -Wmissing-prototypes
 
-CINDIR=/usr/local/lv70/cintools
-SFLAGS=-O3 -fPIC $(CC_ARCH_SPEC) -fvisibility=hidden -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2 -DBZ_NO_STDIO -Ibzip2 -L$(CINDIR)
+CINDIR=/usr/local/natist/LabVIEW-8.6/cintools
+SFLAGS=-O3 -fPIC $(CC_ARCH_SPEC) -fvisibility=hidden -Wnonnull -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2 -DBZ_NO_STDIO -Ibzip2 -L$(CINDIR)
+#SFLAGS=-g3 -DDEBUG -fPIC $(CC_ARCH_SPEC) -fvisibility=hidden -Wnonnull -D_LARGEFILE64_SOURCE=1 -DHAVE_HIDDEN -DHAVE_AES -DHAVE_BZIP2 -DBZ_NO_STDIO -Ibzip2 -L$(CINDIR)
 LDFLAGS=-Wl,-soname=$(SHAREDLIBM)
 TEST_LDFLAGS=-L. libz.a
 LDSHARED=gcc
@@ -59,7 +60,7 @@ pkgconfigdir = ${libdir}/pkgconfig
 
 OBJZ = adler32.o crc32.o crypt.o deflate.o infback.o inffast.o inflate.o inftrees.o trees.o zutil.o
 OBJG = compress.o uncompr.o gzclose.o gzlib.o gzread.o gzwrite.o
-OBJL = lvapi.o lvutil.o lwstr.o ioapi.o iomem.o mztools.o unzip.o zip.o utf.o
+OBJL = lvapi.o lvutil.o lwstr.o ioapi.o iomem.o mztools.o refnum.o unzip.o zip.o utf.o
 OBJE = aes/aescrypt.o aes/aeskey.o aes/aestab.o aes/fileenc.o aes/hmac.o aes/prng.o aes/pwd2key.o aes/sha1.o
 OBJ2 = bzip2/blocksort.o bzip2/huffman.o bzip2/crctable.o bzip2/randtable.o bzip2/bzcompress.o bzip2/decompress.o bzip2/bzlib.o
 
@@ -67,7 +68,7 @@ OBJC = $(OBJZ) $(OBJL) $(OBJG) $(OBJ2) $(OBJE)
 
 PIC_OBJZ = adler32.lo crc32.lo crypt.lo deflate.lo infback.lo inffast.lo inflate.lo inftrees.lo trees.lo zutil.lo
 PIC_OBJG = compress.lo uncompr.lo gzclose.lo gzlib.lo gzread.lo gzwrite.lo
-PIC_OBJL = lvapi.lo lvutil.lo lwstr.lo ioapi.lo iomem.lo mztools.lo unzip.lo zip.lo utf.lo
+PIC_OBJL = lvapi.lo lvutil.lo lwstr.lo ioapi.lo iomem.lo mztools.lo refnum.lo unzip.lo zip.lo utf.lo
 PIC_OBJE = aes/aescrypt.lo aes/aeskey.lo aes/aestab.lo aes/fileenc.lo aes/hmac.lo aes/prng.lo aes/pwd2key.lo aes/sha1.lo
 PIC_OBJ2 = bzip2/blocksort.lo bzip2/huffman.lo bzip2/crctable.lo bzip2/randtable.lo bzip2/bzcompress.lo bzip2/decompress.lo bzip2/bzlib.lo
 PIC_OBJC = $(PIC_OBJZ) $(PIC_OBJL) $(PIC_OBJG) $(PIC_OBJ2) $(PIC_OBJE)

@@ -18,7 +18,7 @@ Overwrite Existing Files=TRUE
 # "name magled" with the Namespace as a suffix.  For=""
 # example, "MyVI.vi" with a Namespace of "MyApp" becomes=""
 # "MyVI__MyApp.vi" in the built software product.=""
-Namespace=ogtk
+Namespace=""
 ###########################################################=""
 # Top Level VIs specifies VIs whose hierarchies are to be=""
 # included in the build. Additionally, Top Level VIs will=""
@@ -32,7 +32,7 @@ Log File=""
 Log File Suffix=""
 Include Help Files=FALSE
 Help File Dir=""
-Include Shared Libs=TRUE
+Include Shared Libs=FALSE
 Shared Lib Dir=""
 Include External Subrs=FALSE
 External Subr Dir=""
@@ -41,7 +41,7 @@ EXE Icon File=""
 New Build Root=TRUE
 Unsaved Changes MsgBox=FALSE
 Ambiguous VIs Dest Dir=""
-Call Pre-Build VI="build_support/Pre-Post Build (testing).vi"
+#Call Pre-Build VI="build_support/Pre-Post Build (testing).vi"
 Call Post-Build VI=""
 Revision File=build_support/lvzip.rev
 Version VI Name=""
@@ -57,8 +57,12 @@ Call-Back VI 1="build_support/Call-Back VI - Rem namespace from Window Title.vi"
 # Dynamic VIs specifies VIs whose hierarchies are to be=""
 # included in the build.  Keynames for this section are=""
 # arbitrary=""
-VI 1="lvzip.llb/ZLIB VI Tree.vi"
-VI 2="macbin.llb/MACBIN VI Tree.vi"
+VI 1="fileutil.llb/FILE VI Tree.vi"
+VI 2="lvzip.llb/ZLIB VI Tree.vi"
+VI 3="macbin.llb/MACBIN VI Tree.vi"
+VI 4="examples/View Archive Content.vi"
+VI 5="examples/Update Open Office Document.vi"
+VI 6="examples/Update Open Office Document2.vi"
 
 [Dynamic VIs]
 ###########################################################=""
@@ -71,27 +75,47 @@ LibDir 1=<application>
 
 [Destination 1]
 Source Dir=lvzip.llb
-Target Dir=lvzip.llb
+Target Dir=lvzip.llb/<KeepHierarchy>
 Convert Target to LLB=FALSE
 Convert Target to EXE=FALSE
 Save Level=0
 Default Destination=FALSE
 Apply New Password=""
-Namespace=""
+Namespace="ogtk"
 
 [Destination 2]
 Source Dir=macbin.llb
-Target Dir=macbin.llb
+Target Dir=macbin.llb/<KeepHierarchy>
 Convert Target to LLB=FALSE
 Convert Target to EXE=FALSE
 Save Level=0
 Default Destination=FALSE
 Apply New Password=""
-Namespace=""
+Namespace="ogtk"
 
 [Destination 3]
 Source Dir=fileutil.llb
-Target Dir=fileutil.llb
+Target Dir=fileutil.llb/<KeepHierarchy>
+Convert Target to LLB=FALSE
+Convert Target to EXE=FALSE
+Save Level=0
+Default Destination=FALSE
+Apply New Password=""
+Namespace="ogtk"
+
+[Destination 4]
+Source Dir=stringutil.llb
+Target Dir=stringutil.llb/<KeepHierarchy>
+Convert Target to LLB=FALSE
+Convert Target to EXE=FALSE
+Save Level=0
+Default Destination=FALSE
+Apply New Password=""
+Namespace="ogtk"
+
+[Destination 5]
+Source Dir=examples
+Target Dir=examples/<KeepHierarchy>
 Convert Target to LLB=FALSE
 Convert Target to EXE=FALSE
 Save Level=0

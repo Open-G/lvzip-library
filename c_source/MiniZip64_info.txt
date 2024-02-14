@@ -22,7 +22,7 @@ Changed from MiniZip 1.0 to MiniZip 1.1
 * Added ZIP64 support for unzip ( by Even Rouault )
 * Added ZIP64 support for zip ( by Mathias Svensson )
 * Reverted some changed that Even Rouault did.
-* Bunch of patches received from Gulles Vollant that he received for MiniZip from various users.
+* Bunch of patches received from Gilles Vollant that he received for MiniZip from various users.
 * Added unzip patch for BZIP Compression method (patch create by Daniel Borca)
 * Added BZIP Compress method for zip
 * Did some refactoring and code cleanup

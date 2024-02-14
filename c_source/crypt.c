@@ -26,8 +26,7 @@
 
 #ifdef _WIN32
 #  include <windows.h>
-#  define RtlGenRandom SystemFunction036
-BOOLEAN NTAPI RtlGenRandom(PVOID RandomBuffer, ULONG RandomBufferLength);
+#  include <wincrypt.h>
 #elif defined(__VXWORKS__)
 #  include <stdlib.h>
 #  include <time.h>
@@ -62,11 +61,11 @@ uint8_t decrypt_byte(uint32_t *pkeys)
 
 uint8_t update_keys(uint32_t *pkeys, const z_crc_t *pcrc_32_tab, uint8_t c)
 {
-    (*(pkeys+0)) = (uint32_t)CRC32((*(pkeys+0)), c);
+    (*(pkeys+0)) = (uint32_t)CRC32((*(pkeys + 0)), c);
     (*(pkeys+1)) += (*(pkeys+0)) & 0xff;
     (*(pkeys+1)) = (*(pkeys+1)) * 134775813L + 1;
     {
-        register uint32_t keyshift = (uint32_t)((*(pkeys + 1)) >> 24);
+        register int32_t keyshift = (int32_t)((*(pkeys + 1)) >> 24);
         (*(pkeys+2)) = (uint32_t)CRC32((*(pkeys+2)), keyshift);
     }
     return c;
@@ -85,6 +84,7 @@ void init_keys(const char *passwd, uint32_t *pkeys, const z_crc_t *pcrc_32_tab)
 }
 
 /***************************************************************************/
+
 #ifndef NOCRYPT
 #ifndef ZCR_SEED2
 #  define ZCR_SEED2 3141592654UL     /* use PI as default pattern */
@@ -95,21 +95,29 @@ typedef void (*arc4random_func)(void *, unsigned int);
 unsigned int cryptrand(unsigned char *buf, unsigned int len)
 {
     unsigned int rlen = len;
-#if defined(_WIN32)
+#ifdef _WIN32
 #if !EMBEDDED
-	BOOL result = RtlGenRandom(buf, len);
-    if (!result)
+    HCRYPTPROV provider;
+    int result = 0;
+
+    if (CryptAcquireContext(&provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
+    {
+        result = CryptGenRandom(provider, len, buf);
+        CryptReleaseContext(provider, 0);
+        if (result)
+            return len;
+    }
 #endif
-	{
-		unsigned __int64 pentium_tsc[1];
- 
-		for (rlen = 0; rlen < (int)len; ++rlen)
-		{
-			if (rlen % 8 == 0)
-				QueryPerformanceCounter((LARGE_INTEGER *)pentium_tsc);
-			buf[rlen] = ((unsigned char*)pentium_tsc)[rlen % 8];
-		}
-	}
+    {
+        unsigned __int64 pentium_tsc[1];
+
+        for (rlen = 0; rlen < (int)len; ++rlen)
+        {
+            if (rlen % 8 == 0)
+                QueryPerformanceCounter((LARGE_INTEGER *)pentium_tsc);
+            buf[rlen] = ((unsigned char*)pentium_tsc)[rlen % 8];
+        }
+    }
 #else
 	static int calls = 0;
 #if defined(__VXWORKS__)
@@ -155,7 +163,7 @@ unsigned int cryptrand(unsigned char *buf, unsigned int len)
             buf[rlen++] = (unsigned char)(rand() >> 7) & 0xff;
     }
 #endif
-   return rlen;
+    return rlen;
 }
 
 int crypthead(const char *passwd, uint8_t *buf, int buf_size, uint32_t *pkeys,

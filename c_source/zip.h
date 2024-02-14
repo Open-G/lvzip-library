@@ -195,6 +195,7 @@ extern int ZEXPORT zipCloseFileInZipRaw64(zipFile file, uint64_t uncompressed_si
 extern int ZEXPORT zipClose(zipFile file, const char *global_comment);
 /* Close the zipfile */
 
+extern int ZEXPORT zipCloseEx(zipFile file, const char *global_comment, voidpf *output);
 extern int ZEXPORT zipClose2(zipFile file, const char *global_comment, uint16_t version_madeby, voidpf *output);
 
 /***************************************************************************/

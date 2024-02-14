@@ -107,3 +107,7 @@ Added intial support for 64 bit library
 
 2014-04-29 rk
 Added support for correct codepage translation for filename and file comment
+
+2023-12-31 rk
+Version 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager
+layer to support long file paths as well as unicode file names.
