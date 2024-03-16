@@ -36,7 +36,7 @@ Distribution="OpenG Toolkit"
 Vendor=OpenG.org
 URL=http://wiki.openg.org/oglib_lvzip
 Packager="Rolf Kalbermatter <rolf.kalbermatter@gmail.com>"
-Release Notes="Version 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager layer to support long file paths as well as unicode file names.\0AVersion 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
+Release Notes="Version 5.0.1: Fix installation problems on various systems\0AVersion 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager layer to support long file paths as well as unicode file names.\0AVersion 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
 Demo=FALSE
 System Package=FALSE
 Sub Package=FALSE
@@ -51,9 +51,9 @@ restart labview after install=FALSE
 skip mass compile after install=FALSE
 
 [Platform]
-Exclusive_LabVIEW_Version=>=8.6
+Exclusive_LabVIEW_Version=">=8.6"
 Exclusive_LabVIEW_System=All
-Exclusive_OS="Windows NT,Windows x64,Linux,Linux x64"
+Exclusive_OS="Windows NT,Linux"
 
 [Script VIs]
 Source Dir=""
@@ -66,12 +66,12 @@ PreBuild=PreBuild.vi
 PostBuild=""
 
 [Dependencies]
-AutoReqProv=FALSE
+AutoReqProv=TRUE
 Requires=""
 Conflicts=""
 
 [Files]
-Num File Groups=13
+Num File Groups=16
 Source Dir=""
 Target Dir=""
 Passwords.<size(s)>=0
@@ -145,7 +145,7 @@ NameMode=0
 PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
-Exclusive_OS="Windows NT,Windows 9x"
+Exclusive_OS="Windows NT"
 Num Files=1
 File 0=*.dll
 
@@ -156,7 +156,7 @@ NameMode=0
 PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
-Exclusive_OS="Windows NT,Windows x64"
+Exclusive_OS="Windows NT"
 Num Files=1
 File 0=*.dll
 
@@ -178,20 +178,55 @@ NameMode=0
 PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
-Exclusive_OS="Linux x64"
+Exclusive_OS=Linux
 Num Files=1
 File 0=*.so
 
-[RT Images]
-Source Dir="RT Images"
+[Dynamic File Palette Old]
+Source Dir="Dynamic Palette MNUs"
 DirMode=0
 NameMode=0
 PPFix=""
-Target Dir="<OpenG.lib>/lvzip/RT Images"
-Replace Mode=Exclude
-Exclusive_OS="Windows NT,Windows 9x"
+Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
+Replace Mode=Always
+Exclusive_LabVIEW_Version="<=8.6"
+Num Files=2
+File 0=oglib_lvzip.mnu
+File 1=oglib_fileutil.mnu
+
+[Dynamic File Palette File]
+Source Dir="Dynamic Palette MNUs"
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<user.lib>/_dynamicpalette_dirs/file
+Replace Mode=Always
+Exclusive_LabVIEW_Version="<=8.6"
 Num Files=1
-File 0=ogsetup.exe
+File 0=oglib_fileutil.mnu
+
+[Dynamic Palette New]
+Source Dir="Dynamic Palette MNUs"
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<menus>/Categories/OpenG
+Replace Mode=Always
+Exclusive_LabVIEW_Version=">=9.0"
+Num Files=2
+File 0=oglib_lvzip.mnu
+File 1=oglib_fileutil.mnu
+
+[Dynamic Palette OpenG]
+Source Dir="Dynamic Palette MNUs"
+DirMode=0
+NameMode=0
+PPFix=""
+Target Dir=<menus>/Categories/OpenG
+Replace Mode="If Newer"
+Exclusive_LabVIEW_Version=">=9.0"
+Num Files=1
+File 0=dir.mnu
 
 [Examples]
 Source Dir=built/lvzip/examples
@@ -203,33 +238,14 @@ Replace Mode=Always
 Num Files=1
 File 0=*.*
 
-[Dynamic Palette]
-Source Dir="Dynamic Palette MNUs"
+[RT Images]
+Source Dir="RT Images"
 DirMode=0
 NameMode=0
 PPFix=""
-Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
-Replace Mode=Always
+Target Dir="<OpenG.lib>/lvzip/RT Images"
+Replace Mode=Exclude
+Exclusive_OS="Windows 9x,Windows NT,Windows x64"
 Num Files=1
-File 0=oglib_lvzip.mnu
-
-[Dynamic File Palette 1]
-Source Dir="Dynamic Palette MNUs"
-DirMode=0
-NameMode=0
-PPFix=""
-Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
-Replace Mode=Always
-Num Files=1
-File 0=oglib_fileutil.mnu
-
-[Dynamic File Palette 2]
-Source Dir="Dynamic Palette MNUs"
-DirMode=0
-NameMode=0
-PPFix=""
-Target Dir=<user.lib>/_dynamicpalette_dirs/file
-Replace Mode=Always
-Num Files=1
-File 0=oglib_fileutil.mnu
+File 0=ogsetup.exe
 
