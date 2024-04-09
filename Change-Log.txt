@@ -108,6 +108,18 @@ Added intial support for 64 bit library
 2014-04-29 rk
 Added support for correct codepage translation for filename and file comment
 
-2023-12-31 rk
+2024-02-09 rk
 Version 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager
 layer to support long file paths as well as unicode file names.
+
+2024-03-13 rk
+Make initial dialog be more resiliant to different font sizes to always let the user acknowledge the dialog
+Fix some installation trouble on various systems
+
+2024-04-07 rk
+Make initial dialog respect the quiet flag for programmatic installations
+
+2024-04-09 rk
+Add low level VIs to do chunked file copy into an archive for quasi asynchronous operation for progress dialog
+
+
