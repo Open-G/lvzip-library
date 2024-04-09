@@ -95,7 +95,7 @@
 #  endif
 #endif
 
-const char zip_copyright[] = " zip 1.01 Copyright 1998-2004 Gilles Vollant - http://www.winimage.com/zLibDll";
+const char zip_copyright[] = " zip 1.01 Copyright 1998-2024 Gilles Vollant - http://www.winimage.com/zLibDll";
 
 typedef struct linkedlist_datablock_internal_s
 {
