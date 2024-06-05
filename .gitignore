@@ -1,0 +1,4 @@
+/source/*.so
+/source/*.dll
+/source/*.aliases
+/source/*.lvlps

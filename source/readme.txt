@@ -1,7 +1,7 @@
-LabVIEW ZIP library, version 5.0.0
+LabVIEW ZIP library, version 5.0.3
 ----------------------------------
 
-Copyright 2002-2023 Rolf Kalbermatter
+Copyright 2002-2024 Rolf Kalbermatter
 
 
 Please read this document before you upgrade from a version of LVZIP
@@ -12,7 +12,34 @@ in comparison to earlier versions which might require you to slightly redo
 your project.
 
 
-Release 5.0.0, Released: ???. ??, 2023
+Release 5.0.3, Released: June. 5, 2024
+======================================
+
+Fixes:
+-------------
+1) Fix wiring mistake ZLIB Store File Prepare.vi where comment and password was exchanged
+2) Fix missing wire for the file refnum when opening a file in ZLIB Store File Continue.vi 
+
+
+Release 5.0.2, Released: Apr. 09, 2024
+======================================
+
+New features:
+-------------
+1) Add low level VIs to do chunked file copy into an archive for quasi asynchronous operation
+   for use in a progress dialog
+
+
+Release 5.0.1, Released: Mar. 13, 2024
+======================================
+
+Fixes:
+-------------
+1) Make the initial license dialog work better with various default font sizes on different platforms
+2) Make the initial license dialog respect the quiet flag that VIPM CLI can pass
+
+
+Release 5.0.0, Released: Feb. 09, 2024
 ======================================
 
 New features:
@@ -22,7 +49,7 @@ New features:
 
 Upgrades:
 ----------
-1) Updated the zlib core code to version 1.2.13 from the zlib site
+1) Updated the zlib core code to version 1.3.1 from the zlib site
 
 
 Release 4.2.0, Released: Dec. 08, 2018
