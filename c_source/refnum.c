@@ -124,7 +124,8 @@ MgErr lvzlibGetRefnum(LVRefNum *refnum, void **node, uInt32 magic)
 	{
 		if (pNode->magic == magic)
 		{
-			*node = pNode->u.node;
+			if (node)
+				*node = pNode->u.node;
 		}
 		else
 		{

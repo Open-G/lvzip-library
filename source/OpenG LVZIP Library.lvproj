@@ -58,6 +58,7 @@
 					<Item Name="FILE Info (Path).vi" Type="VI" URL="../fileutil.llb/subVIs/FILE Info (Path).vi"/>
 					<Item Name="FILE Info (UTF8).vi" Type="VI" URL="../fileutil.llb/subVIs/FILE Info (UTF8).vi"/>
 					<Item Name="FILE Info (Wide Path).vi" Type="VI" URL="../fileutil.llb/subVIs/FILE Info (Wide Path).vi"/>
+					<Item Name="FILE Is A File.vi" Type="VI" URL="../fileutil.llb/subVIs/FILE Is A File.vi"/>
 					<Item Name="FILE List Directory Recursive (Path).vi" Type="VI" URL="../fileutil.llb/subVIs/FILE List Directory Recursive (Path).vi"/>
 					<Item Name="FILE List Directory Recursive (UTF8).vi" Type="VI" URL="../fileutil.llb/subVIs/FILE List Directory Recursive (UTF8).vi"/>
 					<Item Name="FILE List Directory Recursive (Wide Path).vi" Type="VI" URL="../fileutil.llb/subVIs/FILE List Directory Recursive (Wide Path).vi"/>
@@ -266,12 +267,32 @@
 		<Item Name="Trials" Type="Folder">
 			<Item Name="Get Call Library Nodes.vi" Type="VI" URL="../../build_support/Get Call Library Nodes.vi"/>
 		</Item>
+		<Item Name="tests" Type="Folder">
+			<Item Name="2013-175TPL0017(Issue Report).odt" Type="Document" URL="../../tests/2013-175TPL0017(Issue Report).odt"/>
+			<Item Name="encoding test.zip" Type="Document" URL="../../tests/encoding test.zip"/>
+			<Item Name="lvfile_test_files.vi" Type="VI" URL="../../tests/lvfile_test_files.vi"/>
+			<Item Name="lvfile_test_paths.vi" Type="VI" URL="../../tests/lvfile_test_paths.vi"/>
+			<Item Name="lvzip-test add to empty archive.vi" Type="VI" URL="../../tests/lvzip-test add to empty archive.vi"/>
+			<Item Name="lvzip-test add to empty archive2.vi" Type="VI" URL="../../tests/lvzip-test add to empty archive2.vi"/>
+			<Item Name="lvzip-test-delete files from archive.vi" Type="VI" URL="../../tests/lvzip-test-delete files from archive.vi"/>
+			<Item Name="lvzip-test-delete files from archive2.vi" Type="VI" URL="../../tests/lvzip-test-delete files from archive2.vi"/>
+			<Item Name="lvzip-test-encoding2.vi" Type="VI" URL="../../tests/lvzip-test-encoding2.vi"/>
+			<Item Name="lvzip-test-lg bin files.vi" Type="VI" URL="../../tests/lvzip-test-lg bin files.vi"/>
+			<Item Name="lvzip-test-lg bin files2.vi" Type="VI" URL="../../tests/lvzip-test-lg bin files2.vi"/>
+			<Item Name="lvzip-test-progress files.vi" Type="VI" URL="../../tests/lvzip-test-progress files.vi"/>
+			<Item Name="lvzip-test-memory stream.vi" Type="VI" URL="../../tests/lvzip-test-memory stream.vi"/>
+			<Item Name="lvzip-test-memory stream2.vi" Type="VI" URL="../../tests/lvzip-test-memory stream2.vi"/>
+			<Item Name="lvzip-test-random-generator.vi" Type="VI" URL="../../tests/lvzip-test-random-generator.vi"/>
+			<Item Name="lvzip-test-sm text files.vi" Type="VI" URL="../../tests/lvzip-test-sm text files.vi"/>
+			<Item Name="lvzip-test-sm text files2.vi" Type="VI" URL="../../tests/lvzip-test-sm text files2.vi"/>
+			<Item Name="lvzip-test-string compress.vi" Type="VI" URL="../../tests/lvzip-test-string compress.vi"/>
+			<Item Name="VI Tree.vi" Type="VI" URL="../../tests/VI Tree.vi"/>
+		</Item>
 		<Item Name="PostInstall.vi" Type="VI" URL="../../PostInstall.vi"/>
 		<Item Name="PreBuild.vi" Type="VI" URL="../../PreBuild.vi"/>
 		<Item Name="PreInstall.vi" Type="VI" URL="../../PreInstall.vi"/>
 		<Item Name="PreUninstall.vi" Type="VI" URL="../../PreUninstall.vi"/>
 		<Item Name="Change-Log.txt" Type="Document" URL="../../Change-Log.txt"/>
-		<Item Name="VI Tree - OGB__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/VI Tree - OGB__ogb.vi"/>
 		<Item Name="Dependencies" Type="Dependencies">
 			<Item Name="vi.lib" Type="Folder">
 				<Item Name="Error Cluster From Error Code.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Error Cluster From Error Code.vi"/>
@@ -298,253 +319,253 @@
 				<Item Name="Temp Restore File.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/libraryn.llb/Temp Restore File.vi"/>
 				<Item Name="System Exec.vi" Type="VI" URL="/&lt;vilib&gt;/Platform/system.llb/System Exec.vi"/>
 				<Item Name="Clear Errors.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Clear Errors.vi"/>
-				<Item Name="TRef TravTarget.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/traverseref.llb/TRef TravTarget.ctl"/>
-				<Item Name="TRef Traverse.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/traverseref.llb/TRef Traverse.vi"/>
-				<Item Name="TRef Traverse for References.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/traverseref.llb/TRef Traverse for References.vi"/>
 				<Item Name="Merge Errors.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Merge Errors.vi"/>
-				<Item Name="Open Config Data.vi" Type="VI" URL="/&lt;vilib&gt;/UTILITY/config.llb/Open Config Data.vi"/>
-				<Item Name="Config Data Open Reference.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Open Reference.vi"/>
-				<Item Name="Config Data Registry.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Registry.vi"/>
-				<Item Name="Config Data RefNum" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data RefNum"/>
-				<Item Name="Config Data.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data.ctl"/>
-				<Item Name="Config Data Section.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Section.ctl"/>
-				<Item Name="Config Data Registry Functions.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Registry Functions.ctl"/>
-				<Item Name="Config Data Set File Path.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Set File Path.vi"/>
-				<Item Name="Config Data Modify.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Modify.vi"/>
-				<Item Name="Info From Config Data.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Info From Config Data.vi"/>
-				<Item Name="Config Data Modify Functions.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Modify Functions.ctl"/>
-				<Item Name="Config Data Read From File.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Read From File.vi"/>
-				<Item Name="Config Data Get File Path.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Get File Path.vi"/>
-				<Item Name="String to Config Data.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/String to Config Data.vi"/>
-				<Item Name="Invalid Config Data Reference.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Invalid Config Data Reference.vi"/>
-				<Item Name="Config Data Close Reference.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Close Reference.vi"/>
-				<Item Name="Read Key (String).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Read Key (String).vi"/>
-				<Item Name="Config Data Get Key Value.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Get Key Value.vi"/>
-				<Item Name="Parse Stored String.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Parse Stored String.vi"/>
-				<Item Name="Get Next Character.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Get Next Character.vi"/>
-				<Item Name="Write Key (String).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Write Key (String).vi"/>
-				<Item Name="Single to Double Backslash.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Single to Double Backslash.vi"/>
-				<Item Name="Remove Unprintable Chars.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Remove Unprintable Chars.vi"/>
-				<Item Name="Read Key (U32).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Read Key (U32).vi"/>
-				<Item Name="Write Key (U32).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Write Key (U32).vi"/>
-				<Item Name="Remove Key.vi" Type="VI" URL="/&lt;vilib&gt;/UTILITY/config.llb/Remove Key.vi"/>
-				<Item Name="Close Config Data.vi" Type="VI" URL="/&lt;vilib&gt;/utility/config.llb/Close Config Data.vi"/>
-				<Item Name="Config Data Write To File.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data Write To File.vi"/>
-				<Item Name="Config Data to String.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Config Data to String.vi"/>
-				<Item Name="Add Quotes.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Add Quotes.vi"/>
-				<Item Name="Write Key (I32).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Write Key (I32).vi"/>
-				<Item Name="Write Key (Path).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Write Key (Path).vi"/>
-				<Item Name="Specific Path to Common Path.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Specific Path to Common Path.vi"/>
-				<Item Name="Librarian Get Info.vi" Type="VI" URL="/&lt;vilib&gt;/utility/libraryn.llb/Librarian Get Info.vi"/>
-				<Item Name="Find First Error.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Find First Error.vi"/>
-				<Item Name="Librarian Set Info.vi" Type="VI" URL="/&lt;vilib&gt;/utility/libraryn.llb/Librarian Set Info.vi"/>
-				<Item Name="Set VI Library File Info.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/libraryn.llb/Set VI Library File Info.vi"/>
-				<Item Name="compatOverwrite.vi" Type="VI" URL="/&lt;vilib&gt;/_oldvers/_oldvers.llb/compatOverwrite.vi"/>
-				<Item Name="Get Section Names.vi" Type="VI" URL="/&lt;vilib&gt;/UTILITY/config.llb/Get Section Names.vi"/>
-				<Item Name="Get Key Names.vi" Type="VI" URL="/&lt;vilib&gt;/UTILITY/config.llb/Get Key Names.vi"/>
-				<Item Name="Read Key (Path).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Read Key (Path).vi"/>
-				<Item Name="Remove Quotes.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Remove Quotes.vi"/>
-				<Item Name="Common Path to Specific Path.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Common Path to Specific Path.vi"/>
-				<Item Name="Read Key (Boolean).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Read Key (Boolean).vi"/>
-				<Item Name="Read Key (I32).vi" Type="VI" URL="/&lt;vilib&gt;/Utility/config.llb/Read Key (I32).vi"/>
+				<Item Name="General Error Handler.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/General Error Handler.vi"/>
+				<Item Name="General Error Handler CORE.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/General Error Handler CORE.vi"/>
+				<Item Name="Check Special Tags.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Check Special Tags.vi"/>
+				<Item Name="TagReturnType.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/TagReturnType.ctl"/>
+				<Item Name="Set String Value.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Set String Value.vi"/>
+				<Item Name="GetRTHostConnectedProp.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/GetRTHostConnectedProp.vi"/>
+				<Item Name="Error Code Database.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Error Code Database.vi"/>
+				<Item Name="Format Message String.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Format Message String.vi"/>
+				<Item Name="Find Tag.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Find Tag.vi"/>
+				<Item Name="Search and Replace Pattern.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Search and Replace Pattern.vi"/>
+				<Item Name="Set Bold Text.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Set Bold Text.vi"/>
+				<Item Name="Details Display Dialog.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Details Display Dialog.vi"/>
+				<Item Name="DialogTypeEnum.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/DialogTypeEnum.ctl"/>
+				<Item Name="ErrWarn.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/ErrWarn.ctl"/>
+				<Item Name="eventvkey.ctl" Type="VI" URL="/&lt;vilib&gt;/event_ctls.llb/eventvkey.ctl"/>
+				<Item Name="Not Found Dialog.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Not Found Dialog.vi"/>
+				<Item Name="Three Button Dialog.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Three Button Dialog.vi"/>
+				<Item Name="Three Button Dialog CORE.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Three Button Dialog CORE.vi"/>
+				<Item Name="Longest Line Length in Pixels.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Longest Line Length in Pixels.vi"/>
+				<Item Name="Convert property node font to graphics font.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Convert property node font to graphics font.vi"/>
+				<Item Name="Get Text Rect.vi" Type="VI" URL="/&lt;vilib&gt;/picture/picture.llb/Get Text Rect.vi"/>
+				<Item Name="Get String Text Bounds.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/Get String Text Bounds.vi"/>
+				<Item Name="LVBoundsTypeDef.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/miscctls.llb/LVBoundsTypeDef.ctl"/>
+				<Item Name="BuildHelpPath.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/BuildHelpPath.vi"/>
+				<Item Name="GetHelpDir.vi" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/GetHelpDir.vi"/>
+				<Item Name="DialogType.ctl" Type="VI" URL="/&lt;vilib&gt;/Utility/error.llb/DialogType.ctl"/>
 			</Item>
 			<Item Name="user.lib" Type="Folder">
 				<Item Name="Build Application from Build File API__deab_api.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/deab_api/deab_api.llb/Build Application from Build File API__deab_api.vi"/>
 				<Item Name="OGB Directory__deab_api.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/deab_api/deab_api.llb/OGB Directory__deab_api.vi"/>
-				<Item Name="Convert File Extension (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Convert File Extension (String)__ogtk.vi"/>
-				<Item Name="Convert File Extension (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Convert File Extension (Path)__ogtk.vi"/>
-				<Item Name="Convert File Extension__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Convert File Extension__ogtk.vi"/>
+				<Item Name="Temporary Directory__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Temporary Directory__ogtk.vi"/>
+				<Item Name="Valid Path - Traditional__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Valid Path - Traditional__ogtk.vi"/>
+				<Item Name="Delete Recursive__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Delete Recursive__ogtk.vi"/>
+				<Item Name="Build Error Cluster__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/error/error.llb/Build Error Cluster__ogtk.vi"/>
+				<Item Name="Build Path - File Names Array__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Build Path - File Names Array__ogtk.vi"/>
+				<Item Name="Build Path__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Build Path__ogtk.vi"/>
+				<Item Name="Build Path - Traditional__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Build Path - Traditional__ogtk.vi"/>
+				<Item Name="Build Path - File Names and Paths Arrays__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Build Path - File Names and Paths Arrays__ogtk.vi"/>
+				<Item Name="Build Path - Traditional - path__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Build Path - Traditional - path__ogtk.vi"/>
+				<Item Name="Build Path - File Names Array - path__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Build Path - File Names Array - path__ogtk.vi"/>
+				<Item Name="Build Path - File Names and Paths Arrays - path__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Build Path - File Names and Paths Arrays - path__ogtk.vi"/>
+				<Item Name="Create Dir if Non-Existant__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Create Dir if Non-Existant__ogtk.vi"/>
+				<Item Name="Strip Path - Traditional__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Strip Path - Traditional__ogtk.vi"/>
+				<Item Name="Strip Path__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Strip Path__ogtk.vi"/>
+				<Item Name="Strip Path - Arrays__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Strip Path - Arrays__ogtk.vi"/>
+				<Item Name="Compare Two Paths__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Compare Two Paths__ogtk.vi"/>
+				<Item Name="List Directory Recursive__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/List Directory Recursive__ogtk.vi"/>
+				<Item Name="List Directory__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/List Directory__ogtk.vi"/>
+				<Item Name="Trim Whitespace (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/string/string.llb/Trim Whitespace (String)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (String)__ogtk.vi"/>
+				<Item Name="Trim Whitespace__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/string/string.llb/Trim Whitespace__ogtk.vi"/>
+				<Item Name="Trim Whitespace (String Array)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/string/string.llb/Trim Whitespace (String Array)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (Path)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (CDB)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (CSG)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (CXT)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (DBL)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (EXT)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (I16)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (I32)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (I8)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (SGL)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (U16)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (U32)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (U8)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (Variant)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (Variant)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (Boolean)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (I64)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (U64)__ogtk.vi"/>
+				<Item Name="Remove Duplicates from 1D Array (LVObject)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Remove Duplicates from 1D Array (LVObject)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (Path)__ogtk.vi"/>
+				<Item Name="Search 1D Array (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (Path)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (Path)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (I32)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (Path)__ogtk.vi"/>
+				<Item Name="Sort Array__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort Array__ogtk.vi"/>
+				<Item Name="Sort 1D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (CDB)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array (CDB)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (CXT)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array (CXT)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (CSG)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array (CSG)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (DBL)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (EXT)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (I16)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (I8)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (SGL)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (U16)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (U32)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (U8)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (CDB)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (CXT)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (CSG)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (DBL)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (EXT)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (I16)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (I32)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (I8)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (SGL)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (U16)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (U32)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (U8)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (Path)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (String)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (Path)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (String)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (I64)__ogtk.vi"/>
+				<Item Name="Sort 1D Array (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 1D Array (U64)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (I64)__ogtk.vi"/>
+				<Item Name="Sort 2D Array (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Sort 2D Array (U64)__ogtk.vi"/>
+				<Item Name="Reorder Array2__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder Array2__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (CDB)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (CXT)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (CSG)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (DBL)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (EXT)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (I16)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (I32)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (I8)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (SGL)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (U16)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (U32)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (U8)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (Boolean)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (String)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (Variant)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (Variant)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (Boolean)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (CDB)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (CSG)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (CXT)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (DBL)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (EXT)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (I8)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (I16)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (I32)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (Path)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (SGL)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (String)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (U8)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (U16)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (U32)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (Variant)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (Variant)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (I64)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (U64)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (I64)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (U64)__ogtk.vi"/>
+				<Item Name="Reorder 1D Array2 (LVObject)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 1D Array2 (LVObject)__ogtk.vi"/>
+				<Item Name="Reorder 2D Array2 (LVObject)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Reorder 2D Array2 (LVObject)__ogtk.vi"/>
+				<Item Name="Search Array__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search Array__ogtk.vi"/>
+				<Item Name="Search 1D Array (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (SGL)__ogtk.vi"/>
+				<Item Name="Search 1D Array (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (DBL)__ogtk.vi"/>
+				<Item Name="Search 1D Array (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (EXT)__ogtk.vi"/>
+				<Item Name="Search 1D Array (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (CSG)__ogtk.vi"/>
+				<Item Name="Search 1D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (CDB)__ogtk.vi"/>
+				<Item Name="Search 1D Array (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (CXT)__ogtk.vi"/>
+				<Item Name="Search 1D Array (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (I8)__ogtk.vi"/>
+				<Item Name="Search 1D Array (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (I16)__ogtk.vi"/>
+				<Item Name="Search 1D Array (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (I32)__ogtk.vi"/>
+				<Item Name="Search 1D Array (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (U8)__ogtk.vi"/>
+				<Item Name="Search 1D Array (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (U16)__ogtk.vi"/>
+				<Item Name="Search 1D Array (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (U32)__ogtk.vi"/>
+				<Item Name="Search 1D Array (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (Boolean)__ogtk.vi"/>
+				<Item Name="Search 1D Array (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (String)__ogtk.vi"/>
+				<Item Name="Search 1D Array (Variant)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (Variant)__ogtk.vi"/>
+				<Item Name="Search 1D Array (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (U64)__ogtk.vi"/>
+				<Item Name="Search 1D Array (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (I64)__ogtk.vi"/>
+				<Item Name="Search 1D Array (LVObject)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Search 1D Array (LVObject)__ogtk.vi"/>
+				<Item Name="Delete Elements from Array__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from Array__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (Boolean)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (CDB)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (CSG)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (DBL)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (CXT)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (EXT)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (I8)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (I16)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (I32)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (SGL)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (String)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (U8)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (U16)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (U32)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (Variant)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (Variant)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (Boolean)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (CDB)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (CSG)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (CXT)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (DBL)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (EXT)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (I8)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (I16)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (I32)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (Path)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (SGL)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (String)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (U8)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (U16)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (U32)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (Variant)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (Variant)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (I64)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (U64)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (I64)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (U64)__ogtk.vi"/>
+				<Item Name="Delete Elements from 1D Array (LVObject)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 1D Array (LVObject)__ogtk.vi"/>
+				<Item Name="Delete Elements from 2D Array (LVObject)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Delete Elements from 2D Array (LVObject)__ogtk.vi"/>
+				<Item Name="Filter 1D Array__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array__ogtk.vi"/>
+				<Item Name="Filter 1D Array (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (String)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (U8)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (U32)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (U16)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (I16)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (I32)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (I8)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (Variant)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (Variant)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (Boolean)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (CXT)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (CDB)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (CSG)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (EXT)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (DBL)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (SGL)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (Boolean)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (Boolean)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (CDB)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (CDB)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (CSG)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (CSG)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (CXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (CXT)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (DBL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (DBL)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (EXT)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (EXT)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (I8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (I8)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (I16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (I16)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (I32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (I32)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (Path)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (Path)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (SGL)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (SGL)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (String)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (String)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (U8)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (U8)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (U16)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (U16)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (U32)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (U32)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (Variant)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (Variant)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (I64)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (U64)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (I64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (I64)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (U64)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (U64)__ogtk.vi"/>
+				<Item Name="Filter 1D Array (LVObject)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array (LVObject)__ogtk.vi"/>
+				<Item Name="Filter 1D Array with Scalar (LVObject)__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/array/array.llb/Filter 1D Array with Scalar (LVObject)__ogtk.vi"/>
+				<Item Name="Compare File Binary__ogtk.vi" Type="VI" URL="/&lt;userlib&gt;/_OpenG.lib/file/file.llb/Compare File Binary__ogtk.vi"/>
 			</Item>
-			<Item Name="DEAB Version Str-Num Converter__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Version Str-Num Converter__ogb.vi"/>
-			<Item Name="DEAB Current Version__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Current Version__ogb.vi"/>
-			<Item Name="Build Application__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Build Application__ogb.vi"/>
-			<Item Name="DEAB Build Progress Info__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Build Progress Info__ogb.vi"/>
-			<Item Name="Valid Path - Traditional__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Valid Path - Traditional__ogtk__ogb.vi"/>
-			<Item Name="Current VIs Reference__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Current VIs Reference__ogtk__ogb.vi"/>
-			<Item Name="DEAB Error Handler__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Error Handler__ogb.vi"/>
-			<Item Name="DEAB Error Counter__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Error Counter__ogb.vi"/>
-			<Item Name="DEAB Simple Error Handler (proxy)__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Simple Error Handler (proxy)__ogb.vi"/>
-			<Item Name="VI Library__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/VI Library__ogtk__ogb.vi"/>
-			<Item Name="DEAB Log Store__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Log Store__ogb.vi"/>
-			<Item Name="OGB Verify if NIAB is available to build EXEs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/OGB Verify if NIAB is available to build EXEs__ogb.vi"/>
-			<Item Name="Verify if NIAB is present__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Verify if NIAB is present__ogb.vi"/>
-			<Item Name="Application Directory__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Application Directory__ogtk__ogb.vi"/>
-			<Item Name="Build Error Cluster__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Build Error Cluster__ogtk__ogb.vi"/>
-			<Item Name="Call Pre-Post Build VI__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Call Pre-Post Build VI__ogb.vi"/>
-			<Item Name="DEAB Get Application Reference__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Get Application Reference__ogb.vi"/>
-			<Item Name="Current VIs Parent Directory__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Current VIs Parent Directory__ogtk__ogb.vi"/>
-			<Item Name="Current VIs Parents Ref__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Current VIs Parents Ref__ogtk__ogb.vi"/>
-			<Item Name="Strip Path - Traditional__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Strip Path - Traditional__ogtk__ogb.vi"/>
-			<Item Name="DEAB Log VI Execution__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Log VI Execution__ogb.vi"/>
-			<Item Name="Close Generic Object Refnum (Scalar VI)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Close Generic Object Refnum (Scalar VI)__ogtk__ogb.vi"/>
-			<Item Name="Close Generic Object Refnum (Array VI)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Close Generic Object Refnum (Array VI)__ogtk__ogb.vi"/>
-			<Item Name="Revision File Control__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Revision File Control__ogb.vi"/>
-			<Item Name="String to 1D Array__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/String to 1D Array__ogtk__ogb.vi"/>
-			<Item Name="DEAB Add Empty Line to INI Section__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Add Empty Line to INI Section__ogb.vi"/>
-			<Item Name="Call-Back VI Control__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Call-Back VI Control__ogb.vi"/>
-			<Item Name="DEAB Get Paths by Templates__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Get Paths by Templates__ogb.vi"/>
-			<Item Name="Remove Duplicated Paths from 1D Array__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Remove Duplicated Paths from 1D Array__ogb.vi"/>
-			<Item Name="DEAB Expand &amp; Verify TL&amp;D VI Paths__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Expand &amp; Verify TL&amp;D VI Paths__ogb.vi"/>
-			<Item Name="Load VIs into Memory__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Load VIs into Memory__ogb.vi"/>
-			<Item Name="Filter Library Paths from Paths Array__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Filter Library Paths from Paths Array__ogb.vi"/>
-			<Item Name="Strip Path Extension - Path__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Strip Path Extension - Path__ogtk__ogb.vi"/>
-			<Item Name="Strip Path Extension - String__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Strip Path Extension - String__ogtk__ogb.vi"/>
-			<Item Name="Conditional Auto-Indexing Tunnel (Path)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Conditional Auto-Indexing Tunnel (Path)__ogtk__ogb.vi"/>
-			<Item Name="Get Library Member VI Paths__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Get Library Member VI Paths__ogb.vi"/>
-			<Item Name="Library.Open__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Library.Open__ogb.vi"/>
-			<Item Name="Library.GetMemberVIs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Library.GetMemberVIs__ogb.vi"/>
-			<Item Name="Get VIs Hierarchy__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Get VIs Hierarchy__ogb.vi"/>
-			<Item Name="Find VI Hierarchy__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Find VI Hierarchy__ogb.vi"/>
-			<Item Name="Filter 1D Array with Scalar (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Filter 1D Array with Scalar (String)__ogtk__ogb.vi"/>
-			<Item Name="Search 1D Array (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Search 1D Array (String)__ogtk__ogb.vi"/>
-			<Item Name="Delete Elements from 1D Array (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Delete Elements from 1D Array (String)__ogtk__ogb.vi"/>
-			<Item Name="Sort 1D Array (I32)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Sort 1D Array (I32)__ogtk__ogb.vi"/>
-			<Item Name="Reorder 1D Array2 (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Reorder 1D Array2 (String)__ogtk__ogb.vi"/>
-			<Item Name="Remove Duplicated Strings from 1D Array__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Remove Duplicated Strings from 1D Array__ogb.vi"/>
-			<Item Name="Get Parent Libraries and Members__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Get Parent Libraries and Members__ogb.vi"/>
-			<Item Name="Conditional Auto-Indexing Tunnel (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Conditional Auto-Indexing Tunnel (String)__ogtk__ogb.vi"/>
-			<Item Name="VI.GetLibraries.Members__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/VI.GetLibraries.Members__ogb.vi"/>
-			<Item Name="VI.GetXCTLS.Libraries__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/VI.GetXCTLS.Libraries__ogb.vi"/>
-			<Item Name="Library.RemoveDuplicates__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Library.RemoveDuplicates__ogb.vi"/>
-			<Item Name="Library.GetTypeString__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Library.GetTypeString__ogb.vi"/>
-			<Item Name="Conditional Auto-Indexing Tunnel (VI-REF)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Conditional Auto-Indexing Tunnel (VI-REF)__ogtk__ogb.vi"/>
-			<Item Name="Filter 1D Array (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Filter 1D Array (String)__ogtk__ogb.vi"/>
-			<Item Name="Remove Duplicates from 1D Array (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Remove Duplicates from 1D Array (String)__ogtk__ogb.vi"/>
-			<Item Name="Build VI Hierarchy from VI List__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Build VI Hierarchy from VI List__ogb.vi"/>
-			<Item Name="Sort VI Hierarchy__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Sort VI Hierarchy__ogb.vi"/>
-			<Item Name="Test VIs need be Unloaded__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Test VIs need be Unloaded__ogb.vi"/>
-			<Item Name="UnMangle VI Name (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/UnMangle VI Name (String)__ogtk__ogb.vi"/>
-			<Item Name="Post-build Actual Parameters Constant__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Post-build Actual Parameters Constant__ogb.vi"/>
-			<Item Name="Test for VI Unsaved Changes__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Test for VI Unsaved Changes__ogb.vi"/>
-			<Item Name="Disconnect PolyVIs And Typedefs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Disconnect PolyVIs And Typedefs__ogb.vi"/>
-			<Item Name="Revise Destinations__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Revise Destinations__ogb.vi"/>
-			<Item Name="Treat Password Keywords__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Treat Password Keywords__ogb.vi"/>
-			<Item Name="Treat Keep Hierarchy Flag__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Treat Keep Hierarchy Flag__ogb.vi"/>
-			<Item Name="Compare Two Paths__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Compare Two Paths__ogtk__ogb.vi"/>
-			<Item Name="Get Extension of an Executable file__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Get Extension of an Executable file__ogb.vi"/>
-			<Item Name="Convert File Extension (Path)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Convert File Extension (Path)__ogtk__ogb.vi"/>
-			<Item Name="Convert File Extension (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Convert File Extension (String)__ogtk__ogb.vi"/>
-			<Item Name="DEAB Has LLB Extension__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Has LLB Extension__ogb.vi"/>
-			<Item Name="Generate Resources Copy Info__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Generate Resources Copy Info__ogb.vi"/>
-			<Item Name="Read VI Linking Info from Files (w err)__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Read VI Linking Info from Files (w err)__ogb.vi"/>
-			<Item Name="Read Linker Info from File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Read Linker Info from File__ogb.vi"/>
-			<Item Name="Read Linker Info__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Read Linker Info__ogb.vi"/>
-			<Item Name="Extract Non-VI Resorces Info from Linker Info__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Extract Non-VI Resorces Info from Linker Info__ogb.vi"/>
-			<Item Name="Test Exclude File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Test Exclude File__ogb.vi"/>
-			<Item Name="Find Destination of a Source VI__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Find Destination of a Source VI__ogb.vi"/>
-			<Item Name="Filter Illegal File Names__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Filter Illegal File Names__ogb.vi"/>
-			<Item Name="LabVIEWVersion__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/LabVIEWVersion__ogb.vi"/>
-			<Item Name="DEAB Mangle VI Name__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Mangle VI Name__ogb.vi"/>
-			<Item Name="Generate VI Building Info__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Generate VI Building Info__ogb.vi"/>
-			<Item Name="Test Path Against Source and Exclude Paths__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Test Path Against Source and Exclude Paths__ogb.vi"/>
-			<Item Name="Parse Library Member Name__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Parse Library Member Name__ogb.vi"/>
-			<Item Name="Revise Ambiguous VIs Destination__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Revise Ambiguous VIs Destination__ogb.vi"/>
-			<Item Name="Create Target Dirs and LLBs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Create Target Dirs and LLBs__ogb.vi"/>
-			<Item Name="Rename Build Root Dir If Exists__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Rename Build Root Dir If Exists__ogb.vi"/>
-			<Item Name="Verify if Sources can be Removed__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Verify if Sources can be Removed__ogb.vi"/>
-			<Item Name="1D Array to String__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/1D Array to String__ogtk__ogb.vi"/>
-			<Item Name="Conditional Auto-Indexing Tunnel (Variant)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Conditional Auto-Indexing Tunnel (Variant)__ogtk__ogb.vi"/>
-			<Item Name="Remove Duplicated Variants from 1D Array__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Remove Duplicated Variants from 1D Array__ogb.vi"/>
-			<Item Name="DEAB Create Dir if Non-Existant__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Create Dir if Non-Existant__ogb.vi"/>
-			<Item Name="Proxy - New VI Library__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Proxy - New VI Library__ogb.vi"/>
-			<Item Name="Set VI Properties__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Set VI Properties__ogb.vi"/>
-			<Item Name="Set Version Info Control__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Set Version Info Control__ogb.vi"/>
-			<Item Name="OGB Determine VI Save Level__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/OGB Determine VI Save Level__ogb.vi"/>
-			<Item Name="OGB Test VI for FP Required__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/OGB Test VI for FP Required__ogb.vi"/>
-			<Item Name="OGB Test VI for Event Structure used__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/OGB Test VI for Event Structure used__ogb.vi"/>
-			<Item Name="OGB Test VI for Self-Referencing__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/OGB Test VI for Self-Referencing__ogb.vi"/>
-			<Item Name="Set Common VI Properties__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Set Common VI Properties__ogb.vi"/>
-			<Item Name="Set Custom VI Properties__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Set Custom VI Properties__ogb.vi"/>
-			<Item Name="Set Named VI Property__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Set Named VI Property__ogb.vi"/>
-			<Item Name="DEAB String to Variant Data__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB String to Variant Data__ogb.vi"/>
-			<Item Name="Get Header from TD__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Get Header from TD__ogtk__ogb.vi"/>
-			<Item Name="Get Default Data from TD__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Get Default Data from TD__ogtk__ogb.vi"/>
-			<Item Name="Split Cluster TD__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Split Cluster TD__ogtk__ogb.vi"/>
-			<Item Name="Get Data Name from TD__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Get Data Name from TD__ogtk__ogb.vi"/>
-			<Item Name="Get PString__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Get PString__ogtk__ogb.vi"/>
-			<Item Name="Get Last PString__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Get Last PString__ogtk__ogb.vi"/>
-			<Item Name="Array of VData to VCluster__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Array of VData to VCluster__ogtk__ogb.vi"/>
-			<Item Name="Variant to Header Info__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Variant to Header Info__ogtk__ogb.vi"/>
-			<Item Name="Set Data Name__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Set Data Name__ogtk__ogb.vi"/>
-			<Item Name="Scan Variant from String__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Scan Variant from String__ogtk__ogb.vi"/>
-			<Item Name="Get TDEnum from Data__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Get TDEnum from Data__ogtk__ogb.vi"/>
-			<Item Name="Get Data Name__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Get Data Name__ogtk__ogb.vi"/>
-			<Item Name="Set Enum String Value__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Set Enum String Value__ogtk__ogb.vi"/>
-			<Item Name="Cluster to Array of VData__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Cluster to Array of VData__ogtk__ogb.vi"/>
-			<Item Name="Parse String with TDs__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Parse String with TDs__ogtk__ogb.vi"/>
-			<Item Name="Generic Set Single Property Template__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Generic Set Single Property Template__ogb.vi"/>
-			<Item Name="Copy Project Library Files__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Copy Project Library Files__ogb.vi"/>
-			<Item Name="Library.Save__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Library.Save__ogb.vi"/>
-			<Item Name="Save VIs to Destination__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Save VIs to Destination__ogb.vi"/>
-			<Item Name="Proxy - Dist Set LLB Caching__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Proxy - Dist Set LLB Caching__ogb.vi"/>
-			<Item Name="UnLoad Top-Level and Dynamic VIs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/UnLoad Top-Level and Dynamic VIs__ogb.vi"/>
-			<Item Name="Copy Resource Files and Relink VIs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Copy Resource Files and Relink VIs__ogb.vi"/>
-			<Item Name="File Exists__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/File Exists__ogtk__ogb.vi"/>
-			<Item Name="DEAB Librarian Copy__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Librarian Copy__ogb.vi"/>
-			<Item Name="DEAB Compare Src And Dst__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Compare Src And Dst__ogb.vi"/>
-			<Item Name="DEAB Librarian Path Location__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Librarian Path Location__ogb.vi"/>
-			<Item Name="DEAB Are Paths Equal__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Are Paths Equal__ogb.vi"/>
-			<Item Name="DEAB Copy In Or Out Of VI Library__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Copy In Or Out Of VI Library__ogb.vi"/>
-			<Item Name="DEAB Librarian OK to Delete__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Librarian OK to Delete__ogb.vi"/>
-			<Item Name="DEAB Librarian Delete Dialog__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Librarian Delete Dialog__ogb.vi"/>
-			<Item Name="DEAB Prepare VI Library for Copy__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Prepare VI Library for Copy__ogb.vi"/>
-			<Item Name="DEAB Temp Backup File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Temp Backup File__ogb.vi"/>
-			<Item Name="DEAB Temp Filename__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Temp Filename__ogb.vi"/>
-			<Item Name="DEAB Librarian__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Librarian__ogb.vi"/>
-			<Item Name="DEAB Temp Restore File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Temp Restore File__ogb.vi"/>
-			<Item Name="DEAB Copy From Folder To Folder__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Copy From Folder To Folder__ogb.vi"/>
-			<Item Name="DEAB Compare Src And Dst Simple__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Compare Src And Dst Simple__ogb.vi"/>
-			<Item Name="DEAB Copy From And To VI Library__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Copy From And To VI Library__ogb.vi"/>
-			<Item Name="DEAB Delete From VI Library__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Delete From VI Library__ogb.vi"/>
-			<Item Name="DEAB Librarian Rename__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Librarian Rename__ogb.vi"/>
-			<Item Name="DEAB Librarian Delete__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Librarian Delete__ogb.vi"/>
-			<Item Name="Library.Close__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Library.Close__ogb.vi"/>
-			<Item Name="Write Linker Info from File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Write Linker Info from File__ogb.vi"/>
-			<Item Name="Set Top Level VIs in LLBs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Set Top Level VIs in LLBs__ogb.vi"/>
-			<Item Name="Set VI Top Level__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Set VI Top Level__ogtk__ogb.vi"/>
-			<Item Name="Convert LLBs to EXEs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Convert LLBs to EXEs__ogb.vi"/>
-			<Item Name="Proxy - Dist Build App from LLB__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Proxy - Dist Build App from LLB__ogb.vi"/>
-			<Item Name="Copy Support Files__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Copy Support Files__ogb.vi"/>
-			<Item Name="Get Unique Target-Source Dir Pairs__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Get Unique Target-Source Dir Pairs__ogb.vi"/>
-			<Item Name="Get Directory Path__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Get Directory Path__ogb.vi"/>
-			<Item Name="Make List of Support Files to Copy__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Make List of Support Files to Copy__ogb.vi"/>
-			<Item Name="Recursive List Files and Directories__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Recursive List Files and Directories__ogb.vi"/>
-			<Item Name="DEAB Filter 1D Path Array (w underlying paths)__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Filter 1D Path Array (w underlying paths)__ogb.vi"/>
-			<Item Name="Build Report on Files__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Build Report on Files__ogb.vi"/>
-			<Item Name="Get Top-Level and Opened VIs to Unload__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Get Top-Level and Opened VIs to Unload__ogb.vi"/>
-			<Item Name="DEAB Filter 1D String Array__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Filter 1D String Array__ogb.vi"/>
-			<Item Name="DEAB Write Log File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Write Log File__ogb.vi"/>
-			<Item Name="Build Application from Build File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Build Application from Build File__ogb.vi"/>
-			<Item Name="Read Build File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Read Build File__ogb.vi"/>
-			<Item Name="DEAB Read Build File__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Read Build File__ogb.vi"/>
-			<Item Name="Build Parameters Constant__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Build Parameters Constant__ogb.vi"/>
-			<Item Name="Extra Build File Info Constants__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Extra Build File Info Constants__ogb.vi"/>
-			<Item Name="Filter Comments__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Filter Comments__ogb.vi"/>
-			<Item Name="Trim Whitespace (String)__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Trim Whitespace (String)__ogtk__ogb.vi"/>
-			<Item Name="DEAB Filter 1D String Array w RegExp__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Filter 1D String Array w RegExp__ogb.vi"/>
-			<Item Name="DEAB Validate Cfg Key Names__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Validate Cfg Key Names__ogb.vi"/>
-			<Item Name="OGB Build File Format Version__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/OGB Build File Format Version__ogb.vi"/>
-			<Item Name="DEAB Read Path key__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Read Path key__ogb.vi"/>
-			<Item Name="Treat Mac Path__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Treat Mac Path__ogb.vi"/>
-			<Item Name="Expand Pathroot API__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Expand Pathroot API__pthrtapi__ogb.vi"/>
-			<Item Name="Check Pathroots Installed API__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Check Pathroots Installed API__pthrtapi__ogb.vi"/>
-			<Item Name="Pathroots Resource Directory__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Pathroots Resource Directory__pthrtapi__ogb.vi"/>
-			<Item Name="Application Directory__ogtk__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Application Directory__ogtk__pthrtapi__ogb.vi"/>
-			<Item Name="Expand Pathroot__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Expand Pathroot__pthrtapi__ogb.vi"/>
-			<Item Name="Expand Pathroot Enum__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Expand Pathroot Enum__pthrtapi__ogb.vi"/>
-			<Item Name="Check OpenG Pathroots Installed API__ogpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Check OpenG Pathroots Installed API__ogpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="OpenG Pathroots Resource Directory__ogpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/OpenG Pathroots Resource Directory__ogpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="Application Directory__ogtk__ogpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Application Directory__ogtk__ogpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="Expand OpenG Pathroot API__ogpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Expand OpenG Pathroot API__ogpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="Build Error Cluster__ogtk__ogpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Build Error Cluster__ogtk__ogpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="Check Platform Pathroots Installed API__platpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Check Platform Pathroots Installed API__platpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="Platform Pathroots Resource Directory__platpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Platform Pathroots Resource Directory__platpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="Application Directory__ogtk__platpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Application Directory__ogtk__platpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="Expand Platform Pathroot API__platpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Expand Platform Pathroot API__platpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="Build Error Cluster__ogtk__platpthrtapi__pthrtapi__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/Build Error Cluster__ogtk__platpthrtapi__pthrtapi__ogb.vi"/>
-			<Item Name="DEAB Build Absolute Path__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Build Absolute Path__ogb.vi"/>
-			<Item Name="Append Path to Root if Relative__ogtk__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb_OpenG.llb/Append Path to Root if Relative__ogtk__ogb.vi"/>
-			<Item Name="DEAB Append Log File Suffix__ogb.vi" Type="VI" URL="/C/Program Files (x86)/National Instruments/LabVIEW 8.6/resource/OpenG/build/ogb.llb/DEAB Append Log File Suffix__ogb.vi"/>
 		</Item>
 		<Item Name="Build Specifications" Type="Build"/>
 	</Item>
