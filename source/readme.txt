@@ -1,4 +1,4 @@
-LabVIEW ZIP library, version 5.0.3
+LabVIEW ZIP library, version 5.0.4
 ----------------------------------
 
 Copyright 2002-2024 Rolf Kalbermatter
@@ -11,8 +11,16 @@ Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
 
+Release 5.0.4, Released: Sep. 6, 2024
+======================================
 
-Release 5.0.3, Released: June. 5, 2024
+Fixes:
+-------------
+1) Make chunked copy into archive through ZLIB Store File Continue.vi finally work.
+2) Fix more problems with 32/64-bit installation of the shared library.
+
+
+Release 5.0.3, Released: June 5, 2024
 ======================================
 
 Fixes:

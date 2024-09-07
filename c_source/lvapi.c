@@ -49,7 +49,7 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 {
 	if (!version[0])
 	{
-		snprintf(version, sizeof(version), ABOUT_PRODUCTTITLE "\n"
+		snprintf(version, sizeof(version), ABOUT_PRODUCTTITLE ", " __DATE__ "\n"
 		                                   "zlib version: %s, build flags: 0x%lX\n"
 										   "minizip version: 1.2.0, September 16th, 2017\n"
 										   "aes version: 2013\n"

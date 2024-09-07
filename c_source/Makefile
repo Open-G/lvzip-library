@@ -36,7 +36,7 @@ STATICLIB=lvzlib.a
 SHAREDLIB=liblvzlib.so
 SHAREDLIBV=liblvzlib.so.4
 SHAREDLIBM=lvzlib.so
-SHAREDLIB32=lvzlib.so
+SHAREDLIB32=lvzlib32.so
 SHAREDLIB64=lvzlib64.so
 LIBS=$(STATICLIB) $(SHAREDLIBV)
 

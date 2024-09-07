@@ -256,10 +256,11 @@
 				<Item Name="zip.mnu" Type="Document" URL="../submenus/zip.mnu"/>
 				<Item Name="zlib-string.mnu" Type="Document" URL="../submenus/zlib-string.mnu"/>
 			</Item>
+			<Item Name="lvzlib32.dll" Type="Document" URL="../lvzlib32.dll"/>
+			<Item Name="lvzlib64.dll" Type="Document" URL="../lvzlib64.dll"/>
+			<Item Name="lvzlib32.so" Type="Document" URL="../lvzlib32.so"/>
 			<Item Name="LICENSE.txt" Type="Document" URL="../LICENSE.txt"/>
-			<Item Name="lvzlib.dll" Type="Document" URL="../lvzlib.dll"/>
 			<Item Name="lvzlib.framework.zip" Type="Document" URL="../lvzlib.framework.zip"/>
-			<Item Name="lvzlib.so" Type="Document" URL="../lvzlib.so"/>
 			<Item Name="opengdoc.txt" Type="Document" URL="../opengdoc.txt"/>
 			<Item Name="readme.txt" Type="Document" URL="../readme.txt"/>
 			<Item Name="readonly.txt" Type="Document" URL="../readonly.txt"/>
@@ -279,9 +280,9 @@
 			<Item Name="lvzip-test-encoding2.vi" Type="VI" URL="../../tests/lvzip-test-encoding2.vi"/>
 			<Item Name="lvzip-test-lg bin files.vi" Type="VI" URL="../../tests/lvzip-test-lg bin files.vi"/>
 			<Item Name="lvzip-test-lg bin files2.vi" Type="VI" URL="../../tests/lvzip-test-lg bin files2.vi"/>
-			<Item Name="lvzip-test-progress files.vi" Type="VI" URL="../../tests/lvzip-test-progress files.vi"/>
 			<Item Name="lvzip-test-memory stream.vi" Type="VI" URL="../../tests/lvzip-test-memory stream.vi"/>
 			<Item Name="lvzip-test-memory stream2.vi" Type="VI" URL="../../tests/lvzip-test-memory stream2.vi"/>
+			<Item Name="lvzip-test-progress files.vi" Type="VI" URL="../../tests/lvzip-test-progress files.vi"/>
 			<Item Name="lvzip-test-random-generator.vi" Type="VI" URL="../../tests/lvzip-test-random-generator.vi"/>
 			<Item Name="lvzip-test-sm text files.vi" Type="VI" URL="../../tests/lvzip-test-sm text files.vi"/>
 			<Item Name="lvzip-test-sm text files2.vi" Type="VI" URL="../../tests/lvzip-test-sm text files2.vi"/>
