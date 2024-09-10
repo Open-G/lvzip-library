@@ -4,3 +4,4 @@
 /source/*.lvlps
 /RT Images/*.aliases
 /RT Images/*.lvlps
+/build_support/*.rev
