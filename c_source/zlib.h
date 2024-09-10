@@ -1264,6 +1264,9 @@ ZEXTERN int ZEXPORT compress2(Bytef *dest,   uLongf *destLen,
    Z_STREAM_ERROR if the level parameter is invalid.
 */
 
+int ZEXPORT compress3(Bytef *dest, uLongf *destLen, const Bytef *source,
+                      uLong sourceLen, int level, int windowBits);
+
 ZEXTERN uLong ZEXPORT compressBound(uLong sourceLen);
 /*
      compressBound() returns an upper bound on the compressed size after
@@ -1295,6 +1298,13 @@ ZEXTERN int ZEXPORT uncompress2(Bytef *dest,   uLongf *destLen,
      Same as uncompress, except that sourceLen is a pointer, where the
    length of the source is *sourceLen.  On return, *sourceLen is the number of
    source bytes consumed.
+*/
+
+ZEXTERN int ZEXPORT uncompress3(Bytef *dest,   uLongf *destLen,
+                                const Bytef *source, uLong *sourceLen, int windowBits);
+/*
+     Same as uncompress2, but with an additional windowBits parameter for
+	 initialization of the stream decompressor.
 */
 
                         /* gzip file access functions */

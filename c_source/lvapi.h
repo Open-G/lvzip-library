@@ -35,7 +35,9 @@ LibAPI(uInt32) lvzlib_isLittleEndian(void);
 
 /* exported zlib deflate and inflate functions */
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen, int level);
+LibAPI(int) lvzlib_compress2(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen, int level, int32 windowSize);
 LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 sourceLen);
+LibAPI(int) lvzlib_uncompress2(Bytef *dest, uInt32 *destLen, const Bytef *source, uInt32 *sourceLen, int32 windowSize);
 LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len);
 LibAPI(uInt32) lvzlib_cryptrand(Bytef *buf, uInt32 size);
 

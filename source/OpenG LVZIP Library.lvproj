@@ -173,8 +173,8 @@
 					<Item Name="ZLIB Store Directory.vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store Directory.vi"/>
 					<Item Name="ZLIB Store File (Path).vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store File (Path).vi"/>
 					<Item Name="ZLIB Store File (Wide Path).vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store File (Wide Path).vi"/>
-					<Item Name="ZLIB Store File Continue.vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store File Continue.vi"/>
-					<Item Name="ZLIB Store File Prepare.vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store File Prepare.vi"/>
+					<Item Name="ZLIB Store File First.vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store File First.vi"/>
+					<Item Name="ZLIB Store File Next.vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store File Next.vi"/>
 					<Item Name="ZLIB Store Link.vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store Link.vi"/>
 					<Item Name="ZLIB Store Stream.vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Store Stream.vi"/>
 					<Item Name="ZLIB Transfer Raw File.vi" Type="VI" URL="../lvzip.llb/subVI/ZLIB Transfer Raw File.vi"/>
@@ -193,6 +193,8 @@
 				<Item Name="ZLIB Compress Files.vi" Type="VI" URL="../lvzip.llb/ZLIB Compress Files.vi"/>
 				<Item Name="ZLIB Copy Raw File.vi" Type="VI" URL="../lvzip.llb/ZLIB Copy Raw File.vi"/>
 				<Item Name="ZLIB CRC32.vi" Type="VI" URL="../lvzip.llb/ZLIB CRC32.vi"/>
+				<Item Name="ZLIB Deflate Extended.vi" Type="VI" URL="../lvzip.llb/ZLIB Deflate Extended.vi"/>
+				<Item Name="ZLIB Deflate Type.ctl" Type="VI" URL="../lvzip.llb/ZLIB Deflate Type.ctl"/>
 				<Item Name="ZLIB Deflate.vi" Type="VI" URL="../lvzip.llb/ZLIB Deflate.vi"/>
 				<Item Name="ZLIB Delete Files From Archive.vi" Type="VI" URL="../lvzip.llb/ZLIB Delete Files From Archive.vi"/>
 				<Item Name="ZLIB Enumerate File Contents Old.vi" Type="VI" URL="../lvzip.llb/ZLIB Enumerate File Contents Old.vi"/>
@@ -211,6 +213,8 @@
 				<Item Name="ZLIB Go To File Pos.vi" Type="VI" URL="../lvzip.llb/ZLIB Go To File Pos.vi"/>
 				<Item Name="ZLIB Go To First File.vi" Type="VI" URL="../lvzip.llb/ZLIB Go To First File.vi"/>
 				<Item Name="ZLIB Go To Next File.vi" Type="VI" URL="../lvzip.llb/ZLIB Go To Next File.vi"/>
+				<Item Name="ZLIB Inflate Extended.vi" Type="VI" URL="../lvzip.llb/ZLIB Inflate Extended.vi"/>
+				<Item Name="ZLIB Inflate Type.ctl" Type="VI" URL="../lvzip.llb/ZLIB Inflate Type.ctl"/>
 				<Item Name="ZLIB Inflate.vi" Type="VI" URL="../lvzip.llb/ZLIB Inflate.vi"/>
 				<Item Name="ZLIB Locate File.vi" Type="VI" URL="../lvzip.llb/ZLIB Locate File.vi"/>
 				<Item Name="ZLIB Open Unzip Archive.vi" Type="VI" URL="../lvzip.llb/ZLIB Open Unzip Archive.vi"/>

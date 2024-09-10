@@ -1,4 +1,4 @@
-LabVIEW ZIP library, version 5.0.4
+LabVIEW ZIP library, version 5.0.5
 ----------------------------------
 
 Copyright 2002-2024 Rolf Kalbermatter
@@ -11,11 +11,19 @@ Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
 
+Release 5.0.5, Released: Sep. 10, 2024
+======================================
+
+Improvements:
+-------------
+1) Add an option to control the header used for the Inflate and Deflate functions.
+
+
 Release 5.0.4, Released: Sep. 6, 2024
 ======================================
 
 Fixes:
--------------
+------
 1) Make chunked copy into archive through ZLIB Store File Continue.vi finally work.
 2) Fix more problems with 32/64-bit installation of the shared library.
 
@@ -24,7 +32,7 @@ Release 5.0.3, Released: June 5, 2024
 ======================================
 
 Fixes:
--------------
+------
 1) Fix wiring mistake ZLIB Store File Prepare.vi where comment and password was exchanged
 2) Fix missing wire for the file refnum when opening a file in ZLIB Store File Continue.vi 
 
@@ -42,7 +50,7 @@ Release 5.0.1, Released: Mar. 13, 2024
 ======================================
 
 Fixes:
--------------
+------
 1) Make the initial license dialog work better with various default font sizes on different platforms
 2) Make the initial license dialog respect the quiet flag that VIPM CLI can pass
 
@@ -56,7 +64,7 @@ New features:
 2) Massive internal rewrite but the outside interface should still be compatible with the previous versions
 
 Upgrades:
-----------
+---------
 1) Updated the zlib core code to version 1.3.1 from the zlib site
 
 
@@ -75,7 +83,7 @@ Bug Fixes:
 1) Several fixes to 64 bit operations
 
 Upgrades:
-----------
+---------
 1) Upgraded to zlib 1.2.11 and minizip 1.2.0 from Nathan Moinvaziri
 
 
@@ -93,7 +101,7 @@ New features:
 4) Added support for all NI-Linux RT platforrms
 
 Upgrades:
-----------
+---------
 1) Upgraded to zlib 1.2.8 and included minizip
 
 

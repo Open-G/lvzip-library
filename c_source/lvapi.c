@@ -78,15 +78,27 @@ LibAPI(uInt32) lvzlib_isLittleEndian(void)
 
 /* exported zlib deflate and inflate functions */
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen,
-                             const Bytef *source, uInt32 sourceLen, int level)
+                            const Bytef *source, uInt32 sourceLen, int level)
 {
 	return compress2(dest, (uLong*)destLen, source, (uLong)sourceLen, level);
 }
 
+LibAPI(int) lvzlib_compress2(Bytef *dest, uInt32 *destLen,
+                             const Bytef *source, uInt32 sourceLen, int level, int windowBits)
+{
+	return compress3(dest, (uLong*)destLen, source, (uLong)sourceLen, level, windowBits);
+}
+
 LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen,
-                             const Bytef *source, uInt32 sourceLen)
+                              const Bytef *source, uInt32 sourceLen)
 {
 	return uncompress(dest, (uLong*)destLen, source, (uLong)sourceLen);
+}
+
+LibAPI(int) lvzlib_uncompress2(Bytef *dest, uInt32 *destLen,
+                               const Bytef *source, uInt32 *sourceLen, int windowBits)
+{
+	return uncompress3(dest, (uLong*)destLen, source, (uLong*)sourceLen, windowBits);
 }
 
 LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len)
