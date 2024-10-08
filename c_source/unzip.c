@@ -80,7 +80,7 @@
 
 const char unz_copyright[] = " unzip 1.2.0 Copyright 1998-2017 - https://github.com/nmoinvaz/minizip";
 
-/* unz_file_info_internal contain internal info about a file in zipfile*/
+/* unz_file_info64_internal contain internal info about a file in zipfile*/
 typedef struct unz_file_info64_internal_s
 {
     uint64_t offset_curfile;            /* relative offset of local header 8 bytes */
@@ -92,7 +92,7 @@ typedef struct unz_file_info64_internal_s
 #endif
 } unz_file_info64_internal;
 
-/* file_in_zip_read_info_s contain internal information about a file in zipfile */
+/* file_in_zip64_read_info_s contain internal information about a file in zipfile */
 typedef struct
 {
     uint8_t *read_buffer;               /* internal buffer for compressed data */
@@ -127,7 +127,7 @@ typedef struct
     int      raw;
 } file_in_zip64_read_info_s;
 
-/* unz64_s contain internal information about the zipfile */
+/* unz64_internal contain internal information about the zipfile */
 typedef struct
 {
     zlib_filefunc64_32_def z_filefunc;
@@ -321,7 +321,7 @@ static int unzSearchCentralDir64(const zlib_filefunc64_32_def *pzlib_filefunc_de
         return UNZ_ERRNO;
     if (value32 != ZIP64ENDLOCHEADERMAGIC)
         return UNZ_ERRNO;
-    /* Number of the disk with the start of the zip64 end of  central directory */
+    /* Number of the disk with the start of the zip64 end of central directory */
     if (unzReadUInt32(pzlib_filefunc_def, filestream, &value32) != UNZ_OK)
         return UNZ_ERRNO;
     /* Relative offset of the zip64 end of central directory record */
@@ -362,7 +362,7 @@ static unzFile unzOpenInternal(const void *path, zlib_filefunc64_32_def *pzlib_f
 
     if (pzlib_filefunc64_32_def == NULL)
 #if WIN32
-		fill_win32_filefunc64A(&us.z_filefunc.zfile_func64);
+		fill_win32_filefunc64W(&us.z_filefunc.zfile_func64);
 #else
 		fill_fopen64_filefunc(&us.z_filefunc.zfile_func64);
 #endif
@@ -555,7 +555,8 @@ extern int ZEXPORT unzClose2(unzFile file, voidpf *output)
     if (s->filestream_with_CD != NULL)
         ZCLOSE64(s->z_filefunc, s->filestream_with_CD);
 
-	*output = s->z_filefunc.zfile_func64.opaque;
+	if (output)
+		*output = s->z_filefunc.zfile_func64.opaque;
 
 	s->filestream = NULL;
     s->filestream_with_CD = NULL;
@@ -1734,7 +1735,7 @@ extern int ZEXPORT unzGoToNextFile2(unzFile file, unz_file_info64 *pfile_info, c
     s->num_file += 1;
 
     err = unzGetCurrentFileInfoInternal(file, &s->cur_file_info, &s->cur_file_info_internal,
-            filename, filename_size, extrafield,extrafield_size, comment, comment_size);
+            filename, filename_size, extrafield, extrafield_size, comment, comment_size);
 
     s->current_file_ok = (err == UNZ_OK);
     if ((err == UNZ_OK) && (pfile_info != NULL))
@@ -1852,11 +1853,7 @@ extern int ZEXPORT unzGoToFilePos64(unzFile file, const unz64_file_pos *file_pos
 
 extern uint32_t ZEXPORT unzGetOffset(unzFile file)
 {
-    uint64_t offset64 = 0;
-
-    if (file == NULL)
-        return UNZ_PARAMERROR;
-    offset64 = unzGetOffset64(file);
+    uint64_t offset64 = unzGetOffset64(file);
     return (uint32_t)offset64;
 }
 
@@ -1865,7 +1862,7 @@ extern uint64_t ZEXPORT unzGetOffset64(unzFile file)
     unz64_internal *s = NULL;
 
     if (file == NULL)
-        return UNZ_PARAMERROR;
+        return UNZ_INVOFFSET;
     s = (unz64_internal*)file;
     if (!s->current_file_ok)
         return 0;
@@ -1903,10 +1900,10 @@ extern uint32_t ZEXPORT unzTell(unzFile file)
 {
     unz64_internal *s = NULL;
     if (file == NULL)
-        return UNZ_PARAMERROR;
+        return (uint32_t)UNZ_INVOFFSET;
     s = (unz64_internal*)file;
     if (s->pfile_in_zip_read == NULL)
-        return UNZ_PARAMERROR;
+        return (uint32_t)UNZ_INVOFFSET;
     return (uint32_t)s->pfile_in_zip_read->stream.total_out;
 }
 
@@ -1914,10 +1911,10 @@ extern uint64_t ZEXPORT unzTell64(unzFile file)
 {
     unz64_internal *s = NULL;
     if (file == NULL)
-        return UNZ_PARAMERROR;
+        return UNZ_INVOFFSET;
     s = (unz64_internal*)file;
     if (s->pfile_in_zip_read == NULL)
-        return UNZ_PARAMERROR;
+        return UNZ_INVOFFSET;
     return s->pfile_in_zip_read->total_out_64;
 }
 

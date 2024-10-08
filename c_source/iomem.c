@@ -2,7 +2,7 @@
    iomem.c -- Memory base function header for compress/uncompress .zip files
    using zlib + zip or unzip API
 
-   Copyright (C) 2007-2018 Rolf Kalbermatter
+   Copyright (C) 2007-2024 Rolf Kalbermatter
 
    All rights reserved.
 
@@ -253,7 +253,7 @@ void fill_mem_filefunc(zlib_filefunc64_def* pzlib_filefunc_def, LStrHandle *memo
     pzlib_filefunc_def->zseek64_file = mem_seek64_file_func;
     pzlib_filefunc_def->zclose_file = mem_close_file_func;
     pzlib_filefunc_def->zerror_file = mem_error_file_func;
-    if (*memory)
+    if (memory && *memory)
     {
         pzlib_filefunc_def->opaque = *memory;
         *memory = NULL;

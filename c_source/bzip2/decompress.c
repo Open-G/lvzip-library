@@ -48,7 +48,7 @@ void makeMaps_d ( DState* s )
          v = (s->bsBuff >>                        \
              (s->bsLive-nnn)) & ((1 << nnn)-1);   \
          s->bsLive -= nnn;                        \
-         vvv = v;                                 \
+         vvv = v;                          \
          break;                                   \
       }                                           \
       if (s->strm->avail_in == 0) RETURN(BZ_OK);  \
