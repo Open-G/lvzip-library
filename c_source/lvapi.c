@@ -49,7 +49,7 @@ LibAPI(const char *) lvzlib_zlibVersion(void)
 {
 	if (!version[0])
 	{
-		snprintf(version, sizeof(version), ABOUT_PRODUCTTITLE "\n"
+		snprintf(version, sizeof(version), ABOUT_PRODUCTTITLE ", " __DATE__ "\n"
 		                                   "zlib version: %s, build flags: 0x%lX\n"
 										   "minizip version: 1.2.0, September 16th, 2017\n"
 										   "aes version: 2013\n"
@@ -78,15 +78,27 @@ LibAPI(uInt32) lvzlib_isLittleEndian(void)
 
 /* exported zlib deflate and inflate functions */
 LibAPI(int) lvzlib_compress(Bytef *dest, uInt32 *destLen,
-                             const Bytef *source, uInt32 sourceLen, int level)
+                            const Bytef *source, uInt32 sourceLen, int level)
 {
 	return compress2(dest, (uLong*)destLen, source, (uLong)sourceLen, level);
 }
 
+LibAPI(int) lvzlib_compress2(Bytef *dest, uInt32 *destLen,
+                             const Bytef *source, uInt32 sourceLen, int level, int windowBits)
+{
+	return compress3(dest, (uLong*)destLen, source, (uLong)sourceLen, level, windowBits);
+}
+
 LibAPI(int) lvzlib_uncompress(Bytef *dest, uInt32 *destLen,
-                             const Bytef *source, uInt32 sourceLen)
+                              const Bytef *source, uInt32 sourceLen)
 {
 	return uncompress(dest, (uLong*)destLen, source, (uLong)sourceLen);
+}
+
+LibAPI(int) lvzlib_uncompress2(Bytef *dest, uInt32 *destLen,
+                               const Bytef *source, uInt32 *sourceLen, int windowBits)
+{
+	return uncompress3(dest, (uLong*)destLen, source, (uLong*)sourceLen, windowBits);
 }
 
 LibAPI(uInt32) lvzlib_crc32(uInt32 crc, const Bytef *buf, uInt32 len)

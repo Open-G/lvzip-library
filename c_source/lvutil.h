@@ -158,6 +158,7 @@ enum { /* values for rsrc parameter */
 	kOpenFileRsrcComment
 };
 
+LibAPI(MgErr) LVFile_IsAFile(LVRefNum *refnum, LVBoolean *isAFile);
 LibAPI(MgErr) LVFile_OpenFile(LVRefNum *refnum, LWPathHandle *path, uInt32 rsrc, uInt32 openMode, uInt32 accessMode, uInt32 denyMode, uInt32 flags);
 LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum);
 LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, LVBoolean remain, FileOffset *size);

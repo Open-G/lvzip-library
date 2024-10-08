@@ -2,3 +2,6 @@
 /source/*.dll
 /source/*.aliases
 /source/*.lvlps
+/RT Images/*.aliases
+/RT Images/*.lvlps
+/build_support/*.rev

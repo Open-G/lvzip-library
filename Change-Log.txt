@@ -124,5 +124,12 @@ Add low level VIs to do chunked file copy into an archive for quasi asynchronous
 
 2024-06-05 rk
 Fix wiring mistake ZLIB Store File Prepare.vi where comment and password was exchanged
-Fix missing wire for the file refnum when opening a file in ZLIB Store File Continue.vi 
+Fix missing wire for the file refnum when opening a file in ZLIB Store File Continue.vi
+
+1024-09-06 rk
+Make chunked copy into archive through ZLIB Store File Continue.vi finally work.
+Fix more problems with 32/64-bit installation of the shared library.
+
+1024-09-10 rk
+Add an option to control the header used for the Inflate and Deflate functions.
 

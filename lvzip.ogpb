@@ -4,7 +4,7 @@ File Version=1.0.0
 [Unit Tests]
 Source Dir=tests
 run tests before build=FALSE
-Files.<size(s)>=15
+Files.<size(s)>=16
 Files 0=/Z/openg-lvzip/openg-lvzip/tests/lvfile_test_files.vi
 Files 1=/Z/openg-lvzip/openg-lvzip/tests/lvfile_test_paths.vi
 Files 2="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test add to empty archive.vi"
@@ -16,14 +16,15 @@ Files 7="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-lg bin files.vi"
 Files 8="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-lg bin files2.vi"
 Files 9="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-memory stream.vi"
 Files 10="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-memory stream2.vi"
-Files 11=/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-random-generator.vi
-Files 12="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-sm text files.vi"
-Files 13="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-sm text files2.vi"
-Files 14="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-string compress.vi"
+Files 11="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-progress files.vi"
+Files 12=/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-random-generator.vi
+Files 13="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-sm text files.vi"
+Files 14="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-sm text files2.vi"
+Files 15="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-string compress.vi"
 
 [Package Name]
 Name=oglib_lvzip
-Version=5.0.3
+Version=5.0.5
 Release=1
 Display Name="OpenG LabVIEW ZIP Library"
 
@@ -36,7 +37,7 @@ Distribution="OpenG Toolkit"
 Vendor=OpenG.org
 URL=http://wiki.openg.org/oglib_lvzip
 Packager="Rolf Kalbermatter <rolf.kalbermatter@gmail.com>"
-Release Notes="Version 5.0.3: Fix wiring mistake in ZLIB Store File Prepare.vi where comment and password was exchanged. Fix missing wiring to store the file refnum when opening a file in ZLIB Store File Continue.vi\0AVersion 5.0.2: Add a Low Level official API to store files in chunks into a ZIP file archive\0AVersion 5.0.1: Fix installation problems on various systems\0AVersion 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager layer to support long file paths as well as unicode file names.\0AVersion 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
+Release Notes="Version 5.0.5: Add an option to control the header used for the Inflate and Deflate functions.\0AVersion 5.0.4: Add a new function to check if a file refnum is valid. Use that when doing storing into archive in chunks.\0AUse the bitness wildcard in the shared library name to resolve various issues with installation madness on Linux.\0AVersion 5.0.3: Fix wiring mistake in ZLIB Store File Prepare.vi where comment and password was exchanged. Fix missing wiring to store the file refnum when opening a file in ZLIB Store File Continue.vi\0AVersion 5.0.2: Add a Low Level official API to store files in chunks into a ZIP file archive\0AVersion 5.0.1: Fix installation problems on various systems\0AVersion 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager layer to support long file paths as well as unicode file names.\0AVersion 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
 Demo=FALSE
 System Package=FALSE
 Sub Package=FALSE
@@ -53,7 +54,7 @@ skip mass compile after install=FALSE
 [Platform]
 Exclusive_LabVIEW_Version=">=8.6"
 Exclusive_LabVIEW_System=All
-Exclusive_OS="Windows NT,Linux"
+Exclusive_OS=All
 
 [Script VIs]
 Source Dir=""
@@ -71,122 +72,145 @@ Requires=""
 Conflicts=""
 
 [Files]
-Num File Groups=16
+Num File Groups=17
 Source Dir=""
 Target Dir=""
 Passwords.<size(s)>=0
 Documentation=""
 Doc Groups=""
 
-[Documents]
-Source Dir=source
+[File Group 0]
+Name=Documents
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir=source
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
 Num Files=1
 File 0=readme.txt
 
-[FileUtils]
-Source Dir=built/lvzip/fileutil.llb
+[File Group 1]
+Name=FileUtils
 DirMode=257
 NameMode=0
 PPFix=""
+Source Dir=built/lvzip/fileutil.llb
 Target Dir=<OpenG.lib>/lvzip/fileutil.llb
 Replace Mode=Always
 Num Files=1
 File 0=*.*
 
-[ArchiveFunctions]
-Source Dir=built/lvzip/lvzip.llb
+[File Group 2]
+Name=ArchiveFunctions
 DirMode=257
 NameMode=0
 PPFix=""
+Source Dir=built/lvzip/lvzip.llb
 Target Dir=<OpenG.lib>/lvzip/lvzip.llb
 Replace Mode=Always
 Num Files=1
 File 0=*.*
 
-[MacBinary]
-Source Dir=built/lvzip/macbin.llb
+[File Group 3]
+Name=MacBinary
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir=built/lvzip/macbin.llb
 Target Dir=<OpenG.lib>/lvzip/macbin.llb
 Replace Mode=Always
 Num Files=1
 File 0=*.*
 
-[StringUtils]
-Source Dir=built/lvzip/stringutil.llb
+[File Group 4]
+Name=StringUtils
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir=built/lvzip/stringutil.llb
 Target Dir=<OpenG.lib>/lvzip/stringutil.llb
 Replace Mode=Always
 Num Files=1
 File 0=*.*
 
-[SubMenus]
-Source Dir=source/submenus
+[File Group 5]
+Name=SubMenus
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir=source/submenus
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
 Num Files=1
 File 0=*.mnu
 
-[32-bit DLL]
+[File Group 6]
+Name="32-bit DLL"
+DirMode=0
+NameMode=0
+PPFix=""
 Source Dir="c_source/make.vs2005/Win32/DLL Release"
-DirMode=0
-NameMode=0
-PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
 Exclusive_OS="Windows NT"
 Num Files=1
 File 0=*.dll
 
-[64-bit DLL]
+[File Group 7]
+Name="64-bit DLL"
+DirMode=0
+NameMode=0
+PPFix=""
 Source Dir="c_source/make.vs2005/x64/DLL Release"
-DirMode=0
-NameMode=0
-PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
 Exclusive_OS="Windows NT"
 Num Files=1
 File 0=*.dll
 
-[32-bit Linux so]
+[File Group 8]
+Name="32-bit Linux so"
+DirMode=0
+NameMode=0
+PPFix=""
 Source Dir=c_source/Linux_x86
-DirMode=0
-NameMode=0
-PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
 Exclusive_OS=Linux
 Num Files=1
 File 0=*.so
 
-[64-bit Linux so]
+[File Group 9]
+Name="64-bit Linux so"
+DirMode=0
+NameMode=0
+PPFix=""
 Source Dir=c_source/Linux_x64
-DirMode=0
-NameMode=0
-PPFix=""
 Target Dir=<OpenG.lib>/lvzip
 Replace Mode=Always
-Exclusive_OS=Linux
+Exclusive_OS="Linux x64,Linux"
 Num Files=1
 File 0=*.so
 
-[Dynamic File Palette Old]
-Source Dir="Dynamic Palette MNUs"
+[File Group 10]
+Name="Macintosh Framework"
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir=source
+Target Dir=<OpenG.lib>/lvzip
+Replace Mode=Exclude
+Exclusive_OS="Mac OS X"
+Num Files=1
+File 0=lvzlib.framework.zip
+
+[File Group 11]
+Name="Dynamic File Palette Old"
+DirMode=0
+NameMode=0
+PPFix=""
+Source Dir="Dynamic Palette MNUs"
 Target Dir=<user.lib>/_dynamicpalette_dirs/OpenG
 Replace Mode=Always
 Exclusive_LabVIEW_Version="<=8.6"
@@ -194,22 +218,24 @@ Num Files=2
 File 0=oglib_lvzip.mnu
 File 1=oglib_fileutil.mnu
 
-[Dynamic File Palette File]
-Source Dir="Dynamic Palette MNUs"
+[File Group 12]
+Name="Dynamic File Palette File"
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir="Dynamic Palette MNUs"
 Target Dir=<user.lib>/_dynamicpalette_dirs/file
 Replace Mode=Always
 Exclusive_LabVIEW_Version="<=8.6"
 Num Files=1
 File 0=oglib_fileutil.mnu
 
-[Dynamic Palette New]
-Source Dir="Dynamic Palette MNUs"
+[File Group 13]
+Name="Dynamic Palette New"
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir="Dynamic Palette MNUs"
 Target Dir=<menus>/Categories/OpenG
 Replace Mode=Always
 Exclusive_LabVIEW_Version=">=9.0"
@@ -217,32 +243,35 @@ Num Files=2
 File 0=oglib_lvzip.mnu
 File 1=oglib_fileutil.mnu
 
-[Dynamic Palette OpenG]
-Source Dir="Dynamic Palette MNUs"
+[File Group 14]
+Name="Dynamic Palette OpenG"
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir="Dynamic Palette MNUs"
 Target Dir=<menus>/Categories/OpenG
 Replace Mode="If Newer"
 Exclusive_LabVIEW_Version=">=9.0"
 Num Files=1
 File 0=dir.mnu
 
-[Examples]
-Source Dir=built/lvzip/examples
+[File Group 15]
+Name=Examples
 DirMode=257
 NameMode=0
 PPFix=""
+Source Dir=built/lvzip/examples
 Target Dir=<application>/examples/OpenG/lvzip
 Replace Mode=Always
 Num Files=1
 File 0=*.*
 
-[RT Images]
-Source Dir="RT Images"
+[File Group 16]
+Name="RT Images"
 DirMode=0
 NameMode=0
 PPFix=""
+Source Dir="RT Images"
 Target Dir="<OpenG.lib>/lvzip/RT Images"
 Replace Mode=Exclude
 Exclusive_OS="Windows 9x,Windows NT,Windows x64"

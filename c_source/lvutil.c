@@ -4199,6 +4199,12 @@ LibAPI(MgErr) LVFile_CloseFile(LVRefNum *refnum)
 	return err;
 }
 
+LibAPI(MgErr) LVFile_IsAFile(LVRefNum *refnum, LVBoolean *isAFile)
+{
+	*isAFile = (LVBoolean)(lvzlibGetRefnum(refnum, NULL, FileMagic) == noErr);
+	return noErr;
+}
+
 LibAPI(MgErr) LVFile_GetSize(LVRefNum *refnum, LVBoolean remainder, FileOffset *size)
 {
 	FileRefNum ioRefNum;
