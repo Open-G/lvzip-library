@@ -49,6 +49,7 @@
 
 /* @(#) $Id$ */
 
+#include <time.h>
 #include "deflate.h"
 
 const char deflate_copyright[] =
@@ -1035,11 +1036,21 @@ int ZEXPORT deflate(z_streamp strm, int flush) {
         put_byte(s, 139);
         put_byte(s, 8);
         if (s->gzhead == Z_NULL) {
+            time_t secs = time(NULL);
             put_byte(s, 0);
-            put_byte(s, 0);
-            put_byte(s, 0);
-            put_byte(s, 0);
-            put_byte(s, 0);
+            if (secs > LONG_MAX) {
+                /* Beyond January 18, 2038, which can't be represented in a signed 32-bit integer */
+                put_byte(s, 0);
+                put_byte(s, 0);
+                put_byte(s, 0);
+                put_byte(s, 0);
+            }
+            else {
+                put_byte(s, (Byte)(secs & 0xff));
+                put_byte(s, (Byte)((secs >> 8) & 0xff));
+                put_byte(s, (Byte)((secs >> 16) & 0xff));
+                put_byte(s, (Byte)((secs >> 24) & 0xff));
+            }
             put_byte(s, s->level == 9 ? 2 :
                      (s->strategy >= Z_HUFFMAN_ONLY || s->level < 2 ?
                       4 : 0));
