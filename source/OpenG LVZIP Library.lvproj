@@ -15,6 +15,7 @@
 				<Item Name="Update Open Office Document.vi" Type="VI" URL="../examples/Update Open Office Document.vi"/>
 				<Item Name="Update Open Office Document2.vi" Type="VI" URL="../examples/Update Open Office Document2.vi"/>
 				<Item Name="View Archive Content.vi" Type="VI" URL="../examples/View Archive Content.vi"/>
+				<Item Name="GZIP Example.vi" Type="VI" URL="../examples/GZIP Example.vi"/>
 			</Item>
 			<Item Name="fileutil.llb" Type="Folder">
 				<Item Name="subVIs" Type="Folder">
@@ -269,9 +270,7 @@
 			<Item Name="readme.txt" Type="Document" URL="../readme.txt"/>
 			<Item Name="readonly.txt" Type="Document" URL="../readonly.txt"/>
 		</Item>
-		<Item Name="Trials" Type="Folder">
-			<Item Name="Get Call Library Nodes.vi" Type="VI" URL="../../build_support/Get Call Library Nodes.vi"/>
-		</Item>
+		<Item Name="Trials" Type="Folder"/>
 		<Item Name="tests" Type="Folder">
 			<Item Name="2013-175TPL0017(Issue Report).odt" Type="Document" URL="../../tests/2013-175TPL0017(Issue Report).odt"/>
 			<Item Name="encoding test.zip" Type="Document" URL="../../tests/encoding test.zip"/>
