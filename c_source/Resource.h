@@ -35,8 +35,8 @@
 
 #define VERSION_MAJOR            5
 #define VERSION_MINOR            0
-#define VERSION_REVISION         5
-#define VERSION_BUILD            165
+#define VERSION_REVISION         6
+#define VERSION_BUILD            166
 
 #define VER_FILEFLAGSMASK        VS_FFI_FILEFLAGSMASK
 #define VER_FILEOS               VOS_DOS_WINDOWS16

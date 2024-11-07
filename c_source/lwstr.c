@@ -108,7 +108,7 @@ DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *
 				*type = fAbsPath;		
 			offset += 2 + (IsSeperator(ptr[offset + 2]) ? 1 : 0);
 		}
-		else if (len >= 3 + offset && IsSeperator(ptr[offset]) && IsSeperator(ptr[offset + 1]) && ptr[offset + 2] < 128 && isalpha(ptr[offset + 2]))
+		else if (len >= 3 + offset && IsSeperator(ptr[offset]) && IsSeperator(ptr[offset + 1]) && isalnum(ptr[offset + 2]))
 		{
 			offset = LWPtrUNCOffset(ptr, offset + 2, len);
 			if (type)
@@ -1797,69 +1797,71 @@ static int32 ConvertToPosixWString(wchar_t *src, int32 srcLen, uInt8 *type, wcha
 MgErr CStrToPosixPath(ConstCStr src, int32 len, uInt32 srccp, LStrHandle *dest, uInt32 destcp, char defaultChar, LVBoolean *defUsed, LVBoolean isDir)
 {
     MgErr err = mgArgErr;
-#if usesHFSPath
-    Unused(defUsed);
-	CFStringEncoding encoding = ConvertCodepageToEncoding(srccp);
-	if (encoding != kCFStringEncodingInvalidId)
+	if (src && len && dest)
 	{
-		CFURLRef urlRef = NULL;
-		CFStringRef posixRef, fileRef = CFStringCreateWithBytes(kCFAllocatorDefault, src, len, encoding, false);
-		if (!fileRef)
+#if usesHFSPath
+		CFStringEncoding encoding = ConvertCodepageToEncoding(srccp);
+
+		Unused(defUsed);
+		if (encoding != kCFStringEncodingInvalidId)
 		{
-			return mFullErr;
-		}
-		urlRef = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, fileRef, kCFURLHFSPathStyle, isDir);
-		CFRelease(fileRef);
-		if (!urlRef)
-		{
-			return mFullErr;
-		}
-		posixRef = CFURLCopyFileSystemPath(urlRef, kCFURLPOSIXPathStyle);
-		CFRelease(urlRef);
-		if (posixRef)
-		{
-			CFIndex len;
-			CFRange range = CFRangeMake(0, CFStringGetLength(posixRef));
-			if (CFStringGetBytes(posixRef, range, encoding, defaultChar, false, NULL, 0, &len) > 0)
+			CFURLRef urlRef = NULL;
+			CFStringRef posixRef, fileRef = CFStringCreateWithBytes(kCFAllocatorDefault, src, len, encoding, false);
+			if (!fileRef)
 			{
-				if (len > 0)
+				return mFullErr;
+			}
+			urlRef = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, fileRef, kCFURLHFSPathStyle, isDir);
+			CFRelease(fileRef);
+			if (!urlRef)
+			{
+				return mFullErr;
+			}
+			posixRef = CFURLCopyFileSystemPath(urlRef, kCFURLPOSIXPathStyle);
+			CFRelease(urlRef);
+			if (posixRef)
+			{
+				CFIndex len;
+				CFRange range = CFRangeMake(0, CFStringGetLength(posixRef));
+				if (CFStringGetBytes(posixRef, range, encoding, defaultChar, false, NULL, 0, &len) > 0)
 				{
-					err = NumericArrayResize(uB, 1, (UHandle*)dest, len + 1);
-					if (!err)
+					if (len > 0)
 					{
-						encoding = ConvertCodepageToEncoding(destcp);
-						if (encoding != kCFStringEncodingInvalidId)
+						err = NumericArrayResize(uB, 1, (UHandle*)dest, len + 1);
+						if (!err)
 						{
-							if (CFStringGetBytes(posixRef, range, encoding, 0, false, LStrBuf(**dest), len, &len) > 0)
+							encoding = ConvertCodepageToEncoding(destcp);
+							if (encoding != kCFStringEncodingInvalidId)
 							{
-								TerminateLStr(dest, len);
-								err = mgNoErr;
-							}
-							else
-							{	
-								err = bogusError;
+								if (CFStringGetBytes(posixRef, range, encoding, 0, false, LStrBuf(**dest), len, &len) > 0)
+								{
+									TerminateLStr(dest, len);
+									err = mgNoErr;
+								}
+								else
+								{	
+									err = bogusError;
+								}
 							}
 						}
 					}
 				}
+				CFRelease(posixRef);
 			}
-			CFRelease(posixRef);
+			else
+			{
+				err = mFullErr;
+			}
 		}
 		else
 		{
-			err = mFullErr;
+			err = mgNotSupported;
 		}
-	}
-	else
-	{
-		err = mgNotSupported;
-	}
 #elif usesWinPath
-    Unused(isDir);
-	if (src && len && dest)
-	{
 		WStrHandle temp = NULL;
-		MgErr err = MultiByteCStrToWideString(src, len, srccp, &temp);
+
+		Unused(isDir);
+		err = MultiByteCStrToWideString(src, len, srccp, &temp);
 		if (!err)
 		{
 			uInt8 type = fNotAPath;
@@ -1879,11 +1881,11 @@ MgErr CStrToPosixPath(ConstCStr src, int32 len, uInt32 srccp, LStrHandle *dest, 
 			}
 			DSDisposeHandle((UHandle)temp);
 		}
-	}
 #else
-    Unused(isDir);
-	err = ConvertCString(src, len, srccp, dest, destcp, defaultChar, defUsed);
+		Unused(isDir);
+		err = ConvertCString(src, len, srccp, dest, destcp, defaultChar, defUsed);
 #endif
+	}
 	return err;
 }
 
