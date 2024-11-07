@@ -158,91 +158,6 @@ DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *
 	return offset;
 }
 
-#if Win32
-static int32 WStrUNCOffset(const wchar_t *ptr, int32 offset, int32 len)
-{
-	int32 sep = 0;
-	for (ptr += offset; *ptr && offset < len; *ptr++, offset++)
-	{
-		if (IsSeperator(*ptr))
-		{
-			while (IsSeperator(ptr[1]))
-			{
-				ptr++;
-				offset++;
-			}
-			if (++sep >= 2)
-				return ++offset;
-		}
-	}
-	if (sep == 1 && (!*ptr || offset == len))
-	{
-		return offset;
-	}
-	return -1;  
-}
-
-DebugAPI(int32) WStrRootLen(const wchar_t *ptr, int32 len, int32 offset, uInt8 *type)
-{
-	if (offset < 0)
-		offset = HasNTFSDevicePrefix(ptr, len);
-
-	if (len > offset)
-	{
-#if usesWinPath
-		if ((len >= 2 + offset && ptr[offset] < 128 && isalpha(ptr[offset]) && ptr[offset + 1] == ':'))
-		{
-			if (type)
-				*type = fAbsPath;		
-			offset += 2 + (IsSeperator(ptr[offset + 2]) ? 1 : 0);
-		}
-		else if (len >= 3 + offset && IsSeperator(ptr[offset]) && IsSeperator(ptr[offset + 1]) && ptr[offset + 2] < 128 && isalpha(ptr[offset + 2]))
-		{
-			offset = WStrUNCOffset(ptr, offset + 2, len);
-			if (type)
-				*type = offset < 0 ? fNotAPath : fUNCPath;		
-		}
- #if !Pharlap
-		else if (offset == 8)
-		{
-			offset = WStrUNCOffset(ptr, offset, len);
-			if (type)
-				*type = offset < 0 ? fNotAPath : fUNCPath;		
-		}
- #endif
-#else
-		if (IsPosixSeperator(ptr[offset]))
-		{
-			if (len >= 2 + offset && IsSeperator(ptr[offset + 1]))
-			{
-				offset = WStrUNCOffset(ptr, offset + 2, len);
-				if (type)
-					*type = offset < 0 ? fNotAPath : fUNCPath;		
-			}
-			else
-			{
-				offset++;
-				if (type)
-					*type = fAbsPath;		
-			}
-		}
-#endif
-		else
-		{
-			if (type)
-				*type = fRelPath;
-		}
-	}
-	else
-	{
-		/* len == offset is root path and always absolute */
-		if (type)
-			*type = fAbsPath;		
-	}
-	return offset;
-}
-#endif
-
 /* Return values:
    -2: invalid path
    -1: no path segment left
@@ -1747,7 +1662,7 @@ static int32 ConvertToPosixWString(wchar_t *src, int32 srcLen, uInt8 *type, wcha
 	wchar_t *ptr = dst;
 	int32 len = 0, offset = HasNTFSDevicePrefix(src, srcLen);
 
-	WStrRootLen(src, srcLen, offset, type);
+	LWPtrRootLen(src, srcLen, offset, type);
 
 	if (*type == fNotAPath)
 		return -1;
