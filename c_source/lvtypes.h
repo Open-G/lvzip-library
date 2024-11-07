@@ -896,6 +896,7 @@ typedef struct
 	FileTypeRec elm[1];
 } FileTypeArrRec, *FileTypeArrPtr, **FileTypeArrHdl;
 
+MgErr CallChain(LStrArrHdl chain);
 /*
 Resource types
 */

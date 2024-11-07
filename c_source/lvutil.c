@@ -4281,3 +4281,14 @@ LibAPI(MgErr) LVFile_Write(LVRefNum *refnum, uInt32 inCount, uInt32 *outCount, U
 	}
 	return err;
 }
+
+LibAPI(MgErr) LVError_ErrorMessage(int32 code, LStrHandle message)
+{
+	LStrArrHdl arr = DSNewHClr(sizeof(int32));
+	MgErr err = CallChain(arr);
+	if (!err)
+	{
+
+	}
+	return err;
+}
