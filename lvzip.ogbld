@@ -63,6 +63,7 @@ VI 3="macbin.llb/MACBIN VI Tree.vi"
 VI 4="examples/View Archive Content.vi"
 VI 5="examples/Update Open Office Document.vi"
 VI 6="examples/Update Open Office Document2.vi"
+VI 7="examples/GZIP Example.vi"
 
 [Dynamic VIs]
 ###########################################################=""
