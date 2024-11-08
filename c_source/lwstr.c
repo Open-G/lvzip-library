@@ -102,13 +102,13 @@ DebugAPI(int32) LWPtrRootLen(const LWChar *ptr, int32 len, int32 offset, uInt8 *
 	if (len > offset)
 	{
 #if usesWinPath
-		if ((len >= 2 + offset && isalpha(ptr[offset]) && ptr[offset + 1] == ':'))
+		if ((len >= 2 + offset && lwisalpha(ptr[offset]) && ptr[offset + 1] == ':'))
 		{
 			if (type)
 				*type = fAbsPath;		
 			offset += 2 + (IsSeperator(ptr[offset + 2]) ? 1 : 0);
 		}
-		else if (len >= 3 + offset && IsSeperator(ptr[offset]) && IsSeperator(ptr[offset + 1]) && isalnum(ptr[offset + 2]))
+		else if (len >= 3 + offset && IsSeperator(ptr[offset]) && IsSeperator(ptr[offset + 1]) && lwisalnum(ptr[offset + 2]))
 		{
 			offset = LWPtrUNCOffset(ptr, offset + 2, len);
 			if (type)

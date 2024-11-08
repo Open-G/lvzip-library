@@ -44,12 +44,16 @@ typedef wchar_t			LWChar;
 #define lwslen			(int32)wcslen
 #define lwsncpy			wcsncpy
 #define lwsrchr			wcsrchr
+#define lwisalpha		iswalpha
+#define lwisalnum		iswalnum
 #define __LW(quote)		L##quote
 #else
 typedef char			LWChar;
 #define lwslen			(int32)strlen
 #define lwsncpy			strncpy
 #define lwsrchr			strrchr       
+#define lwisalpha		isalpha
+#define lwisalnum		isalnum
 #define __LW(quote)		quote
 #endif
 #define	LW(quote)		__LW(quote)
