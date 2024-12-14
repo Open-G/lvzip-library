@@ -1395,7 +1395,7 @@ extern int ZEXPORT unzReadCurrentFile(unzFile file, voidp buf, uint32_t len)
 
                     for (i = 0; i < total_bytes_read; i++)
                       s->pfile_in_zip_read->read_buffer[i] =
-                          zdecode(s->keys, s->pcrc_32_tab, s->pfile_in_zip_read->read_buffer[i]);
+                           (char)zdecode(s->keys, s->pcrc_32_tab, s->pfile_in_zip_read->read_buffer[i]);
                 }
             }
 #endif
@@ -1712,7 +1712,7 @@ extern int ZEXPORT unzGoToFirstFile(unzFile file)
     return unzGoToFirstFile2(file, NULL, NULL, 0, NULL, 0, NULL, 0);
 }
 
-extern int ZEXPORT unzGoToNextFile2(unzFile file, unz_file_info64 *pfile_info, char *filename,
+extern int ZEXPORT unzGoToNextFileIdx(unzFile file, uint64_t index, unz_file_info64 *pfile_info, char *filename,
     uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment, uint16_t comment_size)
 {
     unz64_internal *s = NULL;
@@ -1724,15 +1724,24 @@ extern int ZEXPORT unzGoToNextFile2(unzFile file, unz_file_info64 *pfile_info, c
 
     if (!s->current_file_ok)
         return UNZ_END_OF_LIST_OF_FILE;
-    if (s->gi.number_entry != UINT16_MAX)    /* 2^16 files overflow hack */
+
+	if (index == 0)
+		index = s->num_file + 1;
+	else if (index < s->num_file)
+		return UNZ_PARAMERROR;
+
+
+	if (s->gi.number_entry != UINT16_MAX)    /* 2^16 files overflow hack */
     {
-        if (s->num_file+1 == s->gi.number_entry)
+        if (index >= s->gi.number_entry)
             return UNZ_END_OF_LIST_OF_FILE;
     }
 
-    s->pos_in_central_dir += SIZECENTRALDIRITEM + s->cur_file_info.size_filename +
-            s->cur_file_info.size_file_extra + s->cur_file_info.size_file_comment;
-    s->num_file += 1;
+	for (; s->num_file < index; s->num_file++)
+	{
+		s->pos_in_central_dir += SIZECENTRALDIRITEM + s->cur_file_info.size_filename +
+			    s->cur_file_info.size_file_extra + s->cur_file_info.size_file_comment;
+	}
 
     err = unzGetCurrentFileInfoInternal(file, &s->cur_file_info, &s->cur_file_info_internal,
             filename, filename_size, extrafield, extrafield_size, comment, comment_size);
@@ -1744,9 +1753,15 @@ extern int ZEXPORT unzGoToNextFile2(unzFile file, unz_file_info64 *pfile_info, c
     return err;
 }
 
+extern int ZEXPORT unzGoToNextFile2(unzFile file, unz_file_info64 *pfile_info, char *filename,
+    uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment, uint16_t comment_size)
+{
+    return unzGoToNextFileIdx(file, 0, pfile_info, filename, filename_size, extrafield, extrafield_size, comment, comment_size);
+}
+
 extern int ZEXPORT unzGoToNextFile(unzFile file)
 {
-    return unzGoToNextFile2(file, NULL, NULL, 0, NULL, 0, NULL, 0);
+    return unzGoToNextFileIdx(file, 0, NULL, NULL, 0, NULL, 0, NULL, 0);
 }
 
 extern int ZEXPORT unzLocateFile(unzFile file, const char *filename, unzFileNameComparer filename_compare_func)

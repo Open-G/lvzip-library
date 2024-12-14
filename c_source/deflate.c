@@ -53,7 +53,7 @@
 #include "deflate.h"
 
 const char deflate_copyright[] =
-   " deflate 1.3.1 Copyright 1995-2024 Jean-loup Gailly and Mark Adler ";
+   " deflate 1.3.2 Copyright 1995-2024 Jean-loup Gailly and Mark Adler ";
 /*
   If you use the zlib library in a product, an acknowledgment is welcome
   in the documentation of your product. If for some reason you cannot
@@ -717,6 +717,14 @@ int ZEXPORT deflatePending(z_streamp strm, unsigned *pending, int *bits) {
         *pending = strm->state->pending;
     if (bits != Z_NULL)
         *bits = strm->state->bi_valid;
+    return Z_OK;
+}
+
+/* ========================================================================= */
+int ZEXPORT deflateUsed(z_streamp strm, int *bits) {
+    if (deflateStateCheck(strm)) return Z_STREAM_ERROR;
+    if (bits != Z_NULL)
+        *bits = strm->state->bi_used;
     return Z_OK;
 }
 
@@ -1756,8 +1764,10 @@ local block_state deflate_stored(deflate_state *s, int flush) {
         s->high_water = s->strstart;
 
     /* If the last block was written to next_out, then done. */
-    if (last)
+	if (last) {
+        s->bi_used = 8;
         return finish_done;
+    }
 
     /* If flushing and all input has been consumed, then done. */
     if (flush != Z_NO_FLUSH && flush != Z_FINISH &&

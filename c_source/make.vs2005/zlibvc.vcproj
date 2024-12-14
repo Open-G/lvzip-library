@@ -1124,6 +1124,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\skipset.h"
+					>
+				</File>
+				<File
 					RelativePath="..\trees.h"
 					>
 				</File>

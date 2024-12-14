@@ -203,7 +203,12 @@ extern int ZEXPORT unzGetCurrentFileInfo64(unzFile file, unz_file_info64 *pfile_
    extrafield if != NULL, the extra field information from the central header will be copied in to
    extrafield_size is the size of the extraField buffer 
    comment if != NULL, the comment string of the file will be copied in to
-   comment_size is the size of the comment buffer */
+   comment_size is the size of the comment buffer
+   The file name and comment will be zero-terminated if there is room in the
+   provided buffer. Otherwise the buffer will contain as much as will fit. If at
+   least 65537 bytes of room is provided, then the result will always be
+   complete and zero-terminated.
+  */
 
 extern int ZEXPORT unzGetLocalExtrafield(unzFile file, voidp buf, uint32_t len);
 /* Read extra field from the current file (opened by unzOpenCurrentFile)
@@ -247,6 +252,9 @@ extern int ZEXPORT unzGoToNextFile(unzFile file);
    return UNZ_END_OF_LIST_OF_FILE if the actual file was the latest */
 
 extern int ZEXPORT unzGoToNextFile2(unzFile file, unz_file_info64 *pfile_info, char *filename,
+    uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment, uint16_t comment_size);
+
+extern int ZEXPORT unzGoToNextFileIdx(unzFile file, uint64_t index, unz_file_info64 *pfile_info, char *filename,
     uint16_t filename_size, void *extrafield, uint16_t extrafield_size, char *comment, uint16_t comment_size);
 /* Set the current file of the zipfile to the next file and retrieves the current 
    info on success. Does less seeking around than unzGotoNextFile + unzGetCurrentFileInfo.

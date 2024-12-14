@@ -60,6 +60,7 @@
 #define deflateSetDictionary        lvzip_deflateSetDictionary
 #define deflateSetHeader            lvzip_deflateSetHeader
 #define deflateTune                 lvzip_deflateTune
+#define deflateUsed                 lvzip_deflateUsed
 #define get_crc_table               lvzip_get_crc_table
 #define inflate                     lvzip_inflate
 #define inflate_copyright           lvzip_inflate_copyright
@@ -112,6 +113,7 @@
 #define unzGoToFirstFile2           lvzip_unzGoToFirstFile2
 #define unzGoToNextFile             lvzip_unzGoToNextFile
 #define unzGoToNextFile2            lvzip_unzGoToNextFile2
+#define unzGoToNextFileIdx          lvzip_unzGoToNextFileIdx
 #define unzLocateFile               lvzip_unzLocateFile
 #define unzOpen                     lvzip_unzOpen
 #define unzOpen64                   lvzip_unzOpen64

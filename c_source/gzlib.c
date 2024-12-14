@@ -52,7 +52,7 @@ char ZLIB_INTERNAL *gz_strwinerror(DWORD error) {
             msgbuf[chars] = 0;
         }
 
-        wcstombs(buf, msgbuf, chars + 1);       // assumes buf is big enough
+        wcstombs_s(buf, msgbuf, chars + 1);       // assumes buf is big enough
         LocalFree(msgbuf);
     }
     else {
@@ -232,7 +232,7 @@ local gzFile gz_open(const void *path, int fd, const char *mode) {
         state->fd = open((const char *)path, oflag, 0666);
 #ifdef WIDECHAR
     else if (fd == -2)
-         state->fd = _wopen(path, oflag, _S_IREAD | _S_IWRITE);
+          _wopen(path, oflag, _S_IREAD | _S_IWRITE);
 #endif
     else
         state->fd = fd;

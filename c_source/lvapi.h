@@ -73,6 +73,7 @@ LibAPI(MgErr) lvzlib_unzGoToFirstFile2_64(LVRefNum *refnum, unz_file_info64 *pfi
 LibAPI(MgErr) lvzlib_unzGoToNextFile(LVRefNum *refnum);
 LibAPI(MgErr) lvzlib_unzGoToNextFile2_32(LVRefNum *refnum, unz_file_info *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment);
 LibAPI(MgErr) lvzlib_unzGoToNextFile2_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment);
+LibAPI(MgErr) lvzlib_unzGoToNextFile3_64(LVRefNum *refnum, unz_file_info64 *pfile_info, LStrHandle *fileName, LStrHandle *extraField, LStrHandle *comment, uint64_t index);
 LibAPI(MgErr) lvzlib_unzGoToFilePos32(LVRefNum *refnum, unz_file_pos *pos);
 LibAPI(MgErr) lvzlib_unzGoToFilePos64(LVRefNum *refnum, unz64_file_pos *pos);
 LibAPI(MgErr) lvzlib_unzGetFilePos32(LVRefNum *refnum, unz_file_pos *pos);

@@ -13,8 +13,8 @@
    See the accompanying LICENSE file for the full text of the license.
 */
 
-#ifndef _ZLIBIOAPI64_H
-#define _ZLIBIOAPI64_H
+#ifndef ZLIBIOAPI64_H
+#define ZLIBIOAPI64_H
 
 #include <stdio.h>
 #include <stdlib.h>

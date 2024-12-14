@@ -192,6 +192,9 @@ extern int ZEXPORT zipCloseFileInZipRaw64(zipFile file, uint64_t uncompressed_si
 /* Close the current file in the zipfile, for file opened with parameter raw=1 in zipOpenNewFileInZip2
    where raw is compressed data. Parameters uncompressed_size and crc32 are value for the uncompressed data. */
 
+extern int ZEXPORT zipAlreadyThere(zipFile file, char const* name);
+/* See if name is already in file's central directory. */
+
 extern int ZEXPORT zipClose(zipFile file, const char *global_comment);
 /* Close the zipfile */
 
