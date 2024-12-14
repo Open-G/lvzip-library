@@ -1,4 +1,4 @@
-LabVIEW ZIP library, version 5.0.5
+LabVIEW ZIP library, version 5.0.8
 ----------------------------------
 
 Copyright 2002-2024 Rolf Kalbermatter
@@ -10,6 +10,31 @@ older than 2.2 to this version.
 Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
+
+Release 5.0.8, Released: Dec. 13, 2024
+======================================
+
+Improvement:
+------------
+1) Add Extract functions that allow to pass an index instead of a file name.
+
+
+Release 5.0.7, Released: Dec. 9, 2024
+======================================
+
+Improvement:
+------------
+1) Add optional "overwrite(F)" boolean to the ZLIB Extract All Files To Dir functions.
+
+
+Release 5.0.6, Released: Nov. 8, 2024
+======================================
+
+Fixes:
+------
+1) Fix problem when converting UNC paths starting with numeric character instead of a letter, such as an IP address.
+2) Remove non-working detect option in the ZLIB Inflate Extended.vi function
+
 
 Release 5.0.5, Released: Sep. 10, 2024
 ======================================
