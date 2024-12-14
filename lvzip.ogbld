@@ -26,7 +26,7 @@ Namespace=""
 # Destination is converted to an LLB or EXE.  You can use=""
 # any keyname for Top Level VIs.  Keynames for this section=""
 # are arbitrary.=""
-File Format Version=1.0.1
+File Format Version=1.0.2
 Log Dir=built
 Log File=""
 Log File Suffix=""
@@ -50,6 +50,9 @@ Apply New Password=""
 RemovePolyVIsAndTypedefs=FALSE
 Allow CBVI & Build Hierarchy Overlap=FALSE
 Namespace Convention=0
+Call Pre-Build VI=""
+EXE App Flags=4
+EXE LVRT Res Flags=0
 Call-Back VI 1="build_support/Call-Back VI - Rem namespace from Window Title.vi"
 
 [Top Level VIs]
@@ -82,7 +85,8 @@ Convert Target to EXE=FALSE
 Save Level=0
 Default Destination=FALSE
 Apply New Password=""
-Namespace="ogtk"
+Namespace=ogtk
+Debug Level=0
 
 [Destination 2]
 Source Dir=macbin.llb
@@ -92,7 +96,8 @@ Convert Target to EXE=FALSE
 Save Level=0
 Default Destination=FALSE
 Apply New Password=""
-Namespace="ogtk"
+Namespace=ogtk
+Debug Level=0
 
 [Destination 3]
 Source Dir=fileutil.llb
@@ -102,7 +107,8 @@ Convert Target to EXE=FALSE
 Save Level=0
 Default Destination=FALSE
 Apply New Password=""
-Namespace="ogtk"
+Namespace=ogtk
+Debug Level=0
 
 [Destination 4]
 Source Dir=stringutil.llb
@@ -112,7 +118,8 @@ Convert Target to EXE=FALSE
 Save Level=0
 Default Destination=FALSE
 Apply New Password=""
-Namespace="ogtk"
+Namespace=ogtk
+Debug Level=0
 
 [Destination 5]
 Source Dir=examples
@@ -123,3 +130,5 @@ Save Level=0
 Default Destination=FALSE
 Apply New Password=""
 Namespace=""
+Debug Level=0
+

@@ -24,7 +24,7 @@ Files 15="/Z/openg-lvzip/openg-lvzip/tests/lvzip-test-string compress.vi"
 
 [Package Name]
 Name=oglib_lvzip
-Version=5.0.6
+Version=5.0.8
 Release=1
 Display Name="OpenG LabVIEW ZIP Library"
 
@@ -32,12 +32,12 @@ Display Name="OpenG LabVIEW ZIP Library"
 Description="The lvzip package contains several routines for operating on zip files.\0D\0A"
 Summary="OpenG Zip Tools"
 License="BSD (VIs), LGPL (Shared Library)"
-Copyright="1995-2023 Jean-loup Gailly and Mark Adler\0A1998-2017 Gilles Vollant\0A2009-2010 Mathias Svensson\0A2010-2017 Nathan Moinvaziri\0A2002-2009 Christophe Salzmann, Jim Kring\0A2002-2024 Rolf Kalbermatter"
+Copyright="1995-2024 Jean-loup Gailly and Mark Adler\0A1998-2017 Gilles Vollant\0A2009-2010 Mathias Svensson\0A2010-2017 Nathan Moinvaziri\0A2002-2009 Christophe Salzmann, Jim Kring\0A2002-2024 Rolf Kalbermatter"
 Distribution="OpenG Toolkit"
 Vendor=OpenG.org
 URL=http://wiki.openg.org/oglib_lvzip
 Packager="Rolf Kalbermatter <rolf.kalbermatter@gmail.com>"
-Release Notes="Version 5.0.6: Fix problem when converting UNC paths starting with numeric character instead of a letter, such as an IP address.\0AVersion 5.0.5: Add an option to control the header used for the Inflate and Deflate functions.\0AVersion 5.0.4: Add a new function to check if a file refnum is valid. Use that when doing storing into archive in chunks.\0AUse the bitness wildcard in the shared library name to resolve various issues with installation madness on Linux.\0AVersion 5.0.3: Fix wiring mistake in ZLIB Store File Prepare.vi where comment and password was exchanged. Fix missing wiring to store the file refnum when opening a file in ZLIB Store File Continue.vi\0AVersion 5.0.2: Add a Low Level official API to store files in chunks into a ZIP file archive\0AVersion 5.0.1: Fix installation problems on various systems\0AVersion 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager layer to support long file paths as well as unicode file names.\0AVersion 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
+Release Notes="Version 5.0.8: Add Extract functions that allow to pass an index instead of a file name.\0AVersion 5.0.7: Add optional "overwrite(F)" boolean to the ZLIB Extract All Files To Dir functions.\0AVersion 5.0.6: Fix problem when converting UNC paths starting with numeric character instead of a letter, such as an IP address.\0AVersion 5.0.5: Add an option to control the header used for the Inflate and Deflate functions.\0AVersion 5.0.4: Add a new function to check if a file refnum is valid. Use that when doing storing into archive in chunks.\0AUse the bitness wildcard in the shared library name to resolve various issues with installation madness on Linux.\0AVersion 5.0.3: Fix wiring mistake in ZLIB Store File Prepare.vi where comment and password was exchanged. Fix missing wiring to store the file refnum when opening a file in ZLIB Store File Continue.vi\0AVersion 5.0.2: Add a Low Level official API to store files in chunks into a ZIP file archive\0AVersion 5.0.1: Fix installation problems on various systems\0AVersion 5.0: Upgraded to latest zlib 1.3 sources and implemented a complete file manager layer to support long file paths as well as unicode file names.\0AVersion 4.3: Improved Unicode support for file names and strings in the ZIP directory.\0AVersion 4.2: Updated to zlib 1.2.11 and minizip 1.2 - June 14, 2019 and more 64-bit support\0AVersion 4.1: Updated to zlib 1.2.8 and added support for new cRIO targets\0AVersion 4.0: New palette menu structure\0AVersion 2.5.2: Adds support for the new palette locations of OpenG 4.x packages and removes dependency on ogrsc_dynamicpalette package.\0D\0AVersion 2.5.1: Fixes issue with broken VIs in LabVIEW 2009 due to calling (now) private config utilities.\0D\0AVersion 2.5: Changes license of LabVIEW sources from LGPL to BSD, Adds Memory Stream VIs to the palettes, Optimizes ZLIB Extract All Files to Dir, Fixes potential problem where error such as out of disk on finishing to add a file into an archive might get lost meaning that a corrupted archive could result without the user being informed about it, Fixes issue preventing adding files specified by UNC network path to zip archive.\0D\0AVersion 2.4 adds support for direct memory stream handling.\0D\0AVersion 2.3 adds support for transparent Mac Resource file handling through MacBinary encoding.\0D\0AVersion 2.2 adds support for appending files to an existing archive, deleting files from an archive and password support for adding and extracting files."
 Demo=FALSE
 System Package=FALSE
 Sub Package=FALSE
@@ -109,8 +109,9 @@ PPFix=""
 Source Dir=built/lvzip/lvzip.llb
 Target Dir=<OpenG.lib>/lvzip/lvzip.llb
 Replace Mode=Always
-Num Files=1
+Num Files=2
 File 0=*.*
+File 1=*.*
 
 [File Group 3]
 Name=MacBinary
