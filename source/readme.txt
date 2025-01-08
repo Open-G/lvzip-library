@@ -1,7 +1,7 @@
-LabVIEW ZIP library, version 5.0.8
+LabVIEW ZIP library, version 5.0.9
 ----------------------------------
 
-Copyright 2002-2024 Rolf Kalbermatter
+Copyright 2002-2025 Rolf Kalbermatter
 
 
 Please read this document before you upgrade from a version of LVZIP
@@ -10,6 +10,19 @@ older than 2.2 to this version.
 Version 2.2 of LVZIP has some modifications to the VI connector panes
 in comparison to earlier versions which might require you to slightly redo
 your project.
+
+
+Release 5.0.9, Released: Jan. 8, 2025
+=====================================
+
+Bug Fix:
+--------
+1) Fix wrong default value for the compression input in ZLIB Store File First.vi
+
+Improvement:
+------------
+2) Add an extra output parameter to ZLIB Store File Next.vi indicating the number of bytes having been transferred.
+
 
 Release 5.0.8, Released: Dec. 13, 2024
 ======================================

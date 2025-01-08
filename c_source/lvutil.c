@@ -2524,7 +2524,7 @@ LibAPI(MgErr) LVFile_CreateLink(LWPathHandle *src, LWPathHandle *tgt, uInt32 fla
 /* Read the path a link points to
    src: Path of the supposed link to read its destination
    tgt: Returned path with the location
-   resolveDepth: kRecursive, resolve the link over multiple levels if applicable
+   resolveDepth: kRecursive (-1), resolve the link over multiple levels if applicable
 		         0, return relative paths if the link is relative
 				 >0, maximum amount of resolutions
    resolveCount:

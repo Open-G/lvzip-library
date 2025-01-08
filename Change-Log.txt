@@ -142,3 +142,8 @@ Add optional "overwrite(F)" boolean to the ZLIB Extract All Files To Dir functio
 
 2024-12-13 rk
 Add Extract functions that allow to pass an index instead of a file name.
+
+2025-01-08 rk
+Fix wrong default value for the compression control in ZLIB Store File First__ogtk.vi
+Add an extra output parameter to ZLIB Store File Next__ogtk.vi indicating the number of bytes having been transferred.
+
